@@ -79,7 +79,8 @@
 - [x] Mains 3D low-poly avec doigt actif qui se lève et appuie
 - [x] Course de voitures en 3D : piste, 4 voitures, caméra qui suit
 - [x] Dégâts 3D : carrosserie déformée, fumée, étincelles, turbo avec flammes
-- [ ] Régler l'apparence (angle de caméra, couleurs, taille des mains) après essai
+- [x] Mains 3D améliorées : style jouet avec contour, doigts effilés et articulés, ongles, pouce, poignet et manchette (vérifiées en image)
+- [ ] Régler la course 3D après essai (angle de caméra, couleurs, voitures)
 - [ ] Passer les autres jeux en 3D si souhaité
 
 ## Plus tard

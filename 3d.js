@@ -8,39 +8,53 @@ function pm(c,o){var m=new T.MeshStandardMaterial(Object.assign({color:c,flatSha
 
 /* ---------- Mains 3D ---------- */
 var H3=window.H3={};
-var REST=[-.12,-.26,-.2],UP=[.34,-.04,-.05],DN=[-.55,-.5,-.35];
+var REST=[-.04,-.16,-.12],UP=[.3,-.04,-.04],DN=[-.5,-.5,-.35];
+function toonMap(){var d=new T.DataTexture(new Uint8Array([185,222,255]),3,1,T.LuminanceFormat);d.minFilter=d.magFilter=T.NearestFilter;d.needsUpdate=true;return d}
+function rbox(w,h,d,r,seg){var g=new T.BoxGeometry(w,h,d,seg,seg,seg),p=g.attributes.position,v=new T.Vector3(),c=new T.Vector3(),hw=w/2-r,hh=h/2-r,hd=d/2-r;
+ for(var i=0;i<p.count;i++){v.fromBufferAttribute(p,i);c.set(Math.max(-hw,Math.min(hw,v.x)),Math.max(-hh,Math.min(hh,v.y)),Math.max(-hd,Math.min(hd,v.z)));v.sub(c).normalize().multiplyScalar(r);p.setXYZ(i,c.x+v.x,c.y+v.y,c.z+v.z)}
+ g.computeVertexNormals();return g}
+function skin(c){var o=new T.Color(c);return (o.r+o.g+o.b)/3>.6?o.lerp(new T.Color(1,1,1),.4):o}
 H3.init=function(box){
  var cv=document.createElement("canvas"),r=gl(cv);if(!r)return false;
  box.innerHTML="";box.appendChild(cv);r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
- var sc=new T.Scene(),cam=new T.PerspectiveCamera(32,2,.1,100);
- sc.add(new T.HemisphereLight(0xffffff,0x8892a8,1.05));var dl=new T.DirectionalLight(0xffffff,.9);dl.position.set(2,6,4);sc.add(dl);
- var mats={};for(var i=0;i<=9;i++)mats[i]=new T.MeshStandardMaterial({color:css("--f"+i),roughness:.55,metalness:0,emissive:0x000000});
- var nailM=new T.MeshStandardMaterial({color:0xffffff,roughness:.3,transparent:true,opacity:.7});
+ var sc=new T.Scene(),cam=new T.PerspectiveCamera(30,2,.1,100);
+ var hemi=new T.HemisphereLight(0xffffff,isDark()?0x8f9ab8:0xd8cfc0,1.1);sc.add(hemi,new T.AmbientLight(0xffffff,.3));var dl=new T.DirectionalLight(0xffffff,.9);dl.position.set(-2,6,4);sc.add(dl);
+ var gm=toonMap(),mats={},outM=new T.MeshBasicMaterial({color:css("--po"),side:T.BackSide});
+ for(var i=0;i<=9;i++)mats[i]=new T.MeshToonMaterial({color:i%9?css("--f"+i):skin(css("--f"+i)),gradientMap:gm});
+ var cuffM=new T.MeshToonMaterial({color:isDark()?0xb9c2dc:0xffffff,gradientMap:gm}),nailM=new T.MeshToonMaterial({color:0xffffff,gradientMap:gm});
+ function part(geo,mat,parent,t){var m=new T.Mesh(geo,mat);geo.computeBoundingSphere();var o=new T.Mesh(geo,outM);o.scale.setScalar(1+(t||.05)/Math.max(.1,geo.boundingSphere.radius));m.add(o);parent.add(m);return m}
  var grp=new T.Group(),fing={},act={},accent=new T.Color(css("--acc"));
- function finger(len,rad,mat){var g=new T.Group(),segs=[],par=g;
-  for(var k=0;k<3;k++){var L=len[k],pv=new T.Group();pv.position.z=k?-len[k-1]:0;
-   var m=new T.Mesh(new T.CapsuleGeometry(rad*(1-k*.08),L,4,8),mat);m.rotation.x=Math.PI/2;m.position.z=-L/2;pv.add(m);par.add(pv);par=pv;segs.push(pv)}
-  var n=new T.Mesh(new T.SphereGeometry(rad*.7,8,6),nailM);n.scale.set(1,.35,1.15);n.position.set(0,rad*.6,-len[2]*.6);segs[2].add(n);
+ function finger(k,rb,mat){var g=new T.Group(),segs=[],par=g,len=[.66*k,.48*k,.38*k],rad=[rb,rb*.9,rb*.8,rb*.7];
+  for(var s=0;s<3;s++){var pv=new T.Group();pv.position.z=s?-len[s-1]:0;par.add(pv);par=pv;segs.push(pv);
+   var cyl=new T.CylinderGeometry(rad[s],rad[s+1],len[s],14);cyl.rotateX(Math.PI/2);cyl.translate(0,0,-len[s]/2);part(cyl,mat,pv);
+   part(new T.SphereGeometry(rad[s]*1.02,14,10),mat,pv)}
+  var tip=part(new T.SphereGeometry(rad[3],14,10),mat,segs[2]);tip.position.z=-len[2];
+  var n=new T.Mesh(new T.SphereGeometry(rad[3]*.88,12,8),nailM);n.scale.set(.95,.34,1.3);n.position.set(0,rad[3]*.74,-len[2]*.7);segs[2].add(n);
   return {g:g,segs:segs,cur:REST.slice(),p:0}}
- var spec={1:[-.66,.78],2:[-.3,.94],3:[.06,1],4:[.42,.92]};
+ var spec={1:[-.78,.78,.88],2:[-.33,.95,1],3:[.12,1,1.03],4:[.56,.92,1]};
  [0,1].forEach(function(h){var s=h?-1:1,hg=new T.Group();
-  var palm=new T.Mesh(new T.SphereGeometry(1,18,12),mats[0]);palm.scale.set(.98,.3,.82);palm.position.set(0,0,.3);hg.add(palm);
-  for(var f=1;f<=4;f++){var id=h?9-f:f,k=spec[f][1],fg=finger([.5*k,.36*k,.3*k],.15,mats[id]);fg.g.position.set(s*spec[f][0],0,-.38);hg.add(fg.g);(fing[id]=fing[id]||[]).push(fg)}
-  var th=finger([.42,.34,.28],.18,mats[9]);th.g.position.set(s*.86,0,.18);th.g.rotation.y=-s*.7;hg.add(th.g);(fing[9]=fing[9]||[]).push(th);
-  hg.position.x=s*-1.95;hg.rotation.y=s*.08;grp.add(hg)});
+  var palm=part(rbox(2.05,.48,1.4,.22,7),mats[0],hg,.06);palm.position.set(0,0,.1);
+  for(var f=1;f<=4;f++){var id=h?9-f:f,sp=spec[f],fg=finger(sp[1],.165*sp[2],mats[id]);fg.g.position.set(s*sp[0],.03,-.6);hg.add(fg.g);(fing[id]=fing[id]||[]).push(fg);
+   var kn=part(new T.SphereGeometry(.2*sp[2],12,8),mats[id],hg);kn.position.set(s*sp[0],.2,-.58);kn.scale.set(1,.55,1)}
+  var mound=part(new T.SphereGeometry(.5,14,10),mats[0],hg);mound.scale.set(.9,.5,1.15);mound.position.set(s*.86,-.04,.3);
+  var th=finger(.95,.2,mats[9]);th.g.position.set(s*1.0,.0,.22);th.g.rotation.y=-s*.62;th.g.rotation.z=s*.12;hg.add(th.g);(fing[9]=fing[9]||[]).push(th);
+  var wg=new T.CylinderGeometry(.52,.6,.9,16);wg.rotateX(Math.PI/2);var wr=part(wg,mats[0],hg);wr.position.set(0,-.02,1.3);
+  var cg=new T.CylinderGeometry(.66,.66,.5,18);cg.rotateX(Math.PI/2);var cu=part(cg,cuffM,hg);cu.position.set(0,-.02,1.88);
+  var sh=new T.Mesh(new T.CircleGeometry(1,28),new T.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.09}));sh.rotation.x=-Math.PI/2;sh.position.set(0,-.34,.2);sh.scale.set(1.25,1.9,1);hg.add(sh);
+  hg.position.x=s*-2.3;hg.rotation.y=s*.1;grp.add(hg)});
  sc.add(grp);
  var bb=new T.Box3().setFromObject(grp),size=bb.getSize(new T.Vector3()),ctr=bb.getCenter(new T.Vector3()),lw=0,lh=0,last=0;
- function fit(){var v=cam.fov*Math.PI/360,hh=(size.y+.9)/2,hw=size.x/2*1.06,d=Math.max(hh/Math.tan(v),hw/(Math.tan(v)*cam.aspect));var dir=new T.Vector3(0,.82,.6).normalize();cam.position.copy(ctr).addScaledVector(dir,d*1.12+size.z*.4);cam.lookAt(ctr)}
+ function fit(){var v=cam.fov*Math.PI/360,hh=(size.y+1.1)/2,hw=size.x/2*1.04,d=Math.max(hh/Math.tan(v),hw/(Math.tan(v)*cam.aspect));var dir=new T.Vector3(0,.93,.38).normalize();cam.position.copy(ctr).addScaledVector(dir,d*1.2+size.z*.4);cam.lookAt(ctr)}
  function loop(t){requestAnimationFrame(loop);if(!box.offsetParent)return;var w=box.clientWidth,h=box.clientHeight;if(!w||!h)return;
   if(w!==lw||h!==lh){lw=w;lh=h;r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();fit()}
-  var dt=Math.min(.05,(t-last)/1000||.016);last=t;
+  var dt=Math.min(.05,(t-last)/1000||.016);last=t;grp.position.y=Math.sin(t/650)*.025;
   for(var id in fing)fing[id].forEach(function(f){var tg=f.p>0?DN:(act[id]?UP:REST);for(var k=0;k<3;k++){f.cur[k]+=(tg[k]-f.cur[k])*Math.min(1,dt*14);f.segs[k].rotation.x=f.cur[k]}f.p-=dt});
-  for(var m=1;m<=9;m++){var on=!!act[m];mats[m].emissive.copy(on?accent:new T.Color(0));mats[m].emissiveIntensity=on?.35+.2*Math.sin(t/110):0}
+  for(var m=1;m<=9;m++){var on=!!act[m];mats[m].emissive.copy(on?accent:new T.Color(0));mats[m].emissiveIntensity=on?.55+.25*Math.sin(t/110):0}
   r.render(sc,cam)}
  requestAnimationFrame(loop);
  H3.set=function(ids){act={};(ids||[]).forEach(function(i){act[i]=1})};
  H3.press=function(id){(fing[id]||[]).forEach(function(f){f.p=.14})};
- H3.recolor=function(){for(var i=0;i<=9;i++)mats[i].color.set(css("--f"+i));accent.set(css("--acc"))};
+ H3.recolor=function(){for(var i=0;i<=9;i++)mats[i].color.set(i%9?css("--f"+i):skin(css("--f"+i)));accent.set(css("--acc"));outM.color.set(css("--po"));hemi.groundColor.set(isDark()?0x8f9ab8:0xd8cfc0);cuffM.color.set(isDark()?0xb9c2dc:0xffffff)};
  return true};
 
 /* ---------- Course 3D ---------- */
