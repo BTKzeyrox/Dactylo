@@ -147,3 +147,9 @@ body.fit .lead{margin:0 0 8px}
 #gtext{flex:none;height:calc(var(--tl)*4.4);overflow:hidden;margin-top:6px}
 body.fit #v-games #gl{flex:1;min-height:0;overflow:auto;align-content:start}
 @media (max-width:760px){body.fit main{height:calc(100dvh - 62px);padding-bottom:6px}body.fit .app{height:auto}}
+/* 3D */
+.hands.h3d{width:100%;max-width:640px;height:clamp(90px,19vh,200px);margin:0 auto}
+.hands.h3d canvas{display:block;width:100%;height:100%}
+#stage .stagebox{position:relative}
+.cv3{position:absolute;z-index:0;display:none}
+#stage canvas#cv{position:relative;z-index:1}
