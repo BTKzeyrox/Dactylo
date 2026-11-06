@@ -2,7 +2,7 @@
 (function(){
 var $=function(i){return document.getElementById(i)},Q=function(s){return document.querySelectorAll(s)};
 var FN=["","Auriculaire gauche","Annulaire gauche","Majeur gauche","Index gauche","Index droit","Majeur droit","Annulaire droit","Auriculaire droit","Pouces"];
-var S={stage:0,acc:{ok:0,err:0,ms:0},les:0,text:"",i:0,err:0,start:0,done:true,game:"Pêche au trésor",filter:"Tous",fs:{}};
+var S={ks:{},kall:{},rep:[],catch:false,last:0,stage:0,acc:{ok:0,err:0,ms:0},les:0,text:"",i:0,err:0,start:0,done:true,game:"Pêche au trésor",filter:"Tous",fs:{}};
 for(var f=1;f<=9;f++)S.fs[f]={ok:0,err:0};
 
 function go(v){stopGame();document.body.classList.toggle("fit",v==="lessons"||v==="games");Q(".view").forEach(function(s){s.classList.toggle("on",s.id==="v-"+v)});Q(".nb[data-v]").forEach(function(b){if(b.dataset.v===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});if(v==="lessons")focusText();if(v==="stats"){bars();lb()}window.scrollTo(0,0)}
@@ -55,25 +55,49 @@ function focusText(){setTimeout(function(){$("txt").focus({preventScroll:true})}
 function steps(){$("steps").innerHTML=STN.map(function(n,i){return'<span class="st'+(i===S.stage?" on":i<S.stage?" ok":"")+'"><i>'+(i+1)+'</i>'+E(n)+'</span>'}).join("")}
 function intro(l){var nk=newK(l),h='<div class="intro"><b>Nouvelles touches</b><div class="nks">';if(!nk.length)h+='<span class="nk0">Toutes les touches du clavier</span>';else nk.forEach(function(c){var f=MAP[c];h+='<span class="nk'+(f&&f<9?" b"+f:"")+'">'+E(c)+'</span>'});return h+'</div><p>Repère ces touches et leur doigt sur le clavier. Pas de frappe ici.</p><button class="btn p" id="introGo">Continuer (Entrée)</button></div>'}
 function introHint(nk){Q(".key.next").forEach(function(k){k.classList.remove("next")});Q("#hands .fg.act").forEach(function(r){r.classList.remove("act")});var fs=[];nk.forEach(function(c){var p=POS[c];if(!p)return;if(KE[p.k])KE[p.k].classList.add("next");if(p.s){var sk=KE[MAP[c]<=4?"sr":"sl"];if(sk)sk.classList.add("next")}if(p.a&&KE.ag)KE.ag.classList.add("next");var f=MAP[c];if(f&&fs.indexOf(f)<0)fs.push(f)});if(window.H3&&H3.set)H3.set(fs);fs.forEach(function(f){Q('#hands .fg[data-f="'+f+'"]').forEach(function(r){r.classList.add("act")})})}
-function startStage(st){var l=LES[S.les];S.stage=st;S.i=0;S.err=0;S.start=0;S.lessonEnd=false;$("res").classList.add("hide");$("wpm").textContent="0";$("acc").textContent="100%";$("prog").textContent="0%";steps();$("clock").textContent="5:00";lvlUI();$("chr").classList.toggle("hide",st===0);$("chr").classList.remove("low");if(st===0){S.text="";S.done=true;$("txt").innerHTML=intro(l);$("txt").scrollTop=0;introHint(newK(l))}else{S.text=gen(l,st);S.done=false;paint()}focusText()}
-function begin(){S.acc={ok:0,err:0,ms:0};$("s1").textContent="Leçon "+(S.les+1)+" · "+LES[S.les][0];startStage(0)}
+function startStage(st,keys){var l=LES[S.les];S.catch=!!keys;S.catchKeys=keys||[];S.ks={};S.last=0;S.stage=st;S.i=0;S.err=0;S.start=0;S.lessonEnd=false;$("res").classList.add("hide");$("wpm").textContent="0";$("acc").textContent="100%";$("prog").textContent="0%";steps();$("clock").textContent="5:00";lvlUI();$("chr").classList.toggle("hide",st===0);$("chr").classList.remove("low");if(st===0){S.text="";S.done=true;$("txt").innerHTML=intro(l);$("txt").scrollTop=0;introHint(newK(l))}else{S.text=S.catch?genCatch():gen(l,st);S.done=false;paint()}focusText()}
+function begin(){S.acc={ok:0,err:0,ms:0};S.rep=[];S.kall={};$("s1").textContent="Leçon "+(S.les+1)+" · "+LES[S.les][0];startStage(0)}
 function met(){var m=S.start?(Date.now()-S.start)/60000:0,t=S.i+S.err;return{w:m>0?Math.round(S.i/5/m):0,c:m>0?Math.round(S.i/m):0,a:t?Math.round(S.i/t*100):100}}
 function upd(){var m=met();$("wpm").textContent=m.w;$("acc").textContent=m.a+"%";$("prog").textContent=Math.round(S.i/S.text.length*100)+"%"}
-$("restart").onclick=begin;$("again").onclick=function(){if(S.lessonEnd)begin();else startStage(S.stage)};$("nextS").onclick=function(){startStage(S.stage+1)};$("txt").onclick=function(e){if(e.target.closest("#introGo"))startStage(1)};document.addEventListener("keydown",function(e){if(S.stage===0&&(e.key==="Enter"||e.key===" ")&&$("v-lessons").classList.contains("on")&&!$("lpanel").classList.contains("on")&&!$("login").classList.contains("on")){e.preventDefault();startStage(1)}});$("nextL").onclick=function(){S.les=Math.min(LES.length-1,S.les+1);lchips();begin()};
+$("restart").onclick=begin;$("again").onclick=function(){if(S.lessonEnd)begin();else if(S.catch)startStage(S.stage,S.catchKeys);else startStage(S.stage)};$("catchB").onclick=function(){startStage(S.stage,S.lastCrit)};$("nextS").onclick=function(){startStage(S.stage+1)};$("txt").onclick=function(e){if(e.target.closest("#introGo"))startStage(1)};document.addEventListener("keydown",function(e){if(S.stage===0&&(e.key==="Enter"||e.key===" ")&&$("v-lessons").classList.contains("on")&&!$("lpanel").classList.contains("on")&&!$("login").classList.contains("on")){e.preventDefault();startStage(1)}});$("nextL").onclick=function(){S.les=Math.min(LES.length-1,S.les+1);lchips();begin()};
 document.addEventListener("keydown",function(e){
  if(!$("v-lessons").classList.contains("on")||$("lpanel").classList.contains("on")||S.done||e.key.length!==1||e.metaKey||((e.ctrlKey||e.altKey)&&!(e.getModifierState&&e.getModifierState("AltGraph"))))return;
  e.preventDefault();var k=e.key,el=KE[POS[k]?POS[k].k:k];
  if(el){el.classList.add("hit");setTimeout(function(){el.classList.remove("hit")},90)}
  if(!S.start)S.start=Date.now();
- var exp=S.text[S.i],f=MAP[exp]||9;
- if(k===exp){S.fs[f].ok++;sfx("ok");mood("ok");if(window.H3&&H3.press)H3.press(f);S.i++;if(S.text.length-S.i<40)S.text+=" "+gen(LES[S.les],S.stage)}
- else{S.fs[f].err++;sfx("bad");mood("bad");S.err++;var sp=$("txt").children[S.i];if(sp){sp.classList.add("err");setTimeout(function(){sp.classList.remove("err")},200)}}
+ var exp=S.text[S.i],f=MAP[exp]||9,now=Date.now(),ke=S.ks[exp]||(S.ks[exp]={ok:0,err:0,ms:0,n:0,sub:{}});
+ if(k===exp){ke.ok++;if(S.last&&now-S.last<3000){ke.ms+=now-S.last;ke.n++}S.last=now;S.fs[f].ok++;sfx("ok");mood("ok");if(window.H3&&H3.press)H3.press(f);S.i++;if(S.text.length-S.i<40)S.text+=" "+(S.catch?genCatch():gen(LES[S.les],S.stage))}
+ else{ke.err++;ke.sub[k]=(ke.sub[k]||0)+1;S.fs[f].err++;sfx("bad");mood("bad");S.err++;var sp=$("txt").children[S.i];if(sp){sp.classList.add("err");setTimeout(function(){sp.classList.remove("err")},200)}}
  paint();upd()});
 var TL=300000,lastT=Date.now();
 function fmt(ms){var s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+":"+("0"+s%60).slice(-2)}
 setInterval(function(){var n=Date.now(),d=n-lastT;lastT=n;if(S.done||!S.start||S.stage===0)return;if(!$("v-lessons").classList.contains("on")||$("lpanel").classList.contains("on")||$("login").classList.contains("on")){S.start+=d;return}var rem=TL-(n-S.start);$("clock").textContent=fmt(rem);$("chr").classList.toggle("low",rem<=30000);var el=n-S.start;if(el>=180000&&el<TL){var L=LV[lvl()],t=S.i+S.err,ac=t?S.i/t*100:100,cp=S.i/(el/60000);if(ac>=L.a&&cp>=L.c*(el<240000?1:.8)){upd();stageEnd();return}}if(rem<=0){S.start=n-TL;upd();stageEnd()}},250);
-function stageEnd(){S.done=true;var m=met();S.acc.ok+=S.i;S.acc.err+=S.err;S.acc.ms+=Math.min(TL,Date.now()-S.start);sfx("win");if(S.stage<STN.length-1){var L=LV[lvl()],el=Math.min(TL,Date.now()-S.start),ok=m.a>=L.a&&m.c>=L.c;$("resT").textContent="Étape "+(S.stage+1)+" terminée en "+fmt(el-999)+" · "+m.c+" CPM · "+m.a+" % de précision";$("resP").textContent=ok?"Niveau "+lvl()+" atteint ✅":m.a>=L.a?"Précision atteinte, vitesse en dessous de "+L.c+" CPM.":"Niveau "+lvl()+" non atteint ❌ : vise "+L.a+" % de précision.";$("nextS").textContent="Étape suivante : "+STN[S.stage+1];$("nextS").classList.remove("hide");$("nextL").classList.add("hide");$("res").classList.remove("hide");return}lessonEnd()}
-function lessonEnd(){var t=S.acc.ok+S.acc.err,m={w:S.acc.ms>0?Math.round(S.acc.ok/5/(S.acc.ms/60000)):0,a:t?Math.round(S.acc.ok/t*100):100};S.lessonEnd=true;recLes(m);$("resT").textContent="Leçon terminée · "+m.w+" mots/min · "+m.a+" % de précision";$("resP").textContent=m.a<90?"Ralentissez un peu : 95 % de précision avant d’accélérer.":"Très bien ! Passez à la leçon suivante ou rejouez pour progresser.";$("nextS").classList.add("hide");$("nextL").classList.toggle("hide",S.les>=LES.length-1);$("res").classList.remove("hide");bars()}
+function kn(c){return c===" "?"espace":c}
+function genCatch(){var l=LES[S.les],hb=l[2]==="ALL"?chars(l):l[2].split(""),ks=S.catchKeys.filter(function(c){return c!==" "}),o=[],n=0,w;if(!ks.length)ks=hb;while(n<60){var k=rnd(ks),pp=hb.filter(function(x){return x!==k}),p=pp.length?rnd(pp):k;w=Math.random()<.25?k+k+k:k+p+k+p;o.push(w);n+=w.length+1}return o.join(" ")}
+function crit(ks){return Object.keys(ks).filter(function(c){return ks[c].err>0}).sort(function(x,y){return ks[y].err-ks[x].err}).slice(0,5)}
+function slow(ks){return Object.keys(ks).filter(function(c){return c!==" "&&ks[c].n>=3}).sort(function(x,y){return ks[y].ms/ks[y].n-ks[x].ms/ks[x].n}).slice(0,3)}
+function subs(o){return Object.keys(o).sort(function(x,y){return o[y]-o[x]}).slice(0,3).map(function(k){return E(kn(k))+" ×"+o[k]}).join(", ")}
+function keysHTML(ks){var c=crit(ks),s=slow(ks),h='<h4>Caractères critiques</h4>';h+=c.length?'<ul>'+c.map(function(k){return'<li><b>'+E(kn(k))+'</b> : '+ks[k].err+' erreur'+(ks[k].err>1?"s":"")+' (tapé : '+subs(ks[k].sub)+')</li>'}).join("")+'</ul>':'<p class="rn">Aucune erreur. Bravo !</p>';h+='<h4>Touches lentes</h4>';h+=s.length?'<ul>'+s.map(function(k){return'<li><b>'+E(kn(k))+'</b> : '+Math.round(ks[k].ms/ks[k].n)+' ms en moyenne</li>'}).join("")+'</ul>':'<p class="rn">Pas assez de données.</p>';return h}
+function mergeKs(ks){Object.keys(ks).forEach(function(c){var d=S.kall[c]||(S.kall[c]={ok:0,err:0,ms:0,n:0,sub:{}}),s=ks[c];d.ok+=s.ok;d.err+=s.err;d.ms+=s.ms;d.n+=s.n;Object.keys(s.sub).forEach(function(k){d.sub[k]=(d.sub[k]||0)+s.sub[k]})})}
+function row(l,v,ok){return'<tr><td>'+l+'</td><td>'+v+'</td><td>'+(ok===null?"":ok?"✅":"❌")+'</td></tr>'}
+function stageEnd(){S.done=true;var m=met(),L=LV[lvl()],el=Math.min(TL,Date.now()-S.start),pa=m.a>=L.a,pv=m.c>=L.c,ok=pa&&pv,t=S.i+S.err;sfx("win");
+ if(!S.catch){S.acc.ok+=S.i;S.acc.err+=S.err;S.acc.ms+=el;mergeKs(S.ks);S.rep[S.stage]={c:m.c,w:m.w,a:m.a,ok:ok,t:el}}
+ var nm=S.catch?"Rattrapage":"Étape "+(S.stage+1)+" · "+STN[S.stage];
+ $("resT").textContent=nm+" — Niveau "+lvl()+(ok?" atteint ✅":" non atteint ❌");
+ var v=ok?"Objectif du niveau atteint.":!pa&&!pv?"Il manque de la précision (≥ "+L.a+" %) et de la vitesse (≥ "+L.c+" CPM).":!pa?"Il manque de la précision : "+m.a+" % pour "+L.a+" % requis. Ralentis un peu.":"Précision atteinte. Il manque de la vitesse : "+m.c+" CPM pour "+L.c+" requis.";
+ $("resP").textContent=v;
+ $("rep").innerHTML='<table class="rt">'+row("Précision",m.a+" % <small>(seuil "+L.a+" %)</small>",pa)+row("Vitesse",m.c+" CPM · "+m.w+" MPM <small>(objectif "+L.c+" CPM)</small>",pv)+row("Temps utilisé",fmt(el-999)+" <small>sur 5:00</small>",null)+row("Caractères","<b>"+t+"</b> tapés · "+S.i+" corrects · "+S.err+" erreurs",null)+'</table>'+keysHTML(S.ks);
+ S.lastCrit=crit(S.ks);$("catchB").classList.toggle("hide",!S.lastCrit.length);
+ $("again").textContent=S.catch?"Refaire le rattrapage":"Recommencer";
+ $("nextS").classList.toggle("hide",S.stage>=STN.length-1);$("nextS").textContent="Étape suivante : "+STN[Math.min(S.stage+1,STN.length-1)];$("nextL").classList.toggle("hide",!(S.catch&&S.stage>=STN.length-1&&S.les<LES.length-1));
+ if(S.stage>=STN.length-1&&!S.catch){S.lessonEnd=false;lessonEnd();return}
+ S.lessonEnd=false;$("res").classList.remove("hide")}
+function lessonEnd(){var t=S.acc.ok+S.acc.err,m={w:S.acc.ms>0?Math.round(S.acc.ok/5/(S.acc.ms/60000)):0,a:t?Math.round(S.acc.ok/t*100):100},L=LV[lvl()],cc=S.acc.ms>0?Math.round(S.acc.ok/(S.acc.ms/60000)):0,ok=m.a>=L.a&&cc>=L.c;S.lessonEnd=true;recLes(m);sfx("win");
+ $("resT").textContent="Leçon terminée — Niveau "+lvl()+(ok?" atteint ✅":" non atteint ❌");
+ $("resP").textContent=m.a+" % de précision · "+cc+" CPM ("+m.w+" MPM) sur toute la leçon.";
+ var h='<table class="rt"><tr><th>Étape</th><th>CPM</th><th>Préc.</th><th></th></tr>';S.rep.forEach(function(r,i){if(!r)return;h+='<tr><td>'+(i+1)+'. '+E(STN[i])+'</td><td>'+r.c+'</td><td>'+r.a+' %</td><td>'+(r.ok?"✅":"❌")+'</td></tr>'});h+='</table>'+keysHTML(S.kall);$("rep").innerHTML=h;
+ S.lastCrit=crit(S.kall);$("catchB").classList.toggle("hide",!S.lastCrit.length);$("again").textContent="Recommencer la leçon";
+ $("nextS").classList.add("hide");$("nextL").classList.toggle("hide",S.les>=LES.length-1);$("res").classList.remove("hide");bars()}
 
 /* Jeux */
 var RW="le la les un une des du de et en que qui dans pour sur avec son sa ses mais ou donc car ce cette nous vous ils elle il je tu on pas plus tout bien faire dire voir aller venir jour temps vie main nuit monde pays ville maison porte table livre ecole classe travail projet idee mot phrase texte clavier souris ecran lettre rapide lent simple facile calme grand petit beau long haut bas matin soir pluie soleil vent mer terre ciel feu eau pain lait route velo train avion bateau musique".split(" ");

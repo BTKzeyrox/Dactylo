@@ -187,3 +187,15 @@ body.fit #v-games #gl{flex:1;min-height:0;overflow:auto;align-content:start}
 .lv{margin:0;display:flex;gap:4px;flex-wrap:nowrap}.lv .chip{padding:4px 10px;font-size:.78rem;white-space:nowrap}
 .lv .chip[aria-pressed="true"]{border-color:var(--acc);background:var(--acc);color:var(--onacc)}
 #goal{display:block;margin-top:2px}
+
+/* Rapport de fin d'étape */
+#res{width:min(640px,94%);max-height:94%;overflow:auto;text-align:left}
+#res #resT{display:block;text-align:center}#res #resP{text-align:center}
+#res .btn{margin:6px 6px 0 0}
+#rep h4{margin:10px 0 4px;font:700 .85rem var(--fb)}
+#rep ul{margin:0;padding-left:1.1em;font-size:.88rem;line-height:1.5}
+#rep .rn{margin:0;font-size:.85rem;color:var(--mute)}
+.rt{width:100%;border-collapse:collapse;font-size:.88rem}
+.rt td,.rt th{padding:4px 6px;border-bottom:1px solid var(--line);text-align:left}
+.rt td:last-child,.rt th:last-child{text-align:center;width:2em}
+.rt small{color:var(--mute)}
