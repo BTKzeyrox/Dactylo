@@ -83,9 +83,28 @@
 - [ ] Régler la course 3D après essai (angle de caméra, couleurs, voitures)
 - [ ] Passer les autres jeux en 3D si souhaité
 
+## Phase 9 : Méthode de leçon (type Typing Master)
+- [x] Liste des leçons dans un panneau latéral, texte à taper en haut
+- [x] 6 phases par leçon, au choix et dans l'ordre libre (Nouvelles touches, Drills, Mots, Phrases, Paragraphe, Exercice texte)
+- [x] 3 niveaux : 1 débutant 92 % (80 CPM), 2 intermédiaire 95 % (150 CPM), 3 avancé 98 % (225 CPM)
+- [x] Chrono de 5 min par phase, fin anticipée entre 3 et 4 min si le niveau est atteint
+- [x] Rapport de fin de phase : précision, CPM/MPM, caractères critiques, touches lentes, verdict, rattrapage
+- [x] Exercice texte avec Backspace limité à la dernière lettre tapée
+- [x] Test global de 10 min à 1 h : histoire, peu de chiffres et de signes, courbe de vitesse
+- [x] QWERTY et English prévus dans le code mais bloqués (« bientôt »)
+- [x] Plus de vocabulaire, tirage sans répétition, voyelles dès la leçon 3, leçons 1 et 2 sans phases de mots
+- [ ] **Mots** : chaque mot est tapé 3 fois de suite, puis le mot suivant
+- [ ] **Phrases** : une seule phrase à l'écran, on la tape, puis Entrée pour passer à une autre phrase (Entrée seulement si la phrase est entièrement tapée)
+- [ ] **Paragraphe** : le modèle s'affiche en haut, un champ de saisie en dessous ; on lit le modèle puis on tape dans le champ
+- [ ] **Exercice texte** : même principe (modèle et champ de saisie) avec plus de texte que le paragraphe ; Backspace limité à la dernière lettre
+- [ ] **Barre de progression** et **compte à rebours** placés à droite de l'écran
+- [ ] **Pause automatique** après 4 s sans frappe, reprise dès que l'utilisateur tape
+- [ ] Boutons **Suivant** et **Annuler** en bas, à côté de la progression et du compte à rebours
+- [ ] À confirmer : quantité de contenu selon le niveau, Suivant = terminer la phase avec rapport, Annuler = abandonner et recommencer avec un texte neuf, barre/chrono/pause aussi pour Drills et Nouvelles touches
+
 ## Plus tard
 - [ ] Vrai multijoueur en ligne avec Supabase
 - [ ] Comptes en ligne et classement mondial
-- [ ] Disposition QWERTY
+- [ ] Disposition QWERTY et textes en anglais (bloqués dans Réglages pour l'instant)
 - [ ] Touches Entrée, Retour arrière et Tab
 - [ ] Version mobile et tactile
