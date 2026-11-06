@@ -16,6 +16,7 @@
   <div class="logo"><i><i class="pxi" data-i="kb"></i></i>Dactylo</div>
   <button class="nb" data-v="home" aria-current="page"><i class="pxi" data-i="home"></i>Accueil</button>
   <button class="nb" data-v="lessons"><i class="pxi" data-i="kb"></i>Leçons</button>
+  <button class="nb" data-v="test"><i class="pxi" data-i="trophy"></i>Test global</button>
   <button class="nb" data-v="games"><i class="pxi" data-i="pad"></i>Jeux</button>
   <button class="nb" data-v="multi"><i class="pxi" data-i="flag"></i>Multijoueur</button>
   <button class="nb" data-v="stats"><i class="pxi" data-i="chart"></i>Bilan</button>
@@ -61,6 +62,23 @@
   </div>
   <div class="lback" id="lback"></div>
   <aside class="lpanel" id="lpanel" role="dialog" aria-label="Liste des leçons"><div class="lph"><b>Leçons</b><button class="btn" id="lclose" aria-label="Fermer">✕</button></div><div id="llist"></div></aside>
+</section>
+
+<section class="view" id="v-test">
+  <h1>Test global</h1>
+  <p class="lead">Mesure ta vitesse de frappe sur une histoire. Retour arrière : dernière lettre seulement.</p>
+  <div class="card" id="tsetup">
+    <h2>Durée</h2><div class="chips" id="tdur"><button class="chip" data-d="10" aria-pressed="true">10 min</button><button class="chip" data-d="20" aria-pressed="false">20 min</button><button class="chip" data-d="30" aria-pressed="false">30 min</button><button class="chip" data-d="60" aria-pressed="false">1 h</button></div>
+    <h2 style="margin-top:14px">Niveau</h2><div class="chips" id="tlvl"><button class="chip" data-l="1" aria-pressed="true">1 Débutant · 92 % · 80 CPM</button><button class="chip" data-l="2" aria-pressed="false">2 Intermédiaire · 95 % · 150 CPM</button><button class="chip" data-l="3" aria-pressed="false">3 Avancé · 98 % · 225 CPM</button></div>
+    <p class="note" id="tlast" style="margin:12px 0"></p>
+    <button class="btn p" id="tgo">Commencer (Entrée)</button>
+  </div>
+  <div class="card hide" id="trun">
+    <div class="row" style="justify-content:space-between;margin-bottom:8px"><b id="tclock" class="tclock">10:00</b><span id="tgoal" class="note"></span><button class="btn" id="tstop">Arrêter</button></div>
+    <div class="text" id="ttxt"></div>
+    <p class="note" style="margin:8px 0 0">Le chrono démarre à la première lettre.</p>
+  </div>
+  <div class="card hide" id="trep"></div>
 </section>
 
 <section class="view" id="v-games">

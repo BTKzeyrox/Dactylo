@@ -208,3 +208,9 @@ button.st:hover:not(:disabled){transform:translateY(-1px);border-color:var(--acc
 button.st:disabled{opacity:.5;cursor:not-allowed}
 .st small{font-weight:500;color:var(--mute);margin-left:2px}
 .st.ko i{background:var(--bad);color:#fff}
+
+/* Test global */
+#ttxt{height:calc(var(--tl)*6);overflow:hidden}
+.tclock{font:400 1.8rem var(--fs)}
+#v-test .chips{display:flex;gap:8px;flex-wrap:wrap}
+#trep{max-width:720px}
