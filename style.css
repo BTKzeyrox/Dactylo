@@ -199,3 +199,5 @@ body.fit #v-games #gl{flex:1;min-height:0;overflow:auto;align-content:start}
 .rt td,.rt th{padding:4px 6px;border-bottom:1px solid var(--line);text-align:left}
 .rt td:last-child,.rt th:last-child{text-align:center;width:2em}
 .rt small{color:var(--mute)}
+
+.text .wrong{background:var(--badbg);color:var(--bad);opacity:.85}
