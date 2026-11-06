@@ -49,14 +49,14 @@
 - [x] Exporter et importer la sauvegarde
 
 ## Phase 5 : Jeux en pixel art
-- [ ] Course : sprites animés, route à défilement, déformation et fumée en pixel art
-- [ ] Défense du château
-- [ ] Zombies
-- [ ] Pêche au trésor
-- [ ] Ballons
-- [ ] Fusée spatiale
-- [ ] Pilote d'avion
-- [ ] Effets : particules, secousses d'écran, flammes de turbo
+- [x] Course : sprites animés, route à défilement, déformation et fumée en pixel art
+- [x] Défense du château
+- [x] Zombies
+- [x] Pêche au trésor
+- [x] Ballons
+- [x] Fusée spatiale
+- [x] Pilote d'avion
+- [x] Effets : particules, secousses d'écran, flammes de turbo
 - [x] Sons 8 bits avec bouton pour couper le son
 - [ ] Jeux restants : Pizzeria express, Alpiniste, Duel de ninjas
 
