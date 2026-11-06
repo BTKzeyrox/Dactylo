@@ -153,3 +153,15 @@ body.fit #v-games #gl{flex:1;min-height:0;overflow:auto;align-content:start}
 #stage .stagebox{position:relative}
 .cv3{position:absolute;z-index:0;display:none}
 #stage canvas#cv{position:relative;z-index:1}
+
+/* Panneau des leçons */
+.lbar b{flex:1;min-width:0;font:600 .95rem var(--fb);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lback{position:fixed;inset:0;background:rgba(20,16,10,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:60}
+.lback.on{opacity:1;pointer-events:auto}
+.lpanel{position:fixed;top:0;left:0;bottom:0;width:min(320px,86vw);background:var(--card);border-right:3px solid var(--line2);box-shadow:6px 0 24px rgba(0,0,0,.18);transform:translateX(-105%);transition:transform .22s;z-index:61;display:flex;flex-direction:column;padding:12px}
+.lpanel.on{transform:none}
+.lph{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#llist{flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.li{display:flex;gap:10px;align-items:center;text-align:left;font:600 .92rem var(--fb);padding:9px 12px;border-radius:14px;border:3px solid var(--line);background:var(--solid);color:var(--ink);cursor:pointer}
+.li span{min-width:1.6em;color:var(--mute)}
+.li.on{border-color:var(--acc);background:var(--acc);color:var(--onacc)}.li.on span{color:var(--onacc)}
