@@ -201,3 +201,10 @@ body.fit #v-games #gl{flex:1;min-height:0;overflow:auto;align-content:start}
 .rt small{color:var(--mute)}
 
 .text .wrong{background:var(--badbg);color:var(--bad);opacity:.85}
+
+/* Phases cliquables */
+button.st{font-family:inherit;cursor:pointer;color:var(--ink);transition:transform .1s}
+button.st:hover:not(:disabled){transform:translateY(-1px);border-color:var(--acc)}
+button.st:disabled{opacity:.5;cursor:not-allowed}
+.st small{font-weight:500;color:var(--mute);margin-left:2px}
+.st.ko i{background:var(--bad);color:#fff}
