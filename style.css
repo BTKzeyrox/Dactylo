@@ -216,3 +216,9 @@ button.st:disabled{opacity:.5;cursor:not-allowed}
 #trep{max-width:720px}
 
 .chip:disabled{opacity:.5;cursor:not-allowed}
+
+/* Barre des phases : une seule ligne, défilable */
+.steps{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding:2px 2px 6px;margin-bottom:4px}
+.st{flex:none;font-size:.8rem;padding:5px 12px 5px 5px;white-space:nowrap}
+@media (max-width:900px){.lbar{gap:6px}.lbar .btn{padding:6px 10px;font-size:.85rem}#ltitle{display:none}.lv .chip{padding:3px 8px;font-size:.72rem}}
+@media (max-width:900px){.lbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.lbar>*{flex:none}}
