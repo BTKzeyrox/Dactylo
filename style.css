@@ -181,3 +181,9 @@ body.fit #v-games #gl{flex:1;min-height:0;overflow:auto;align-content:start}
 /* Chrono */
 #chr strong{font:400 1.5rem var(--fs);line-height:1.3}
 #chr.low strong{color:var(--bad)}
+
+/* Niveaux */
+.lbar{flex-wrap:wrap}
+.lv{margin:0;display:flex;gap:4px;flex-wrap:nowrap}.lv .chip{padding:4px 10px;font-size:.78rem;white-space:nowrap}
+.lv .chip[aria-pressed="true"]{border-color:var(--acc);background:var(--acc);color:var(--onacc)}
+#goal{display:block;margin-top:2px}
