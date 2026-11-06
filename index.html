@@ -44,6 +44,7 @@
 <section class="view" id="v-lessons">
   <div class="lbar"><button class="btn" id="lopen" aria-haspopup="dialog" aria-controls="lpanel">☰ Leçons</button><b id="ltitle"></b><button class="btn" id="lprev" aria-label="Leçon précédente">‹</button><button class="btn" id="lnext" aria-label="Leçon suivante">›</button><button class="btn" id="restart">Recommencer</button></div>
   <div class="card lcard">
+    <div class="steps" id="steps"></div>
     <div class="text" id="txt" tabindex="0" aria-label="Texte à recopier"></div>
     <div class="stats"><div class="mascot" data-m></div><div><strong id="wpm">0</strong><span>mot/min</span></div><div><strong id="acc">100%</strong><span>précision</span></div><div><strong id="prog">0%</strong><span>avancement</span></div></div>
     <div class="row" style="margin-bottom:8px">
@@ -56,7 +57,7 @@
       <div class="kb" id="kb" aria-hidden="true"></div>
       <div class="legend" id="leg"></div>
     </div>
-    <div class="res hide" id="res"><b id="resT"></b><p id="resP" style="margin:4px 0 10px"></p><button class="btn p" id="nextL">Leçon suivante</button> <button class="btn" id="again">Rejouer</button></div>
+    <div class="res hide" id="res"><b id="resT"></b><p id="resP" style="margin:4px 0 10px"></p><button class="btn p hide" id="nextS">Étape suivante</button> <button class="btn p" id="nextL">Leçon suivante</button> <button class="btn" id="again">Rejouer</button></div>
   </div>
   <div class="lback" id="lback"></div>
   <aside class="lpanel" id="lpanel" role="dialog" aria-label="Liste des leçons"><div class="lph"><b>Leçons</b><button class="btn" id="lclose" aria-label="Fermer">✕</button></div><div id="llist"></div></aside>
