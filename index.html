@@ -42,9 +42,8 @@
 </section>
 
 <section class="view" id="v-lessons">
-  <h1>Leçons</h1>
-  <div class="chips" id="lchips" role="group" aria-label="Choisir une leçon"></div>
-  <div class="card">
+  <div class="lbar"><button class="btn" id="lprev" aria-label="Leçon précédente">‹</button><select id="lsel" aria-label="Choisir une leçon"></select><button class="btn" id="lnext" aria-label="Leçon suivante">›</button></div>
+  <div class="card lcard">
     <div class="row" style="justify-content:space-between;margin-bottom:8px">
       <div class="chips" style="margin:0" id="aide" role="group" aria-label="Niveau d’aide">
         <button class="chip" aria-pressed="true" data-a="full">Mains et couleurs</button><button class="chip" aria-pressed="false" data-a="color">Couleurs seules</button><button class="chip" aria-pressed="false" data-a="none">Sans clavier</button>
@@ -59,12 +58,11 @@
       <div class="legend" id="leg"></div>
     </div>
     <div class="res hide" id="res"><b id="resT"></b><p id="resP" style="margin:4px 0 10px"></p><button class="btn p" id="nextL">Leçon suivante</button> <button class="btn" id="again">Rejouer</button></div>
-    <p class="note">Cliquez sur le texte puis tapez. Sur téléphone, un clavier adapté au tactile remplacera ce clavier.</p>
   </div>
 </section>
 
 <section class="view" id="v-games">
-  <h1>Jeux</h1>
+  <h1 id="gh1">Jeux</h1>
   <p class="lead" id="glead">Cliquez sur un jeu pour jouer. Tout se joue au clavier, sans souris.</p>
   <div class="chips" id="gf" role="group" aria-label="Filtrer les jeux"></div>
   <div class="games" id="gl"></div>
@@ -73,7 +71,7 @@
 <div class="stats" style="margin:0"><div><strong id="gw">0</strong><span>mot/min</span></div><div><strong id="ga">100%</strong><span>précision</span></div><div><strong id="gv">0</strong><span id="gvl">vies</span></div></div>
 <button class="btn" id="gq">Quitter</button></div>
 <div class="stagebox"><canvas id="cv" width="900" height="420" aria-label="Zone de jeu"></canvas></div>
-<div class="text hide" id="gtext" style="font-size:1.2rem;line-height:1.9;min-height:0;margin-top:8px"></div>
+<div class="text hide" id="gtext"></div>
 <div class="res hide" id="gres"><b id="gresT"></b><p id="gresP" style="margin:4px 0 10px"></p><button class="btn p" id="gagain">Rejouer</button> <button class="btn" id="gback">Retour aux jeux</button></div>
 </div>
 </section>
