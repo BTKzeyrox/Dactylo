@@ -93,14 +93,20 @@
 - [x] Test global de 10 min à 1 h : histoire, peu de chiffres et de signes, courbe de vitesse
 - [x] QWERTY et English prévus dans le code mais bloqués (« bientôt »)
 - [x] Plus de vocabulaire, tirage sans répétition, voyelles dès la leçon 3, leçons 1 et 2 sans phases de mots
-- [ ] **Mots** : chaque mot est tapé 3 fois de suite, puis le mot suivant
-- [ ] **Phrases** : une seule phrase à l'écran, on la tape, puis Entrée pour passer à une autre phrase (Entrée seulement si la phrase est entièrement tapée)
-- [ ] **Paragraphe** : le modèle s'affiche en haut, un champ de saisie en dessous ; on lit le modèle puis on tape dans le champ
-- [ ] **Exercice texte** : même principe (modèle et champ de saisie) avec plus de texte que le paragraphe ; Backspace limité à la dernière lettre
-- [ ] **Barre de progression** et **compte à rebours** placés à droite de l'écran
-- [ ] **Pause automatique** après 4 s sans frappe, reprise dès que l'utilisateur tape
-- [ ] Boutons **Suivant** et **Annuler** en bas, à côté de la progression et du compte à rebours
-- [ ] À confirmer : quantité de contenu selon le niveau, Suivant = terminer la phase avec rapport, Annuler = abandonner et recommencer avec un texte neuf, barre/chrono/pause aussi pour Drills et Nouvelles touches
+- [x] **Mots** : chaque mot est tapé 3 fois de suite, puis le mot suivant
+- [x] **Phrases** : une seule phrase à l'écran, on la tape, puis Entrée pour passer à une autre phrase (Entrée seulement si la phrase est entièrement tapée)
+- [x] **Paragraphe** : le modèle s'affiche en haut, un champ de saisie en dessous ; on lit le modèle puis on tape dans le champ
+- [x] **Exercice texte** : même principe (modèle et champ de saisie) avec plus de texte que le paragraphe ; Backspace limité à la dernière lettre
+- [x] **Barre de progression** et **compte à rebours** placés à droite de l'écran
+- [x] **Pause automatique** après 4 s sans frappe, reprise dès que l'utilisateur tape
+- [x] Boutons **Suivant** et **Annuler** en bas, à côté de la progression et du compte à rebours
+- [x] Choix appliqués (à ajuster si besoin) :
+  - **Quantité de contenu** : quota = objectif de vitesse du niveau × 3,5 min, soit 280 / 525 / 790 caractères pour Mots, Phrases et Paragraphe ; Drills × 0,8 ; Exercice texte × 1,4 ; Rattrapage × 0,6. La phase se termine quand le quota est tapé (ou au bout de 5 min). L'ancienne fin anticipée entre 3 et 4 min est remplacée par ce quota.
+  - **Suivant** = terminer la phase avec rapport (sans frappe : passe directement à la phase suivante) ; à l'intro « Nouvelles touches », Suivant = commencer.
+  - **Annuler** = abandonner la phase et recommencer avec un texte neuf.
+  - **Barre, compte à rebours et pause** : aussi pour Drills et Rattrapage ; pas pour « Nouvelles touches » (aucune frappe).
+  - **Paragraphe** : modèle + champ de saisie, une erreur reste dans le champ et compte, pas de retour arrière. **Exercice texte** : même principe, Backspace limité à la dernière lettre.
+  - **Phrases** : vraies phrases quand c'est possible ; chrono et pause continuent entre deux phrases.
 
 ## Plus tard
 - [ ] Vrai multijoueur en ligne avec Supabase
