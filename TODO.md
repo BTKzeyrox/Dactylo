@@ -108,6 +108,27 @@
   - **Paragraphe** : modèle + champ de saisie, une erreur reste dans le champ et compte, pas de retour arrière. **Exercice texte** : même principe, Backspace limité à la dernière lettre.
   - **Phrases** : vraies phrases quand c'est possible ; chrono et pause continuent entre deux phrases.
 
+## Phase 10 : Refonte des phases d'une leçon (affichage progressif, frappe sans blocage)
+- [x] Leçons 1 et 2 fusionnées (« Milieu · les deux mains »), mots jamais coupés en fin de ligne
+- [ ] **Règle générale, toutes les phases : on ne bloque jamais.** Une lettre fausse est acceptée, affichée en rouge, comptée comme erreur, et le curseur avance (la vitesse ne doit pas tomber)
+- [ ] **Resynchronisation par mot** : l'espace passe au mot suivant du modèle ; mot plus court = lettres manquantes comptées en erreur ; mot plus long = lettres en trop comptées en erreur, sans décaler la suite
+  - Exemple : modèle « elles aiment les chocolats », tapé « elled aiment les chocolat » → 2 erreurs seulement (d pour s, s manquant), les autres mots sont justes
+- [ ] Retour arrière : dernière lettre seulement, dans toutes les phases
+- [ ] **Phase 1 · Nouvelles touches** : grosses tuiles colorées avec le doigt et la position des mains
+  - Exemple : [Q] [S] [D] [F] [J] [K] [L] [M] ; Q = auriculaire gauche, F = index gauche, J = index droit ; index sur F et J (repères), pouces sur espace
+  - Un clic sur une tuile montre le bon doigt sur les mains 3D et allume la touche
+- [ ] **Phase 2 · Drills** : afficher seulement le groupe en cours et les 3 suivants, le reste masqué ; la fenêtre avance d'un cran à chaque groupe tapé
+  - Exemple : fjfj dkdk sqsq lmlm
+- [ ] **Phase 3 · Mots** : un mot tapé 3 fois de suite, puis le mot suivant, un seul groupe affiché à la fois
+  - Exemple : salle salle salle, puis mois mois mois
+- [ ] **Phase 4 · Phrases** : une phrase à la fois, bouton Entrée visible dès le début et à la fin (grisé pendant la frappe, actif quand la phrase est finie, cliquable à la souris), puis phrase suivante
+  - Exemple : Il mange du pain frais. [⏎ Entrée]
+- [ ] **Phase 5 · Paragraphe** : 2 à 3 paragraphes courts affichés à la fois avec le champ de saisie dessous ; quand ils sont tapés, 2 à 3 autres arrivent
+  - Exemple : Le chat dort sur le canapé. Il rêve de lait. (puis 2 autres lignes)
+- [ ] **Phase 6 · Exercice texte** : modèle en petits caractères pour afficher 5 à 7 phrases d'un coup, champ de saisie dessous
+  - Exemple : Il était une fois un vieux marin. Il vivait près de la mer. Chaque matin, il marchait sur la plage… (5 à 7 phrases)
+- [ ] À confirmer : phase 3 = même mot ×3 puis suivant ; phase 4 = bouton Entrée visible pendant toute la phrase, actif à la fin
+
 ## Plus tard
 - [ ] Vrai multijoueur en ligne avec Supabase
 - [ ] Comptes en ligne et classement mondial
