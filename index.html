@@ -44,23 +44,22 @@
 
 <section class="view" id="v-lessons">
   <div class="lbar"><button class="btn" id="lopen" aria-haspopup="dialog" aria-controls="lpanel">☰ Leçons</button><b id="ltitle"></b><div class="chips lv" id="lvl" role="group" aria-label="Niveau"><button class="chip" data-l="1" aria-pressed="true" title="92 % · 80 CPM">1 Débutant</button><button class="chip" data-l="2" aria-pressed="false" title="95 % · 150 CPM">2 Intermédiaire</button><button class="chip" data-l="3" aria-pressed="false" title="98 % · 225 CPM">3 Avancé</button></div><button class="btn" id="lprev" aria-label="Leçon précédente">‹</button><button class="btn" id="lnext" aria-label="Leçon suivante">›</button><button class="btn" id="restart">Recommencer</button></div>
-  <div class="card lcard">
-    <div class="lgrid"><div class="lmain">
+  <div class="lgrid" id="lgrid">
+    <div class="lmain">
+      <div class="card ltext lcard">
     <div class="steps" id="steps"></div>
     <div class="text" id="txt" tabindex="0" aria-label="Texte à recopier"></div>
     <div class="text" id="tin" aria-label="Zone de saisie"></div>
-    <div class="row" style="margin-bottom:8px">
-      <div class="chips" style="margin:0" id="aide" role="group" aria-label="Niveau d’aide">
-        <button class="chip" aria-pressed="true" data-a="full">Mains et couleurs</button><button class="chip" aria-pressed="false" data-a="color">Couleurs seules</button><button class="chip" aria-pressed="false" data-a="none">Sans clavier</button>
       </div>
-    </div>
+      <div class="card lhelp" id="helperCard">
     <div id="helper">
       <div class="hands" id="hands"></div>
       <div class="kb" id="kb" aria-hidden="true"></div>
       <div class="legend" id="leg"></div>
     </div>
+      </div>
     </div>
-    <div class="lside s0" id="lside"><div class="mascot" data-m></div><div id="chr" class="hide"><strong id="clock">5:00</strong><span>temps restant</span><span id="goal"></span></div><div class="pbar" id="pbar" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div><div id="ptxt" class="ptxt">0 %</div><div id="pz" class="pz hide">⏸ Pause<small>Tapez pour reprendre</small></div><div class="sbtns"><button class="btn p" id="snext">Suivant</button><button class="btn" id="scancel" disabled>Annuler</button></div><div class="hide"><strong id="wpm">0</strong><strong id="acc">100%</strong><strong id="prog">0%</strong></div></div></div>
+    <div class="card lside s0" id="lside"><div class="mascot big" data-m></div><div id="sinfo" class="sinfo"></div><div id="chr" class="hide"><strong id="clock">5:00</strong><span>temps restant</span><span id="goal"></span></div><div class="pbar" id="pbar" role="progressbar" aria-label="Progression" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></div><div id="ptxt" class="ptxt">0 %</div><div id="pz" class="pz hide">⏸ Pause<small>Tapez pour reprendre</small></div><div class="sbtns"><button class="btn p" id="snext">Suivant</button><button class="btn" id="scancel" disabled>Annuler</button></div><div class="hide"><strong id="wpm">0</strong><strong id="acc">100%</strong><strong id="prog">0%</strong></div></div>
     <div class="res hide" id="res"><b id="resT"></b><p id="resP" style="margin:4px 0 10px"></p><div id="rep"></div><button class="btn p hide" id="nextS">Étape suivante</button> <button class="btn p" id="nextL">Leçon suivante</button> <button class="btn" id="again">Recommencer</button> <button class="btn hide" id="catchB">Rattrapage</button></div>
   </div>
   <div class="lback" id="lback"></div>
@@ -129,6 +128,8 @@
     <p class="note">Disposition du clavier</p><div class="chips" id="ckb"><button class="chip" data-kb="azerty">AZERTY</button><button class="chip" data-kb="qwerty" disabled title="Bientôt disponible">QWERTY · bientôt</button></div>
     <p class="note">Langue des textes</p><div class="chips" id="clg"><button class="chip" data-lg="fr">Français</button><button class="chip" data-lg="en" disabled title="Bientôt disponible">English · bientôt</button></div>
     <p class="note">Pour l’instant, seuls AZERTY et le français sont disponibles.</p></div>
+  <div class="card"><h2>Affichage des leçons</h2>
+    <p class="note">Aide visuelle pendant la frappe</p><div class="chips" id="caide" role="group" aria-label="Aide visuelle"><button class="chip" data-a="full">Mains et couleurs</button><button class="chip" data-a="color">Couleurs seules</button><button class="chip" data-a="none">Sans clavier</button></div></div>
   <div class="card"><h2>Application</h2><button class="btn p hide" id="install">Installer sur cet ordinateur</button><p class="note">Une fois installée, Dactylo fonctionne sans connexion et garde vos données sur l’appareil.</p><p class="note" id="offl"></p></div>
   <div class="card"><h2>Données</h2><div class="row"><button class="btn" id="exp">Exporter</button><button class="btn" id="imp">Importer</button><input type="file" id="impf" accept="application/json" class="hide"></div>
     <div class="row" style="margin-top:14px"><button class="btn" id="rp">Réinitialiser ce profil</button><button class="btn" id="ra">Tout effacer</button></div><p class="note" id="dmsg"></p></div>
