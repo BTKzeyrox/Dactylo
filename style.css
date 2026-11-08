@@ -346,3 +346,4 @@ button.st.on{border-color:var(--pc,var(--acc))}button.st.on i{background:var(--p
 .ph2 #txt{height:auto;overflow:visible}
 .lgrid button.st.on{border-color:var(--pc,var(--acc))}
 @media (max-height:800px){.lcard.mid #tin{height:calc(var(--tl)*1.85*3 + 10px)}.ph5 #tin{border-top-width:8px}}
+.ph4 #txt{height:auto;overflow:visible;min-height:calc(var(--tl)*4)}
