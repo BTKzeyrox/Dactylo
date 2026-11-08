@@ -144,6 +144,15 @@
 - [x] Drills : les groupes finis restent à l'écran (grisés), seuls les 3 suivants sont visibles, par blocs de 10 groupes
 - [x] Option « Bloquer sur les fautes » pour l'Exercice texte seulement (Réglages), désactivée par défaut : la lettre fausse est comptée mais le curseur reste, espace trop tôt et retour arrière ignorés
 
+## Phase 13 : Un design par phase
+- [x] Exercice texte : au moins 5 phrases affichées (7 sur grand écran), phrases générées plus longues quand la leçon n'a pas de phrases réelles
+- [x] Drills : touches de clavier (finies en vert, en cours en relief)
+- [x] Mots : trois tickets avec le même mot
+- [x] Phrases : bulle bleue avec bouton ⏎ Entrée à droite
+- [x] Paragraphe : feuille lignée avec marge et bloc-notes vert pour la saisie
+- [x] Exercice texte : page de livre (serif) et feuille de machine à écrire pour la saisie
+- [x] Couleur propre à chaque phase, reprise sur les pastilles en haut
+
 ## Plus tard
 - [ ] Vrai multijoueur en ligne avec Supabase
 - [ ] Comptes en ligne et classement mondial
