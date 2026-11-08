@@ -80,6 +80,7 @@
 - [x] Course de voitures en 3D : piste, 4 voitures, caméra qui suit
 - [x] Dégâts 3D : carrosserie déformée, fumée, étincelles, turbo avec flammes
 - [x] Mains 3D améliorées : style jouet avec contour, doigts effilés et articulés, ongles, pouce, poignet et manchette (vérifiées en image)
+- [x] Mains posées sur un clavier AZERTY 3D : repos sur Q S D F et J K L M, pouces sur la barre d'espace, doigts de longueur constante (aucune déformation), la main avance pour les touches éloignées, Maj et AltGr pris en charge (vérifié en images)
 - [ ] Régler la course 3D après essai (angle de caméra, couleurs, voitures)
 - [ ] Passer les autres jeux en 3D si souhaité
 
