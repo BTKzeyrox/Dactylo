@@ -310,3 +310,9 @@ body.fit main{max-width:none}
 @media (max-width:1000px){.lside{flex-wrap:wrap;align-content:center;padding:8px 12px;gap:8px 14px}.lside .mascot.big{display:none}.lside .ptxt,.lside .pz{font-size:.75rem}}
 @media (max-width:1000px) and (max-height:800px){.lgrid.pf .lhelp{display:none}.lgrid.pf .lmain{flex:1}}
 @media (max-width:1000px) and (max-height:800px){.lgrid.in0 .lhelp{display:none}.lgrid.in0 .lmain{flex:1}}
+
+/* Thèmes de mots des jeux */
+.gthw{margin:0 0 18px}
+.gthw .note{margin:0 0 8px;font-weight:600}
+#glw{display:inline-flex;align-items:center;gap:10px;margin-top:12px;font:600 .9rem var(--fb)}
+#glw select{font:600 .9rem var(--fb);padding:6px 10px;border-radius:12px;border:3px solid var(--line2);background:var(--solid);color:var(--ink)}

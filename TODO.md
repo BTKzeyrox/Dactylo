@@ -132,6 +132,12 @@
 - [x] Test global : même règle de frappe sans blocage et resynchronisation par mot
 - [ ] Écrans bas et étroits : le clavier se masque quand il n'y a pas de place (phases 5 et 6, ou phase 1 avec beaucoup de touches)
 
+## Phase 11 : Thèmes de mots pour les jeux
+- [x] Pastilles « Thème des mots » sur la page Jeux, choix multiple, enregistré par profil
+- [x] Thèmes : Mots courants, Touches étudiées (jusqu'à la leçon choisie), Chiffres, Fruits, Noms, Pays, Professions
+- [x] Appliqué aux jeux de mots et au texte de la course de voitures (minuscules, sans accents)
+- [ ] À savoir : les chiffres demandent la touche Maj sur AZERTY
+
 ## Plus tard
 - [ ] Vrai multijoueur en ligne avec Supabase
 - [ ] Comptes en ligne et classement mondial
