@@ -139,6 +139,10 @@
 - [x] Appliqué aux jeux de mots et au texte de la course de voitures (minuscules, sans accents)
 - [ ] À savoir : les chiffres demandent la touche Maj sur AZERTY
 
+## Phase 12 : Drills et exercice texte
+- [x] Drills : les groupes finis restent à l'écran (grisés), seuls les 3 suivants sont visibles, par blocs de 10 groupes
+- [x] Option « Bloquer sur les fautes » pour l'Exercice texte seulement (Réglages), désactivée par défaut : la lettre fausse est comptée mais le curseur reste, espace trop tôt et retour arrière ignorés
+
 ## Plus tard
 - [ ] Vrai multijoueur en ligne avec Supabase
 - [ ] Comptes en ligne et classement mondial
