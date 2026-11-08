@@ -153,6 +153,11 @@
 - [x] Exercice texte : page de livre (serif) et feuille de machine à écrire pour la saisie
 - [x] Couleur propre à chaque phase, reprise sur les pastilles en haut
 
+## Phase 14 : Blocage sur les fautes
+- [x] Phases 2 à 5 (Drills, Mots, Phrases, Paragraphe) et rattrapage : bloqué sur les fautes, la lettre fausse est comptée et il faut retaper la bonne touche ; espace trop tôt, lettre en trop et retour arrière ignorés
+- [x] Exercice texte : libre par défaut (lettre fausse acceptée en rouge, resynchronisation par mot) ; option « Bloquer sur les fautes » dans Réglages
+- [x] Test global : reste libre (sans blocage)
+
 ## Plus tard
 - [ ] Vrai multijoueur en ligne avec Supabase
 - [ ] Comptes en ligne et classement mondial
