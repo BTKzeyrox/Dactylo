@@ -166,6 +166,16 @@
 - [x] Clavier du téléphone ouvert : barre du bas, barre des phases et champ miroir masqués pour garder le texte visible
 - [ ] À vérifier sur un vrai téléphone : claviers avec saisie prédictive, jeux sur petit écran
 
+## Phase 16 : Thèmes animés et musique
+- [x] Thème **Soleil** (ex-Crème) amélioré : soleil avec halo qui pulse et rayons qui tournent, nuages qui dérivent, particules de lumière
+- [x] Thème **Lune** enrichi : lune avec halo, étoiles qui scintillent, étoiles filantes toutes les 8 à 15 s, nuages sombres
+- [x] Nouveau thème **Océan** : ciel et nuages, trois couches de vagues, plage avec coquillages, palmier qui se balance, mouettes qui battent des ailes
+- [x] Réglage **Animations** : Activées, Réduites, Coupées (et respect du réglage « réduire les animations » du système)
+- [x] Décor atténué pendant la frappe ; moins d'éléments sur téléphone
+- [x] **Musique cozy et chill** générée par le navigateur (Web Audio, sans fichier) : lo-fi (piano électrique, basse, batterie douce, crépitement), ambiance par thème (oiseaux et harpe, carillons et grillons, vagues et mouettes)
+- [x] Réglages : musique activée/coupée (coupée par défaut), volume, ambiance ; bouton 🎵 dans la barre latérale et en haut à droite sur mobile ; volume divisé par deux pendant la frappe ; pause quand l'onglet est caché
+- [ ] À écouter et ajuster à l'oreille : équilibre des sons, tempo, volumes des ambiances
+
 ## Plus tard
 - [ ] Vrai multijoueur en ligne avec Supabase
 - [ ] Comptes en ligne et classement mondial

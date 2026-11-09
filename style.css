@@ -8,7 +8,7 @@
 :root{--scale:1;--fh:"Pixelify Sans","Poppins",system-ui,sans-serif;--fb:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;--fs:"Press Start 2P","Pixelify Sans",monospace;--fm:"JetBrains Mono",ui-monospace,Consolas,monospace;
 --bg:#FFF8E6;--bg2:#FBEFCB;--card:#FFFCF1;--solid:#FFFDF6;--ink:#4A3B2A;--mute:#8C7A63;--line:#EBDDB5;--line2:#E3CF98;--po:#5A4632;--acc:#F2A93B;--accd:#D68A1C;--onacc:#3B2A14;--acc2:#F4A58A;--accs:rgba(242,169,59,.2);--ok:#4E9E62;--bad:#D9654F;--badbg:rgba(217,101,79,.18);--dot:rgba(214,170,80,.2);--glow:rgba(255,214,102,.38);
 --f0:#F4E3C3;--f1:#F7C6D0;--f2:#F9D5B0;--f3:#F8EAA8;--f4:#CBE8B8;--f5:#BFE0F0;--f6:#D8CCF0;--f7:#B8E8DC;--f8:#F4BDB5;--f9:#EBDDC8}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141A29;--bg2:#1B2236;--card:#1E263A;--solid:#242D45;--ink:#E9ECF5;--mute:#9AA6C2;--line:#33405C;--line2:#46557A;--po:#0F1422;--acc:#F2E4A6;--accd:#C9B968;--onacc:#1B2236;--acc2:#8FB4D9;--accs:rgba(242,228,166,.14);--ok:#7FD3A0;--bad:#F0948C;--badbg:rgba(240,148,140,.18);--dot:rgba(242,228,166,.1);--glow:rgba(242,228,166,.16);
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="ocean"]){--bg:#141A29;--bg2:#1B2236;--card:#1E263A;--solid:#242D45;--ink:#E9ECF5;--mute:#9AA6C2;--line:#33405C;--line2:#46557A;--po:#0F1422;--acc:#F2E4A6;--accd:#C9B968;--onacc:#1B2236;--acc2:#8FB4D9;--accs:rgba(242,228,166,.14);--ok:#7FD3A0;--bad:#F0948C;--badbg:rgba(240,148,140,.18);--dot:rgba(242,228,166,.1);--glow:rgba(242,228,166,.16);
 --f0:#3A445F;--f1:#6B4A5A;--f2:#6B5640;--f3:#6A6440;--f4:#46634A;--f5:#3F6178;--f6:#55507A;--f7:#3B665F;--f8:#6E4A48;--f9:#4A5470}}
 :root[data-theme="dark"]{--bg:#141A29;--bg2:#1B2236;--card:#1E263A;--solid:#242D45;--ink:#E9ECF5;--mute:#9AA6C2;--line:#33405C;--line2:#46557A;--po:#0F1422;--acc:#F2E4A6;--accd:#C9B968;--onacc:#1B2236;--acc2:#8FB4D9;--accs:rgba(242,228,166,.14);--ok:#7FD3A0;--bad:#F0948C;--badbg:rgba(240,148,140,.18);--dot:rgba(242,228,166,.1);--glow:rgba(242,228,166,.16);
 --f0:#3A445F;--f1:#6B4A5A;--f2:#6B5640;--f3:#6A6440;--f4:#46634A;--f5:#3F6178;--f6:#55507A;--f7:#3B665F;--f8:#6E4A48;--f9:#4A5470}
@@ -339,7 +339,7 @@ button.st.on{border-color:var(--pc,var(--acc))}button.st.on i{background:var(--p
 /* 6 · Exercice texte : page de livre et feuille de machine à écrire */
 .ph6 #txt{font-family:Georgia,"Times New Roman",serif;background:rgba(160,122,208,.08);border:1px solid rgba(160,122,208,.5);border-radius:6px;box-shadow:inset 0 0 0 5px rgba(160,122,208,.08),inset 6px 0 0 rgba(160,122,208,.2);padding:12px 22px 12px 26px;text-align:justify;letter-spacing:0}
 .ph6 #tin{font-family:"Courier New",Courier,monospace;background:rgba(255,254,246,.9);color:#2b2b2b;border:1px solid rgba(160,122,208,.5);border-top:6px solid #A07AD0;border-radius:2px 2px 14px 14px;box-shadow:0 6px 0 rgba(160,122,208,.25)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ph6 #tin{background:rgba(40,36,52,.9);color:var(--ink)}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]):not([data-theme="ocean"]) .ph6 #tin{background:rgba(40,36,52,.9);color:var(--ink)}}
 :root[data-theme="dark"] .ph6 #tin{background:rgba(40,36,52,.9);color:var(--ink)}
 .ph3 #txt{height:auto;overflow:visible}
 .ph3 #txt i.w{padding:6px 14px;margin:4px 6px;font-size:1.1em}
@@ -417,3 +417,80 @@ body.kbd aside{display:none}
  .nb{flex:1 1 0;min-width:0;font-size:.58rem;padding:5px 1px;text-align:center}
  .nb .px,.nb i.pxi{flex:none}
 }
+
+/* ===== Thème Océan ===== */
+:root[data-theme="ocean"]{--bg:#D4EFFA;--bg2:#BDE4F4;--card:#FFFFFF;--solid:#F6FCFF;--ink:#17364A;--mute:#55798C;--line:#BFE0EE;--line2:#9CCFE3;--po:#1D4A63;--acc:#16809B;--accd:#0F6479;--onacc:#FFFFFF;--acc2:#FF9E7A;--accs:rgba(22,128,155,.16);--ok:#2E9E7A;--bad:#D9654F;--badbg:rgba(217,101,79,.18);--dot:rgba(22,128,155,.1);--glow:rgba(255,255,255,.55)}
+/* ===== Décor animé ===== */
+#scene{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;transition:opacity .5s}
+.app{position:relative;z-index:1}
+body.typing #scene{opacity:.5}
+#scene.sc-light{background:linear-gradient(180deg,rgba(255,228,160,.32),transparent 60%)}
+#scene.sc-dark{background:radial-gradient(ellipse at 78% 0%,rgba(120,140,210,.2),transparent 58%),linear-gradient(180deg,rgba(8,12,30,.45),transparent 70%)}
+#scene.sc-ocean{background:linear-gradient(180deg,#8FD3F0 0%,#C5E9F8 42%,#E6F6FC 68%,#F8EFCF 100%)}
+#scene .cl{position:absolute;left:0;width:clamp(120px,16vw,250px);opacity:var(--o,.7);animation:drift var(--d,140s) linear var(--dl,0s) infinite;will-change:transform}
+#scene .cl svg{display:block;width:100%;height:auto}
+#scene .cl.lt{color:#fff}
+#scene .cl.dk{color:rgba(130,145,190,.45)}
+@keyframes drift{from{transform:translateX(-35vw) scale(var(--s,1))}to{transform:translateX(125vw) scale(var(--s,1))}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.12);opacity:.85}}
+/* Soleil */
+.sunw{position:absolute;top:-80px;right:-80px;width:360px;height:360px}
+.sunw .rays{position:absolute;inset:0;width:100%;height:100%;animation:spin 90s linear infinite}
+.sunw .halo{position:absolute;inset:36px;border-radius:50%;background:radial-gradient(circle,rgba(255,226,130,.75),rgba(255,226,130,0) 68%);animation:pulse 6s ease-in-out infinite}
+.sunw .disc{position:absolute;inset:110px;border-radius:50%;background:radial-gradient(circle at 38% 36%,#FFF3B8,#FFC94A 62%,#F5A623);box-shadow:0 0 50px 14px rgba(255,200,80,.5)}
+.pt{position:absolute;bottom:-12px;width:var(--sz,5px);height:var(--sz,5px);border-radius:50%;background:rgba(255,214,102,.85);box-shadow:0 0 10px rgba(255,214,102,.9);animation:rise var(--d,18s) linear var(--dl,0s) infinite}
+@keyframes rise{0%{transform:translate(0,0);opacity:0}10%{opacity:.9}90%{opacity:.6}100%{transform:translate(34px,-110vh);opacity:0}}
+/* Lune */
+.moonw{position:absolute;top:34px;right:7%;width:150px;height:150px}
+.mhalo{position:absolute;inset:-70px;border-radius:50%;background:radial-gradient(circle,rgba(220,230,255,.3),rgba(220,230,255,0) 66%);animation:pulse 8s ease-in-out infinite}
+.moon{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 36% 34%,#FFFDF0,#EEE9CF 55%,#D5CFAE);box-shadow:0 0 34px 8px rgba(240,238,205,.35)}
+.moon .cr{position:absolute;border-radius:50%;background:rgba(170,165,130,.35);box-shadow:inset 2px 2px 3px rgba(130,125,95,.35)}
+.moon .c1{width:34px;height:34px;left:28px;top:40px}.moon .c2{width:20px;height:20px;left:92px;top:78px}.moon .c3{width:14px;height:14px;left:64px;top:106px}
+.sx{position:absolute;width:var(--sz,2px);height:var(--sz,2px);border-radius:50%;background:#FFF8D8;animation:twk var(--d,4s) ease-in-out var(--dl,0s) infinite}
+.sx.big{box-shadow:0 0 8px 2px rgba(255,248,216,.8)}
+@keyframes twk{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.25)}}
+.shoot{position:absolute;width:150px;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.95));opacity:0;animation:shoot 1.3s ease-out forwards}
+@keyframes shoot{0%{opacity:0;transform:translate(0,0) rotate(28deg)}15%{opacity:1}100%{opacity:0;transform:translate(340px,180px) rotate(28deg)}}
+/* Océan */
+.wv{position:absolute;left:0;width:200%;height:13vh;animation:wave 28s linear infinite}
+.wv svg{display:block;width:100%;height:100%}
+.wv.w1{bottom:15vh}.wv.w2{bottom:10vh;animation-duration:20s;animation-direction:reverse}.wv.w3{bottom:5vh;animation-duration:14s}
+@keyframes wave{to{transform:translateX(-50%)}}
+.beach{position:absolute;left:0;right:0;bottom:0;height:9vh}
+.beach svg{display:block;width:100%;height:100%}
+.beach .sh{position:absolute;width:11px;height:8px;border-radius:50% 50% 45% 45%;box-shadow:0 1px 0 rgba(0,0,0,.15)}
+.palm{position:absolute;left:3%;bottom:3vh;width:clamp(70px,10vw,140px);transform-origin:50% 100%;animation:sway 7s ease-in-out infinite alternate}
+.palm svg{display:block;width:100%;height:auto}
+@keyframes sway{from{transform:rotate(-2.2deg)}to{transform:rotate(2.2deg)}}
+.bird{position:absolute;left:0;width:46px;color:#fff;filter:drop-shadow(0 1px 1px rgba(40,90,120,.35));animation:fly var(--d,40s) linear var(--dl,0s) infinite;will-change:transform}
+.bird.rv{animation-direction:reverse}
+.bird .bb{animation:bob var(--bd,3s) ease-in-out infinite alternate}
+.bird svg{display:block;width:100%;height:auto;transform:scale(var(--s,1))}
+.bird.rv svg{transform:scaleX(-1) scale(var(--s,1))}
+.bird .wl{transform-origin:22px 14px;animation:flapL .8s ease-in-out infinite alternate}
+.bird .wr{transform-origin:22px 14px;animation:flapR .8s ease-in-out infinite alternate}
+@keyframes fly{from{transform:translateX(-10vw)}to{transform:translateX(112vw)}}
+@keyframes bob{from{transform:translateY(-6px)}to{transform:translateY(6px)}}
+@keyframes flapL{from{transform:rotate(-26deg)}to{transform:rotate(20deg)}}
+@keyframes flapR{from{transform:rotate(26deg)}to{transform:rotate(-20deg)}}
+/* réglage Animations */
+html[data-anim="off"] #scene *{animation:none!important}
+html[data-anim="low"] #scene .bird,html[data-anim="low"] #scene .shoot,html[data-anim="low"] #scene .pt{display:none}
+html[data-anim="low"] #scene .sx{animation:none}
+/* bouton musique */
+#mubtn .mi{font-size:1.2rem;width:26px;text-align:center;line-height:1}
+#mubtn[aria-pressed="true"]{border-color:var(--acc)}
+@media (max-width:760px){
+ #mubtn{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));right:10px;z-index:25;width:46px;height:46px;min-width:0;padding:0;border-radius:50%;background:var(--card);border:3px solid var(--line2);justify-content:center;flex:none;display:flex;flex-direction:row}
+ #mubtn span:last-child{display:none}
+ #mubtn[aria-pressed="true"]{background:var(--accs);border-color:var(--acc)}
+ body.kbd #mubtn{display:none}
+}
+
+/* retouches visuelles */
+#scene.sc-light{background:linear-gradient(180deg,rgba(255,232,170,.35),transparent 55%),linear-gradient(180deg,rgba(168,214,243,.32) 0,transparent 42%)}
+#scene .cl.lt{filter:drop-shadow(0 5px 7px rgba(150,170,200,.28))}
+.palm{left:auto;right:4%}
+.bird{width:64px}
+@media (max-width:760px){.bird{width:46px}.palm{right:2%}}

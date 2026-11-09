@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="scene" aria-hidden="true"></div>
 <div class="app">
 <aside>
   <div class="logo"><i><i class="pxi" data-i="kb"></i></i>Dactylo</div>
@@ -23,6 +24,7 @@
   <button class="nb" data-v="settings"><i class="pxi" data-i="gear"></i>Réglages</button>
   <div class="sp"></div>
   <button class="nb" id="who"></button>
+  <button class="nb" id="mubtn" aria-pressed="false" aria-label="Musique"><span class="mi">🎵</span><span>Musique</span></button>
   <button class="nb themeb" id="theme"><i class="pxi" data-i="moon"></i>Thème</button>
 </aside>
 
@@ -123,10 +125,16 @@
   <h1>Réglages</h1>
   <div class="card"><h2>Joueur</h2><p>Connecté : <b id="who2"></b></p><button class="btn" id="switch">Changer de joueur</button></div>
   <div class="card"><h2>Apparence</h2>
-    <p class="note">Thème</p><div class="chips" id="cth"><button class="chip" data-th="auto">Automatique</button><button class="chip" data-th="light">Crème</button><button class="chip" data-th="dark">Nuit de lune</button></div>
+    <p class="note">Thème</p><div class="chips" id="cth"><button class="chip" data-th="auto">Automatique</button><button class="chip" data-th="light">☀️ Soleil</button><button class="chip" data-th="dark">🌙 Lune</button><button class="chip" data-th="ocean">🌊 Océan</button></div>
     <p class="note">Polices</p><div class="chips" id="cft"><button class="chip" data-ft="douceur">Douceur</button><button class="chip" data-ft="arcade">Arcade rétro</button><button class="chip" data-ft="classique">Classique</button></div>
     <p class="note">Taille du texte : <b id="szv"></b></p><input type="range" id="sz" min="90" max="130" step="5" aria-label="Taille du texte">
     <p class="note">Sons</p><div class="chips" id="csn"><button class="chip" data-sn="1">Activés</button><button class="chip" data-sn="0">Coupés</button></div></div>
+  <div class="card"><h2>Décor et musique</h2>
+    <p class="note">Animations du décor</p><div class="chips" id="can" role="group" aria-label="Animations du décor"><button class="chip" data-an="on">Activées</button><button class="chip" data-an="low">Réduites</button><button class="chip" data-an="off">Coupées</button></div>
+    <p class="note">Musique cozy et chill</p><div class="chips" id="cmu" role="group" aria-label="Musique"><button class="chip" data-mu="1">Activée</button><button class="chip" data-mu="0">Coupée</button></div>
+    <p class="note">Volume : <b id="mvv"></b></p><input type="range" id="mvol" min="0" max="100" step="5" aria-label="Volume de la musique">
+    <p class="note">Ambiance</p><div class="chips" id="cmamb" role="group" aria-label="Ambiance musicale"><button class="chip" data-ma="auto">Automatique</button><button class="chip" data-ma="sun">Soleil</button><button class="chip" data-ma="moon">Lune</button><button class="chip" data-ma="ocean">Océan</button><button class="chip" data-ma="lofi">Lo-fi seul</button></div>
+    <p class="note">La musique est créée par ton navigateur, sans fichier. Elle baisse de moitié pendant la frappe.</p></div>
   <div class="card"><h2>Clavier et langue</h2>
     <p class="note">Disposition du clavier</p><div class="chips" id="ckb"><button class="chip" data-kb="azerty">AZERTY</button><button class="chip" data-kb="qwerty" disabled title="Bientôt disponible">QWERTY · bientôt</button></div>
     <p class="note">Langue des textes</p><div class="chips" id="clg"><button class="chip" data-lg="fr">Français</button><button class="chip" data-lg="en" disabled title="Bientôt disponible">English · bientôt</button></div>
