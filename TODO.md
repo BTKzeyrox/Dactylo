@@ -80,6 +80,7 @@
 - [x] Course de voitures en 3D : piste, 4 voitures, caméra qui suit
 - [x] Dégâts 3D : carrosserie déformée, fumée, étincelles, turbo avec flammes
 - [x] Mains 3D améliorées : style jouet avec contour, doigts effilés et articulés, ongles, pouce, poignet et manchette (vérifiées en image)
+- [x] Mains 3D plus humaines (paume effilée vers le poignet, avant-bras, doigts plus longs, pouce implanté plus bas), peau marron clair, clavier complet (Tab, Verr. Maj, Entrée, Retour, Ctrl, Alt, Win, Menu), affichage de toutes les nouvelles touches (anneaux) dans la phase « Nouvelles touches », même sur écran de moins de 900 px de haut
 - [x] Mains et clavier 3D adoucis : peau couleur humaine, mains et touches translucides, grand clavier aux lettres lisibles, anneau lumineux sur la touche visée (visible à travers la main), les deux pouces restent sur la barre d'espace
 - [x] Mains posées sur un clavier AZERTY 3D : repos sur Q S D F et J K L M, pouces sur la barre d'espace, doigts de longueur constante (aucune déformation), la main avance pour les touches éloignées, Maj et AltGr pris en charge (vérifié en images)
 - [ ] Régler la course 3D après essai (angle de caméra, couleurs, voitures)
