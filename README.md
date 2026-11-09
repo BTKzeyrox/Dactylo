@@ -13,3 +13,10 @@ Application web pour apprendre à taper au clavier en jouant. Un seul fichier HT
 - Pizzeria express, Alpiniste, Duel de ninjas
 - Multijoueur en temps réel (écran de démonstration pour l'instant)
 - QWERTY, touches Entrée / Retour arrière / Tab, sauvegarde, PWA
+
+## Piano
+Jeu de piano avec de vraies notes échantillonnées (Do4 à Mi5), mode libre, mode Apprendre et mode Rythme.
+
+## Crédits
+- Sons de piano : soundfont **FluidR3_GM** (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
+- Mélodies : domaine public.

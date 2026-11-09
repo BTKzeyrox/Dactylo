@@ -176,6 +176,15 @@
 - [x] Réglages : musique activée/coupée (coupée par défaut), volume, ambiance ; bouton 🎵 dans la barre latérale et en haut à droite sur mobile ; volume divisé par deux pendant la frappe ; pause quand l'onglet est caché
 - [ ] À écouter et ajuster à l'oreille : équilibre des sons, tempo, volumes des ambiances
 
+## Phase 17 : Piano
+- [x] Vraies notes de piano : 17 échantillons (Do4 à Mi5, dièses compris), hauteur vérifiée par analyse du spectre, volume égalisé, mis en cache pour le hors ligne
+- [x] Clavier-piano : touches blanches sur Q S D F G H J K L M, dièses sur Z E T Y U O P (positions physiques, étiquettes selon la disposition du clavier)
+- [x] Mode Libre, mode Apprendre (la mélodie attend la bonne touche) et mode Rythme (notes qui tombent, Parfait / Bien / Ok / Raté)
+- [x] 6 mélodies du domaine public : Ode à la joie, Au clair de la lune, Ah ! vous dirai-je maman, Frère Jacques, Jingle Bells, Für Élise (début)
+- [x] Score, série, précision, étoiles, records par joueur ; souris et tactile ; carte dans le catalogue des jeux et entrée dans le menu
+- [ ] Autres octaves (graves et aigus), plus de mélodies, enregistrement de ses propres morceaux
+- [ ] Mode deux joueurs
+
 ## Plus tard
 - [ ] Vrai multijoueur en ligne avec Supabase
 - [ ] Comptes en ligne et classement mondial
