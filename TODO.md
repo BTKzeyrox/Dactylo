@@ -159,6 +159,13 @@
 - [x] Exercice texte : libre par défaut (lettre fausse acceptée en rouge, resynchronisation par mot) ; option « Bloquer sur les fautes » dans Réglages
 - [x] Test global : reste libre (sans blocage)
 
+## Phase 15 : Mobile
+- [x] Saisie sur téléphone : champ invisible qui ouvre le clavier du téléphone et réinjecte les lettres, le retour arrière et Entrée (leçons, test global, jeux) ; bouton « ⌨ Clavier » pour l'ouvrir ; les claviers physiques marchent toujours
+- [x] Mise en page mobile sans défilement latéral (Accueil, Leçons, Test global, Jeux, Bilan, Réglages) ; barre du bas qui tient en largeur
+- [x] Leçons sur téléphone : barre du haut sur deux lignes, bandeau compact (chrono, progression, Suivant / Annuler), mains et clavier dessinés masqués
+- [x] Clavier du téléphone ouvert : barre du bas, barre des phases et champ miroir masqués pour garder le texte visible
+- [ ] À vérifier sur un vrai téléphone : claviers avec saisie prédictive, jeux sur petit écran
+
 ## Plus tard
 - [ ] Vrai multijoueur en ligne avec Supabase
 - [ ] Comptes en ligne et classement mondial

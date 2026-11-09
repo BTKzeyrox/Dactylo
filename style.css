@@ -347,3 +347,73 @@ button.st.on{border-color:var(--pc,var(--acc))}button.st.on i{background:var(--p
 .lgrid button.st.on{border-color:var(--pc,var(--acc))}
 @media (max-height:800px){.lcard.mid #tin{height:calc(var(--tl)*1.85*3 + 10px)}.ph5 #tin{border-top-width:8px}}
 .ph4 #txt{height:auto;overflow:visible;min-height:calc(var(--tl)*4)}
+
+/* ===== Mobile ===== */
+#mkb{position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:0;border:0;padding:0;margin:0;font-size:16px;pointer-events:none;z-index:-1}
+.mkfab{display:none;position:fixed;right:14px;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:30;font:700 .95rem var(--fb);padding:12px 18px;border-radius:99px;border:3px solid var(--acc);background:var(--acc);color:var(--onacc);box-shadow:0 4px 0 rgba(0,0,0,.18);min-height:48px}
+@media (pointer:coarse){body.typing:not(.kbd) .mkfab{display:block}}
+body.kbd aside{display:none}
+@media (max-width:760px){
+ .app{grid-template-columns:minmax(0,1fr)}
+ main{min-width:0;overflow-x:hidden}
+ body.fit main{height:calc(var(--vvh,100dvh) - 78px);overflow-x:hidden}
+ body.kbd.fit main{height:var(--vvh,100dvh);padding-bottom:6px}
+ body.kbd main{padding-bottom:12px}
+ main{padding-top:16px}
+ h1{font-size:1.5rem}
+ .btn,.chip{min-height:44px}
+ .lbar{flex-wrap:wrap;overflow:visible;gap:8px;margin-bottom:10px}
+ .lbar>*{flex:none}
+ #ltitle{display:none}
+ .lbar .lv{order:5;flex:1 0 100%;display:flex;overflow-x:auto;gap:6px}
+ .lbar .lv .chip{flex:1;min-height:40px;font-size:.78rem;padding:4px 8px}
+ .lgrid{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);gap:12px}
+ .lside{flex-direction:row;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 12px;padding:8px 12px}
+ .lside .mascot,.lside .sinfo{display:none}
+ .lside #chr strong{font-size:1.5rem}
+ .lside #chr span{display:inline;font-size:.72rem}
+ .lside #goal{display:none}
+ .lside .pbar{flex:1;min-width:90px;height:14px;width:auto;min-height:0}
+ .lside .pbar i{height:100%;width:calc(var(--p,0)*1%)}
+ .lside .sbtns{flex-direction:row;width:auto;margin-top:0;gap:8px}
+ .lhelp{display:none}
+ .lmain{flex:1}
+ .ltext{padding:12px 14px 16px;--tl:clamp(1.05rem,3.2vw,1.3rem)}
+ .ltext .steps{margin-bottom:10px}
+ button.st{min-height:40px}
+ .lcard.mid{--tl:clamp(.95rem,3vw,1.15rem)}
+ .lcard.mini{--tl:clamp(.9rem,2.8vw,1.05rem)}
+ .ph3 #txt i.w{font-size:1em;padding:6px 10px;margin:4px 4px}
+ .ph4 #txt{padding:12px 14px}
+ .ph6 #txt{padding:10px 14px}
+ .lgrid.in0 .nks:not(.many){grid-template-columns:repeat(2,minmax(0,1fr))}
+ #stage canvas#cv{max-width:100%;height:auto}
+ .gthw .chips,#gf,.chips{flex-wrap:wrap}
+ .ebar{flex-wrap:wrap}
+ .ebar .note{display:none}
+ #trep,#tsetup,#trun{padding:14px}
+ .tclock{font-size:1.4rem}
+ #tlvl .chip{flex:1 0 100%;text-align:left}
+ .br{grid-template-columns:90px 1fr 36px}
+ .hero h1{font-size:1.5rem}
+ .hero .row,.hero{flex-wrap:wrap}
+}
+/* Clavier du téléphone ouvert : on libère la place pour le texte */
+@media (max-width:760px){
+ body.kbd .lbar{display:none}
+ body.kbd .lside{padding:6px 10px;gap:6px 10px}
+ body.kbd .lside #chr span,body.kbd .lside #goal,body.kbd .lside .ptxt{display:none}
+ body.kbd .lside #chr strong{font-size:1.15rem}
+ body.kbd .lside .sbtns .btn{min-height:36px;padding:4px 12px}
+ body.kbd .ltext .steps{display:none}
+ body.kbd.fit main{overflow-y:auto}
+ body.kbd .ltext{padding:10px 12px}
+}
+@media (max-width:760px){body.kbd .lcard.pf #tin{display:none}}
+@media (max-width:760px){
+ .card>.steps:not(#steps){flex-direction:column;overflow:visible;gap:10px}
+ .card>.steps:not(#steps) .step{width:100%;flex:none}
+ aside{justify-content:stretch;overflow-x:hidden}
+ .nb{flex:1 1 0;min-width:0;font-size:.58rem;padding:5px 1px;text-align:center}
+ .nb .px,.nb i.pxi{flex:none}
+}
