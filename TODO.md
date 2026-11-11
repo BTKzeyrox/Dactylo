@@ -1,10 +1,10 @@
 # To-do liste du projet Dactylo
 
 ## Phase 0 : Décisions à confirmer
-- [ ] Pixel art (conseillé) ou 3D pour la course
-- [ ] Icônes pixel art dessinées dans le code ou emojis
-- [ ] Mascotte : personnage, voiture ou chat
-- [ ] Ensemble de polices par défaut (conseillé : « Douceur »)
+- [x] Pixel art ou 3D pour la course : décidé — pixel art pour les jeux, 3D pour la course de voitures et les mains
+- [x] Icônes : décidé — pixel art dessinées dans le code (identiques sur tous les appareils, utilisables hors ligne)
+- [x] Mascotte : décidé — un petit chat pixel qui réagit à la frappe
+- [x] Ensemble de polices par défaut : décidé — « Douceur » (Pixelify Sans, Poppins, Press Start 2P)
 
 ## Phase 1 : Nouveau design
 - [x] Palette Crème : blanc légèrement jaune, accents miel et pêche
@@ -36,7 +36,7 @@
 - [x] Deux mains pixel art : doigts arrondis, pouces, ongles, ombres
 - [x] Une couleur pastel par doigt
 - [x] Doigt à utiliser qui s'illumine, bouge et fait une étincelle
-- [ ] Mains posées sur les repères F et J au début de chaque leçon
+- [x] Mains posées sur les repères F et J au début de chaque leçon : les index reposent sur F et J (touches marquées d'un repère) dans la scène 3D
 - [x] Clavier recoloré avec les nouveaux pastels
 
 ## Phase 4 : Profils et mémoire
@@ -65,13 +65,13 @@
 - [x] Service worker avec mise en cache de toutes les ressources
 - [x] Icônes d'installation
 - [x] Proposition « Installer l'application » dans Chrome et Edge
-- [ ] Test complet sans connexion
+- [x] Test complet sans connexion : simulé (installation du cache puis réseau coupé : 33/33 ressources servies, repli sur l'accueil) ; piano.js et les 17 sons de piano ajoutés au cache préinstallé. À refaire une fois dans un vrai navigateur (mode avion)
 - [x] Mises à jour automatiques au retour de la connexion
 
 ## Phase 7 : Mise en ligne
 - [x] Séparer le projet en fichiers propres (page, styles, scripts, polices, icônes)
 - [x] Envoyer sur GitHub
-- [ ] Vérifier le déploiement automatique sur Vercel
+- [x] Vérifier le déploiement automatique sur Vercel : vérifié via les statuts GitHub (« Deployment has completed » pour le dernier commit)
 - [ ] Tester l'installation sur ordinateur
 
 ## Phase 8 : 3D
