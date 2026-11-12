@@ -39,6 +39,10 @@ Règle : uniquement des airs dont je suis sûr de la mélodie ; tout doit tenir 
 - Même clavier, on se le passe : le jeu ne cherche pas à distinguer les joueurs par touche.
 - Vitesse Lent / Normal / Rapide comme en Rythme.
 
+### 3.5 Demandes du 12/11 (ordre : 1 réglages + durée des notes, 2 métronome, 3 accordage, 4 clavier pro)
+- **2. Métronome : FAIT** (40–220 BPM, 2/3/4/6 temps, accent, volume, voyants).
+- 1, 3 et 4 : à faire. Les 4 mélodies restantes (3.2) attendent après.
+
 ## 4. Vérifications prévues
 1. Chaque touche joue le bon échantillon ; les notes transposées utilisent la bonne vitesse de lecture.
 2. Changement d'octave : étiquettes et hauteurs justes ; retour à l'octave 4 en mode jeu.
