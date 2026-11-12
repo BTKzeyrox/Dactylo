@@ -42,7 +42,8 @@ Règle : uniquement des airs dont je suis sûr de la mélodie ; tout doit tenir 
 ### 3.5 Demandes du 12/11 (ordre : 1 réglages + durée des notes, 2 métronome, 3 accordage, 4 clavier pro)
 - **2. Métronome : FAIT** (40–220 BPM, 2/3/4/6 temps, accent, volume, voyants).
 - **3. Accordage : FAIT** (La4 de 430 à 450 Hz, bouton « Jouer le La », remise à 440).
-- 1 et 4 : à faire. Les 4 mélodies restantes (3.2) attendent après.
+- **Leçons d'accords : FAIT** (mode « Leçons », 6 leçons).
+- À faire ensuite : import de morceaux (MIDI), leçons main droite / main gauche, 1 panneau Réglages + durée des notes, 4 clavier pro. Les 4 mélodies restantes (3.2) attendent après.
 
 ## 4. Vérifications prévues
 1. Chaque touche joue le bon échantillon ; les notes transposées utilisent la bonne vitesse de lecture.
