@@ -43,6 +43,7 @@ Règle : uniquement des airs dont je suis sûr de la mélodie ; tout doit tenir 
 - **2. Métronome : FAIT** (40–220 BPM, 2/3/4/6 temps, accent, volume, voyants).
 - **3. Accordage : FAIT** (La4 de 430 à 450 Hz, bouton « Jouer le La », remise à 440).
 - **Leçons d'accords : FAIT** (mode « Leçons », 6 leçons).
+- **Correctifs piano : FAIT** : relâchement progressif (une note sonne au moins 0,3 s puis s'éteint en douceur), glissando souris/tactile en mode Libre (plusieurs doigts possibles), plus de plantage sans Web Audio (message clair, leçons sans chrono), `piano.js` réécrit lisiblement (même API `window.Piano`).
 - À faire ensuite : import de morceaux (MIDI), leçons main droite / main gauche, 1 panneau Réglages + durée des notes, 4 clavier pro. Les 4 mélodies restantes (3.2) attendent après.
 
 ## 4. Vérifications prévues
@@ -56,7 +57,7 @@ Règle : uniquement des airs dont je suis sûr de la mélodie ; tout doit tenir 
 
 ## 5. Plus tard (idées)
 - **Clavier MIDI** branché en USB (API Web MIDI) pour jouer avec un vrai piano.
-- Accords et pédale de sustain (barre d'espace).
+- Accords : voir les leçons (FAIT). **Pédale de sustain (barre d'espace) : FAIT** : tant qu'elle est enfoncée, les notes relâchées continuent de sonner ; bouton « Pédale » pour le tactile, voyant « PÉD. » sur le clavier.
 - Métronome, niveaux de difficulté, partition affichée.
 - Plus d'octaves complètes (88 touches) et plus de mélodies (import d'un fichier MIDI).
 - Mode défi du jour, classement entre joueurs de l'appareil.
