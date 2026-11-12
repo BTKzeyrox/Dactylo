@@ -15,7 +15,7 @@ Application web pour apprendre à taper au clavier en jouant. Un seul fichier HT
 - QWERTY, touches Entrée / Retour arrière / Tab, sauvegarde, PWA
 
 ## Piano
-Jeu de piano avec de vraies notes échantillonnées (Do4 à Mi5), mode libre, mode Apprendre et mode Rythme.
+Jeu de piano avec de vraies notes échantillonnées (Do3 à Mi6 en mode libre, Do4 à Mi5 dans les jeux), mode libre, mode Apprendre et mode Rythme.
 
 ## Crédits
 - Sons de piano : soundfont **FluidR3_GM** (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.

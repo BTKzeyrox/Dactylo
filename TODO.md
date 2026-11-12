@@ -180,6 +180,7 @@
 
 ## Phase 17 : Piano
 - [x] Vraies notes de piano : 17 échantillons (Do4 à Mi5, dièses compris), hauteur vérifiée par analyse du spectre, volume égalisé, mis en cache pour le hors ligne
+- [x] Piano v2, étape 1 : autres octaves (Do3 à Mi6, 3 positions, flèches ↑ ↓ ou boutons − / +, mode Libre), 24 échantillons, notes sans échantillon transposées depuis la plus proche (≤ 2 demi-tons), 7 nouveaux sons dans le cache hors ligne (sw.js v33). À juger à l'oreille
 - [x] Clavier-piano : touches blanches sur Q S D F G H J K L M, dièses sur Z E T Y U O P (positions physiques, étiquettes selon la disposition du clavier)
 - [x] Mode Libre, mode Apprendre (la mélodie attend la bonne touche) et mode Rythme (notes qui tombent, Parfait / Bien / Ok / Raté)
 - [x] 6 mélodies du domaine public : Ode à la joie, Au clair de la lune, Ah ! vous dirai-je maman, Frère Jacques, Jingle Bells, Für Élise (début)

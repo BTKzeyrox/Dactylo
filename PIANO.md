@@ -15,7 +15,7 @@ Total des 24 échantillons : environ 1,1 Mo.
 
 ## 3. v2 — fonctionnalités prévues
 
-### 3.1 Autres octaves
+### 3.1 Autres octaves (FAIT)
 - Étendue **Do3 → Mi6** avec 3 positions : octaves 3–4, 4–5 (par défaut), 5–6.
 - Commandes : flèches ↑ ↓ ou boutons − / + ; disponible en mode Libre ; les mélodies restent dans l'octave par défaut.
 - Les notes qui n'ont pas d'échantillon sont **transposées depuis la note la plus proche** (au plus 2 demi-tons, soit 12 % de vitesse) : technique standard des échantillonneurs.
