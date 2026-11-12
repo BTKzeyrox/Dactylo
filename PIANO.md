@@ -44,6 +44,7 @@ Règle : uniquement des airs dont je suis sûr de la mélodie ; tout doit tenir 
 - **3. Accordage : FAIT** (La4 de 430 à 450 Hz, bouton « Jouer le La », remise à 440).
 - **Leçons d'accords : FAIT** (mode « Leçons », 6 leçons).
 - **Correctifs piano : FAIT** : relâchement progressif (une note sonne au moins 0,3 s puis s'éteint en douceur), glissando souris/tactile en mode Libre (plusieurs doigts possibles), plus de plantage sans Web Audio (message clair, leçons sans chrono), `piano.js` réécrit lisiblement (même API `window.Piano`).
+- **Écho : FAIT** : ligne à retard avec répétitions de plus en plus sourdes ; bouton « Écho », réglages « Délai » (100–800 ms) et « Répétitions » (0–80 %), mémorisés. Désactivé par défaut ; le tic-tac du métronome n'est pas touché.
 - À faire ensuite : import de morceaux (MIDI), leçons main droite / main gauche, 1 panneau Réglages + durée des notes, 4 clavier pro. Les 4 mélodies restantes (3.2) attendent après.
 
 ## 4. Vérifications prévues

@@ -4,11 +4,11 @@
    Plan du fichier :
      1. Constantes et données (touches, mélodies, leçons)
      2. Interface injectée dans le site
-     3. Audio (échantillons, lecture, relâchement, pédale de sustain)
+     3. Audio (échantillons, lecture, relâchement, pédale de sustain, écho)
      4. État du jeu et règles (libre, apprendre, rythme)
      5. Dessin du canvas
      6. Boucle et commandes (clavier, souris, tactile avec glissando)
-     7. Métronome, accordage
+     7. Métronome, accordage, écho
      8. Moteur des leçons
      9. API publique (window.Piano) */
 (function () {
@@ -177,7 +177,7 @@
     ".pmet{gap:10px;margin:0 0 8px;align-items:center}",
     ".pmet input[type=range]{accent-color:var(--acc);width:140px}",
     "#pt_val{min-width:150px}",
-    "#pm_val,#pt_val{font:400 .85rem var(--fs);min-width:92px;text-align:center}",
+    "#pm_val,#pt_val,#pe_val{font:400 .85rem var(--fs);min-width:92px;text-align:center}",
     ".pdots{display:inline-flex;gap:6px}",
     ".pdots i{width:14px;height:14px;border-radius:4px;background:var(--line2);display:inline-block}",
     ".pdots i.on{background:var(--acc)}",
@@ -233,6 +233,12 @@
         '<select id="pm_beats" aria-label="Mesure"><option value="2">2 temps</option><option value="3">3 temps</option><option value="4" selected>4 temps</option><option value="6">6 temps</option></select>',
         '<span class="pdots" id="pm_dots"></span>',
         '<label class="note">Volume tic-tac <input type="range" id="pm_vol" min="0" max="100" value="60" aria-label="Volume du tic-tac"></label>',
+      '</div>',
+      '<div class="row pmet">',
+        '<button class="chip" id="pe_on" aria-pressed="false" title="Ajoute des répétitions du son, comme dans une grande salle">Écho</button>',
+        '<label class="note">Délai <input type="range" id="pe_time" min="100" max="800" step="10" value="300" aria-label="Délai de l\'écho"></label>',
+        '<label class="note">Répétitions <input type="range" id="pe_fb" min="0" max="80" step="5" value="40" aria-label="Nombre de répétitions de l\'écho"></label>',
+        '<strong id="pe_val">300 ms · 40 %</strong>',
       '</div>',
       '<div class="row pmet">',
         '<b class="note">Accordage</b>',
@@ -294,6 +300,8 @@
   var voices = {};             // note en cours par touche : { s: source, g: gain, t: début }
   var sustainOn = false;       // pédale de sustain enfoncée
   var heldVoices = [];         // notes relâchées mais maintenues par la pédale
+  var echo = { on: false, time: .3, fb: .4 };   // écho : délai (secondes) et répétitions (0 à .8)
+  var echoDelay = null, echoFeedback = null, echoWet = null;
 
   var SAMPLE_NAMES = "C3 Eb3 Gb3 A3 C4 Db4 D4 Eb4 E4 F4 Gb4 G4 Ab4 A4 Bb4 B4 C5 Db5 D5 Eb5 E5 A5 C6 Eb6".split(" ");
 
@@ -307,6 +315,7 @@
         master = audioCtx.createGain();
         master.gain.value = volume;
         master.connect(audioCtx.destination);
+        buildEcho();
       } catch (e) {
         audioCtx = null;
         master = null;
@@ -315,6 +324,39 @@
     }
     if (audioCtx.state === "suspended" && audioCtx.resume) audioCtx.resume();
     return audioCtx;
+  }
+
+  /* Écho : le son passe aussi par une ligne à retard dont la sortie est renvoyée vers son entrée.
+     Chaque répétition est plus faible (réglage « Répétitions ») et plus sourde (filtre passe-bas).
+     Le tic-tac du métronome ne passe pas par l'écho. Si le navigateur ne sait pas le faire,
+     le piano marche quand même, sans écho. */
+  function buildEcho() {
+    try {
+      var tone = audioCtx.createBiquadFilter();
+      tone.type = "lowpass";
+      tone.frequency.value = 3200;
+      echoDelay = audioCtx.createDelay(2);
+      echoFeedback = audioCtx.createGain();
+      echoWet = audioCtx.createGain();
+      master.connect(echoDelay);
+      echoDelay.connect(tone);
+      tone.connect(echoFeedback);
+      echoFeedback.connect(echoDelay);
+      tone.connect(echoWet);
+      echoWet.connect(audioCtx.destination);
+      applyEcho(true);
+    } catch (e) {
+      echoDelay = echoFeedback = echoWet = null;
+    }
+  }
+
+  /* applique les réglages de l'écho ; désactivé = plus de répétitions ni de signal d'écho */
+  function applyEcho(instant) {
+    if (!echoDelay) return;
+    var t = audioCtx.currentTime, tc = instant ? .001 : .05;
+    echoDelay.delayTime.setTargetAtTime(echo.time, t, tc);
+    echoFeedback.gain.setTargetAtTime(echo.on ? echo.fb : 0, t, tc);
+    echoWet.gain.setTargetAtTime(echo.on ? .5 : 0, t, tc);
   }
 
   function decode(arrayBuffer) {
@@ -1142,6 +1184,34 @@
   };
   setTune(TUNE);
 
+  /* Écho : réglages mémorisés ; opts = { on, time (s), fb (0 à .8) } */
+  try {
+    var savedEcho = JSON.parse(localStorage.getItem("dactylo.piano.echo.v1"));
+    if (savedEcho) {
+      echo.on = !!savedEcho.on;
+      echo.time = clampNum(savedEcho.time, .1, .8);
+      echo.fb = clampNum(savedEcho.fb, 0, .8);
+    }
+  } catch (e) {}
+  function setEcho(opts) {
+    if (opts) {
+      if ("on" in opts) echo.on = !!opts.on;
+      if ("time" in opts) echo.time = clampNum(opts.time, .1, .8);
+      if ("fb" in opts) echo.fb = clampNum(opts.fb, 0, .8);
+    }
+    var ms = Math.round(echo.time * 1000), pct = Math.round(echo.fb * 100);
+    $("pe_on").setAttribute("aria-pressed", echo.on);
+    $("pe_time").value = ms;
+    $("pe_fb").value = pct;
+    $("pe_val").textContent = ms + " ms · " + pct + " %";
+    applyEcho();
+    try { localStorage.setItem("dactylo.piano.echo.v1", JSON.stringify({ on: echo.on, time: echo.time, fb: echo.fb })); } catch (e) {}
+  }
+  $("pe_on").onclick = function () { getAudio(); setEcho({ on: !echo.on }); this.blur(); };
+  $("pe_time").oninput = function () { setEcho({ time: this.value / 1000 }); };
+  $("pe_fb").oninput = function () { setEcho({ fb: this.value / 100 }); };
+  setEcho();
+
   /* ================= 8. Moteur des leçons ================= */
 
   /* instant visé pour l'étape i d'une leçon chronométrée : préparation, puis un accord tous les 2 temps */
@@ -1288,6 +1358,7 @@
     start: start, setMode: setMode, parse: parseMelody,
     _buf: buffers, pick: pickSample, setOct: setOct, oct: octShift,
     setSustain: setSustain, sustain: function () { return sustainOn; },
+    setEcho: setEcho, echo: echo,
     _draw: draw, _update: update
   };
 
