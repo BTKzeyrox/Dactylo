@@ -1,5 +1,7 @@
 # To-do liste du projet Dactylo
 
+> Plans détaillés pour la suite : [`PLAN.md`](PLAN.md) (projet) et [`PIANO.md`](PIANO.md) (piano).
+
 ## Phase 0 : Décisions à confirmer
 - [x] Pixel art ou 3D pour la course : décidé — pixel art pour les jeux, 3D pour la course de voitures et les mains
 - [x] Icônes : décidé — pixel art dessinées dans le code (identiques sur tous les appareils, utilisables hors ligne)
