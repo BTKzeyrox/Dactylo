@@ -294,6 +294,7 @@
                 '<button class="pbtn round" id="pm_up" aria-label="Plus rapide">+</button>',
               '</div>',
               '<select class="psel" id="pm_beats" aria-label="Mesure"><option value="2">2 temps</option><option value="3">3 temps</option><option value="4" selected>4 temps</option><option value="6">6 temps</option></select>',
+              '<select class="psel" id="pm_snd" aria-label="Son du tic-tac"><option value="wood">Son : Bois</option><option value="click">Son : Clic</option><option value="bell">Son : Cloche</option></select>',
             '</div>',
           '</div>',
         '</div>',
@@ -406,7 +407,7 @@
     onChange: function (v) { volume = v / 100; if (master) master.gain.value = volume; } });
   knobs.echoTime = makeKnob($("kn_ed"), { label: "Délai", min: 100, max: 800, step: 10, def: 300, fmt: function (v) { return v + " ms"; },
     onChange: function (v) { setEcho({ time: v / 1000 }); } });
-  knobs.echoFb = makeKnob($("kn_ef"), { label: "Répétitions", min: 0, max: 80, step: 5, def: 40, fmt: pct,
+  knobs.echoFb = makeKnob($("kn_ef"), { label: "Répétitions", min: 0, max: 70, step: 5, def: 40, fmt: pct,
     onChange: function (v) { setEcho({ fb: v / 100 }); } });
   knobs.tune = makeKnob($("kn_tu"), { label: "Accord", min: 430, max: 450, step: 1, def: 440, fmt: function (v) { return v + " Hz"; },
     onChange: function (v) { setTune(v); } });
@@ -447,10 +448,27 @@
   var voices = {};             // note en cours par touche : { s: source, g: gain, t: début }
   var sustainOn = false;       // pédale de sustain enfoncée
   var heldVoices = [];         // notes relâchées mais maintenues par la pédale
-  var echo = { on: false, time: .3, fb: .4 };   // écho : délai (secondes) et répétitions (0 à .8)
-  var echoDelay = null, echoFeedback = null, echoWet = null;
+  var echo = { on: false, time: .3, fb: .4 };   // écho : délai (secondes) et répétitions (0 à .7)
+  var echoSend = null, echoWet = null, echoDelayL = null, echoDelayR = null, echoFbL = null, echoFbR = null;
+  var outNode = null;   // limiteur de sortie : tout passe par lui pour que les accords + l'écho ne saturent pas
 
   var SAMPLE_NAMES = "C3 Eb3 Gb3 A3 C4 Db4 D4 Eb4 E4 F4 Gb4 G4 Ab4 A4 Bb4 B4 C5 Db5 D5 Eb5 E5 A5 C6 Eb6".split(" ");
+
+  /* limiteur : compresseur réglé pour ne rien laisser dépasser 0 dB (sans lui, un accord + l'écho peuvent craquer) */
+  function makeLimiter() {
+    try {
+      var lim = audioCtx.createDynamicsCompressor();
+      lim.threshold.value = -4;
+      lim.knee.value = 0;
+      lim.ratio.value = 20;
+      lim.attack.value = .002;
+      lim.release.value = .12;
+      lim.connect(audioCtx.destination);
+      return lim;
+    } catch (e) {
+      return audioCtx.destination;
+    }
+  }
 
   /* Crée le contexte audio au premier appel. Renvoie null si le navigateur n'a pas Web Audio. */
   function getAudio() {
@@ -461,7 +479,8 @@
         audioCtx = new Ctor();
         master = audioCtx.createGain();
         master.gain.value = volume;
-        master.connect(audioCtx.destination);
+        outNode = makeLimiter();
+        master.connect(outNode);
         buildEcho();
       } catch (e) {
         audioCtx = null;
@@ -473,37 +492,52 @@
     return audioCtx;
   }
 
-  /* Écho : le son passe aussi par une ligne à retard dont la sortie est renvoyée vers son entrée.
-     Chaque répétition est plus faible (réglage « Répétitions ») et plus sourde (filtre passe-bas).
+  /* Écho « ping-pong » : le son passe par deux lignes à retard qui se renvoient l'une à l'autre.
+     La 1re répétition sort à gauche, la 2e à droite, la 3e à gauche… Chaque répétition est plus faible
+     (réglage « Répétitions », 70 % au maximum pour rester stable) et plus sourde (filtre passe-bas) ;
+     un filtre passe-haut dans la boucle empêche les graves de s'empiler.
+     Désactiver l'écho coupe seulement l'envoi : les répétitions déjà parties s'éteignent naturellement.
      Le tic-tac du métronome ne passe pas par l'écho. Si le navigateur ne sait pas le faire,
      le piano marche quand même, sans écho. */
   function buildEcho() {
     try {
-      var tone = audioCtx.createBiquadFilter();
-      tone.type = "lowpass";
-      tone.frequency.value = 3200;
-      echoDelay = audioCtx.createDelay(2);
-      echoFeedback = audioCtx.createGain();
-      echoWet = audioCtx.createGain();
-      master.connect(echoDelay);
-      echoDelay.connect(tone);
-      tone.connect(echoFeedback);
-      echoFeedback.connect(echoDelay);
-      tone.connect(echoWet);
-      echoWet.connect(audioCtx.destination);
+      var c = audioCtx;
+      var filt = function (type, f) { var n = c.createBiquadFilter(); n.type = type; n.frequency.value = f; return n; };
+      echoSend = c.createGain();
+      echoWet = c.createGain();
+      echoDelayL = c.createDelay(2);
+      echoDelayR = c.createDelay(2);
+      echoFbL = c.createGain();
+      echoFbR = c.createGain();
+      var hpL = filt("highpass", 160), lpL = filt("lowpass", 3200);
+      var hpR = filt("highpass", 160), lpR = filt("lowpass", 3200);
+      master.connect(echoSend);
+      echoSend.connect(echoDelayL);
+      echoDelayL.connect(hpL); hpL.connect(lpL); lpL.connect(echoFbL); echoFbL.connect(echoDelayR);
+      echoDelayR.connect(hpR); hpR.connect(lpR); lpR.connect(echoFbR); echoFbR.connect(echoDelayL);
+      var toWet = function (src, pan) {
+        if (c.createStereoPanner) { var p = c.createStereoPanner(); p.pan.value = pan; src.connect(p); p.connect(echoWet); }
+        else src.connect(echoWet);
+      };
+      toWet(lpL, -.7);
+      toWet(lpR, .7);
+      echoWet.connect(outNode);
       applyEcho(true);
     } catch (e) {
-      echoDelay = echoFeedback = echoWet = null;
+      echoSend = echoWet = echoDelayL = echoDelayR = echoFbL = echoFbR = null;
     }
   }
 
-  /* applique les réglages de l'écho ; désactivé = plus de répétitions ni de signal d'écho */
+  /* applique les réglages de l'écho. Le délai change doucement (sinon la hauteur des répétitions se déforme) */
   function applyEcho(instant) {
-    if (!echoDelay) return;
-    var t = audioCtx.currentTime, tc = instant ? .001 : .05;
-    echoDelay.delayTime.setTargetAtTime(echo.time, t, tc);
-    echoFeedback.gain.setTargetAtTime(echo.on ? echo.fb : 0, t, tc);
-    echoWet.gain.setTargetAtTime(echo.on ? .5 : 0, t, tc);
+    if (!echoSend) return;
+    var t = audioCtx.currentTime, tc = instant ? .001 : .2;
+    echoDelayL.delayTime.setTargetAtTime(echo.time, t, tc);
+    echoDelayR.delayTime.setTargetAtTime(echo.time, t, tc);
+    echoFbL.gain.setTargetAtTime(echo.fb, t, .05);
+    echoFbR.gain.setTargetAtTime(echo.fb, t, .05);
+    echoWet.gain.setTargetAtTime(.5, t, .05);
+    echoSend.gain.setTargetAtTime(echo.on ? 1 : 0, t, .02);
   }
 
   function decode(arrayBuffer) {
@@ -1291,8 +1325,22 @@
 
   /* Métronome (tic-tac) : indépendant des modes, réglable de 40 à 220 BPM.
      Les clics sont programmés un peu à l'avance sur l'horloge audio, donc le rythme reste régulier. */
-  var metro = { on: false, bpm: 100, beats: 4, vol: .6, next: 0, beat: 0, q: [], tm: 0, lastT: null, swings: 0 };
+  var metro = { on: false, bpm: 100, beats: 4, vol: .6, snd: "wood", next: 0, beat: 0, q: [], tm: 0, lastT: null, swings: 0 };
   var metroGain = null;
+  /* vrais sons de tic-tac : deux petits échantillons par son (accent = 1er temps, et temps normal), joués à l'instant exact.
+     Si un fichier manque ou ne se décode pas, l'ancien bip synthétique prend le relais. */
+  var METRO_SOUNDS = ["wood", "click", "bell"], METRO_BASE = "sounds/metro/", metroBuf = {}, metroLoading = {};
+  function loadMetroSound(name) {
+    if (!audioCtx || metroLoading[name]) return;
+    metroLoading[name] = true;
+    ["hi", "lo"].forEach(function (k) {
+      fetch(METRO_BASE + name + "_" + k + ".wav")
+        .then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); })
+        .then(decode)
+        .then(function (d) { metroBuf[name + "_" + k] = d; })
+        .catch(function () { metroLoading[name] = false; });
+    });
+  }
 
   /* L'objet métronome : un balancier qui touche un côté à chaque clic. lastT = instant du dernier clic joué,
      swings = nombre de clics joués (pair ou impair = côté du balancier). Le poids monte quand le tempo ralentit. */
@@ -1326,10 +1374,11 @@
       metro.bpm = Math.round(clampNum(savedMetro.bpm, 40, 220));
       metro.beats = [2, 3, 4, 6].indexOf(savedMetro.beats) >= 0 ? savedMetro.beats : 4;
       metro.vol = clampNum(savedMetro.vol, 0, 1);
+      if (METRO_SOUNDS.indexOf(savedMetro.snd) >= 0) metro.snd = savedMetro.snd;
     }
   } catch (e) {}
   function saveMetro() {
-    try { localStorage.setItem("dactylo.piano.metro.v1", JSON.stringify({ bpm: metro.bpm, beats: metro.beats, vol: metro.vol })); } catch (e) {}
+    try { localStorage.setItem("dactylo.piano.metro.v1", JSON.stringify({ bpm: metro.bpm, beats: metro.beats, vol: metro.vol, snd: metro.snd })); } catch (e) {}
   }
 
   /* voyants : un par temps de la mesure, le premier est l'accent */
@@ -1351,6 +1400,15 @@
   }
 
   function metroClick(t, accent) {
+    var buf = metroBuf[metro.snd + (accent ? "_hi" : "_lo")];
+    if (buf) {
+      var s = audioCtx.createBufferSource();
+      s.buffer = buf;
+      s.connect(metroGain);
+      s.start(t);
+      return;
+    }
+    /* secours : ancien bip synthétique */
     var o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.type = "triangle";
     o.frequency.value = accent ? 1500 : 1000;
@@ -1378,11 +1436,18 @@
       metro.swings++;
     }
   }
+  function ensureMetroGain() {
+    var a = getAudio();
+    if (!a) return null;
+    if (!metroGain) { metroGain = a.createGain(); metroGain.connect(outNode || a.destination); }
+    metroGain.gain.value = metro.vol;
+    return metroGain;
+  }
   function metroStart() {
     var a = getAudio();
     if (!a) return;
-    if (!metroGain) { metroGain = a.createGain(); metroGain.connect(a.destination); }
-    metroGain.gain.value = metro.vol;
+    ensureMetroGain();
+    loadMetroSound(metro.snd);
     metro.on = true;
     metro.beat = 0;
     metro.q = [];
@@ -1409,6 +1474,20 @@
   $("pm_up").onclick = function () { setBpm(metro.bpm + 1); this.blur(); };
   $("pm_beats").onchange = function () { metro.beats = +this.value; metro.beat = 0; drawDots(); saveMetro(); refreshLcd(); this.blur(); };
   $("pm_beats").value = metro.beats;
+  $("pm_snd").value = metro.snd;
+  /* choisir un son : on l'entend tout de suite (accent puis temps normal) */
+  $("pm_snd").onchange = function () {
+    metro.snd = this.value;
+    saveMetro();
+    this.blur();
+    if (!ensureMetroGain()) return;
+    loadMetroSound(metro.snd);
+    if (!metro.on) setTimeout(function () {
+      if (metro.on || !audioCtx) return;
+      var t = audioCtx.currentTime + .03;
+      metroClick(t, true); metroClick(t + .45, false);
+    }, 250);
+  };
   knobs.metroVol.set(Math.round(metro.vol * 100));
   drawDots();
   setBpm(metro.bpm);
@@ -1433,20 +1512,20 @@
   };
   setTune(TUNE);
 
-  /* Écho : réglages mémorisés ; opts = { on, time (s), fb (0 à .8) } */
+  /* Écho : réglages mémorisés ; opts = { on, time (s), fb (0 à .7) } */
   try {
     var savedEcho = JSON.parse(localStorage.getItem("dactylo.piano.echo.v1"));
     if (savedEcho) {
       echo.on = !!savedEcho.on;
       echo.time = clampNum(savedEcho.time, .1, .8);
-      echo.fb = clampNum(savedEcho.fb, 0, .8);
+      echo.fb = clampNum(savedEcho.fb, 0, .7);
     }
   } catch (e) {}
   function setEcho(opts) {
     if (opts) {
       if ("on" in opts) echo.on = !!opts.on;
       if ("time" in opts) echo.time = clampNum(opts.time, .1, .8);
-      if ("fb" in opts) echo.fb = clampNum(opts.fb, 0, .8);
+      if ("fb" in opts) echo.fb = clampNum(opts.fb, 0, .7);
     }
     var ms = Math.round(echo.time * 1000), pct = Math.round(echo.fb * 100);
     $("pe_on").setAttribute("aria-pressed", echo.on);

@@ -199,3 +199,4 @@
 - [ ] Touches Entrée, Retour arrière et Tab
 - [ ] Version mobile et tactile
 - [x] Menu latéral masquable (bouton « ◀ Masquer » / « ☰ », choix mémorisé, aussi sur téléphone) ; piano en une seule page sans défilement (mode fit, clavier redimensionné automatiquement, panneau compact : bande défilante horizontale sur téléphone) ; cache sw.js v42
+- [x] Piano : vrais sons de tic-tac (échantillons WAV synthétisés par modèle : Bois / Clic / Cloche, accent + temps normal, sélecteur « Son », mémorisé, bip de secours si fichier absent) ; écho refait : ping-pong stéréo, délai lissé, répétitions limitées à 70 %, graves coupés dans la boucle, queue qui s'éteint naturellement à la désactivation ; limiteur de sortie ; cache sw.js v43

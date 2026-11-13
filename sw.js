@@ -9,7 +9,7 @@
 
    Les gros fichiers qui ne changent presque jamais (STATIC : sons, polices, icônes, three.min.js) sont servis depuis
    le cache sans revérification. Si vous en remplacez un en gardant le même nom, changez V : cela relance tout. */
-const V = "dactylo-v42";
+const V = "dactylo-v43";
 
 const SHELL = ["./", "index.html", "style.css", "app.js", "piano.js", "3d.js", "update.js", "manifest.webmanifest"];
 const STATIC = [
@@ -18,6 +18,7 @@ const STATIC = [
   "fonts/pixelify-sans-latin-400-normal.woff2", "fonts/pixelify-sans-latin-700-normal.woff2",
   "fonts/poppins-latin-400-normal.woff2", "fonts/poppins-latin-600-normal.woff2",
   "fonts/press-start-2p-latin-400-normal.woff2",
+  "sounds/metro/bell_hi.wav", "sounds/metro/bell_lo.wav", "sounds/metro/click_hi.wav", "sounds/metro/click_lo.wav", "sounds/metro/wood_hi.wav", "sounds/metro/wood_lo.wav",
   "sounds/piano/A3.mp3", "sounds/piano/A4.mp3", "sounds/piano/A5.mp3", "sounds/piano/Ab4.mp3",
   "sounds/piano/B4.mp3", "sounds/piano/Bb4.mp3",
   "sounds/piano/C3.mp3", "sounds/piano/C4.mp3", "sounds/piano/C5.mp3", "sounds/piano/C6.mp3",
