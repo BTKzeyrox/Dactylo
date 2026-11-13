@@ -258,6 +258,7 @@
             '<button class="pbtn" data-mode="rhythm" aria-pressed="false"><i class="led"></i>Rythme</button>',
             '<button class="pbtn" data-mode="lesson" aria-pressed="false"><i class="led"></i>Leçons</button>',
           '</div></div>',
+          '<div class="pgrp"><select class="psel" id="pn_inst" aria-label="Instrument" title="Instrument"></select></div>',
           '<div class="pgrp" id="pg_play">',
             '<select class="psel" id="pn_song" aria-label="Mélodie"></select>',
             '<button class="pbtn" id="pn_imp" type="button" style="display:none" aria-label="Importer un fichier MIDI"><i class="led"></i>Importer</button>',
@@ -587,6 +588,225 @@
     return best ? { n: best, rate: Math.pow(2, (m - noteToMidi(best)) / 12) } : null;
   }
 
+  /* ================= Instruments synthétisés ================= */
+
+  /* Le piano joue de vrais échantillons. Les autres instruments sont synthétisés avec Web Audio (aucun fichier en plus,
+     donc hors ligne). Chaque instrument construit ses oscillateurs pour une note et règle son propre relâchement
+     (rel = constante de temps, hold = durée minimale de la note). */
+  var INSTRUMENTS = [
+    ["piano", "Piano"], ["epiano", "Piano électrique"], ["organ", "Orgue jazz"], ["church", "Orgue d'église"],
+    ["rock", "Orgue rock"], ["strings", "Cordes"], ["synth", "Synthé"], ["vibes", "Vibraphone"]
+  ];
+  var instId = "piano", MAX_SYNTH_VOICES = 20, liveSynth = [];
+  var lfoNode = null, vibNodes = {}, noiseBuffer = null, shaperCurve = null, tremNode = null;
+
+  /* oscillateur lent partagé (vibrato, trémolo) */
+  function getLfo(a) {
+    if (!lfoNode) {
+      var o = a.createOscillator();
+      lfoNode = a.createGain();
+      o.frequency.value = 5.6;
+      o.connect(lfoNode);
+      o.start();
+    }
+    return lfoNode;
+  }
+  /* profondeur de vibrato en cents (un nœud partagé par profondeur) */
+  function vibrato(a, cents) {
+    if (!vibNodes[cents]) { var g = a.createGain(); g.gain.value = cents; getLfo(a).connect(g); vibNodes[cents] = g; }
+    return vibNodes[cents];
+  }
+  function tremolo(a) {
+    if (!tremNode) { tremNode = a.createGain(); tremNode.gain.value = .2; getLfo(a).connect(tremNode); }
+    return tremNode;
+  }
+  function noiseBuf(a) {
+    if (!noiseBuffer) {
+      noiseBuffer = a.createBuffer(1, Math.floor(a.sampleRate * .5), a.sampleRate);
+      var d = noiseBuffer.getChannelData(0), i, seed = 12345;
+      for (i = 0; i < d.length; i++) { seed = (seed * 1664525 + 1013904223) >>> 0; d[i] = seed / 2147483648 - 1; }
+    }
+    return noiseBuffer;
+  }
+  function shaper() {
+    if (!shaperCurve) {
+      shaperCurve = new Float32Array(2048);
+      for (var i = 0; i < 2048; i++) shaperCurve[i] = Math.tanh(3.5 * (i / 1023.5 - 1));
+    }
+    return shaperCurve;
+  }
+  /* oscillateur démarré à l'instant t, branché sur dest ; vib = profondeur de vibrato en cents (0 = aucun) */
+  function mkOsc(a, nodes, t, type, freq, dest, det, vib) {
+    var o = a.createOscillator();
+    o.type = type;
+    o.frequency.value = freq;
+    if (det) o.detune.value = det;
+    if (vib) vibrato(a, vib).connect(o.detune);
+    o.connect(dest);
+    o.start(t);
+    nodes.push(o);
+    return o;
+  }
+  /* petit souffle de bruit filtré (attaque d'un orgue, coup de maillet d'un vibraphone) */
+  function burst(a, t, fc, q, lvl, dur, dest) {
+    var s = a.createBufferSource(), bp = a.createBiquadFilter(), gg = a.createGain();
+    s.buffer = noiseBuf(a);
+    bp.type = "bandpass"; bp.frequency.value = fc; bp.Q.value = q;
+    gg.gain.setValueAtTime(lvl, t);
+    gg.gain.exponentialRampToValueAtTime(.001, t + dur);
+    s.connect(bp); bp.connect(gg); gg.connect(dest);
+    s.start(t); s.stop(t + dur + .02);
+  }
+  function filt(a, type, f, q, dest) {
+    var n = a.createBiquadFilter();
+    n.type = type; n.frequency.value = f; n.Q.value = q || .7;
+    n.connect(dest);
+    return n;
+  }
+  /* tirettes d'orgue : rapports de fréquence (16', 5⅓', 8', 4', 2⅔', 2', 1⅗', 1⅓', 1') et niveaux 0 à 1 */
+  var DRAWBAR_RATIO = [.5, 1.5, 1, 2, 3, 4, 5, 6, 8];
+  function drawbars(a, nodes, t, f, levels, dest, vib) {
+    DRAWBAR_RATIO.forEach(function (r, i) {
+      if (!levels[i]) return;
+      var g = a.createGain();
+      g.gain.value = levels[i];
+      g.connect(dest);
+      mkOsc(a, nodes, t, "sine", f * r, g, 0, vib);
+    });
+  }
+  function ramp(param, t, from, to, dur) { param.setValueAtTime(from, t); param.linearRampToValueAtTime(to, t + dur); }
+
+  var SYNTH = {
+    /* Rhodes : modulation de fréquence, « dent » métallique à l'attaque qui s'adoucit */
+    epiano: function (a, t, f, out, nodes, v) {
+      var hp = filt(a, "highpass", 40, .7, out), env = a.createGain(), m1 = a.createGain(), m2 = a.createGain();
+      var car = mkOsc(a, nodes, t, "sine", f, env, 0, 0);
+      mkOsc(a, nodes, t, "sine", f, m1, 0, 0);
+      mkOsc(a, nodes, t, "sine", f * 14, m2, 0, 0);
+      m1.gain.setValueAtTime(f * 2.4, t); m1.gain.exponentialRampToValueAtTime(f * .35, t + .7);
+      m2.gain.setValueAtTime(f * 1.1, t); m2.gain.exponentialRampToValueAtTime(f * .02, t + .09);
+      m1.connect(car.frequency); m2.connect(car.frequency);
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(1, t + .004);
+      env.gain.setTargetAtTime(0, t + .004, 1.7);
+      env.connect(hp);   // le filtre coupe la composante quasi continue que la modulation 1:1 crée vers 0 Hz
+      nodes.forEach(function (n) { n.stop(t + 9); });
+      v.rel = .25; v.hold = .12;
+    },
+    /* Hammond : 9 tirettes, petit clic à l'attaque, percussion sur la 3e harmonique */
+    organ: function (a, t, f, out, nodes, v) {
+      var env = a.createGain(), pg = a.createGain();
+      ramp(env.gain, t, 0, 1, .006);
+      env.connect(out);
+      drawbars(a, nodes, t, f, [.7, .8, 1, .5, 0, .375, 0, 0, 0], env, 0);
+      pg.gain.setValueAtTime(.55, t);
+      pg.gain.exponentialRampToValueAtTime(.001, t + .28);
+      pg.connect(out);
+      mkOsc(a, nodes, t, "sine", f * 3, pg, 0, 0);
+      burst(a, t, 2600, 1.4, .5, .014, out);
+      v.rel = .04; v.hold = .06;
+    },
+    /* orgue d'église : tuyaux, attaque lente, souffle, son plein et sombre */
+    church: function (a, t, f, out, nodes, v) {
+      var lp = filt(a, "lowpass", 3400, .5, out), env = a.createGain(), g2 = a.createGain();
+      ramp(env.gain, t, 0, 1, .09);
+      env.connect(lp);
+      [[.5, .5], [1, 1], [2, .55], [3, .4], [4, .28], [6, .18], [8, .1]].forEach(function (p) {
+        var g = a.createGain();
+        g.gain.value = p[1];
+        g.connect(env);
+        mkOsc(a, nodes, t, "sine", f * p[0], g, 0, 0);
+      });
+      g2.gain.value = .45;
+      g2.connect(env);
+      mkOsc(a, nodes, t, "sine", f, g2, 5, 0);
+      burst(a, t, f * 2, 1.2, .06, .2, out);
+      v.rel = .14; v.hold = .1;
+    },
+    /* orgue rock : tirettes brillantes, vibrato, saturation */
+    rock: function (a, t, f, out, nodes, v) {
+      var lp = filt(a, "lowpass", 6500, .7, out), sh = a.createWaveShaper(), env = a.createGain(), pg = a.createGain();
+      sh.curve = shaper();
+      sh.oversample = "2x";
+      sh.connect(lp);
+      ramp(env.gain, t, 0, 1, .006);
+      env.connect(sh);
+      drawbars(a, nodes, t, f, [.6, .8, 1, .8, .5, .5, .3, 0, 0], env, 8);
+      pg.gain.setValueAtTime(.5, t);
+      pg.gain.exponentialRampToValueAtTime(.001, t + .22);
+      pg.connect(env);
+      mkOsc(a, nodes, t, "sine", f * 3, pg, 0, 8);
+      v.rel = .05; v.hold = .06;
+    },
+    /* ensemble de cordes : trois scies légèrement désaccordées, attaque lente, vibrato */
+    strings: function (a, t, f, out, nodes, v) {
+      var lp = filt(a, "lowpass", Math.min(7000, Math.max(900, f * 5)), .7, out), env = a.createGain();
+      ramp(env.gain, t, 0, 1, .4);
+      env.connect(lp);
+      [-12, 0, 12].forEach(function (d) { mkOsc(a, nodes, t, "sawtooth", f, env, d, 5); });
+      v.rel = .3; v.hold = .15;
+    },
+    /* synthé : scies désaccordées + sous-octave carrée, filtre qui s'ouvre puis se referme */
+    synth: function (a, t, f, out, nodes, v) {
+      var env = a.createGain(), lp = filt(a, "lowpass", 600, 5, env), sg = a.createGain();
+      lp.frequency.setValueAtTime(600, t);
+      lp.frequency.exponentialRampToValueAtTime(5200, t + .12);
+      lp.frequency.setTargetAtTime(2400, t + .12, .25);
+      env.gain.setValueAtTime(0, t);
+      env.gain.linearRampToValueAtTime(1, t + .01);
+      env.gain.setTargetAtTime(.75, t + .01, .3);
+      env.connect(out);
+      mkOsc(a, nodes, t, "sawtooth", f, lp, -7, 0);
+      mkOsc(a, nodes, t, "sawtooth", f, lp, 7, 0);
+      sg.gain.value = .5;
+      sg.connect(lp);
+      mkOsc(a, nodes, t, "square", f / 2, sg, 0, 0);
+      v.rel = .18; v.hold = .08;
+    },
+    /* vibraphone : lames (partiels 1, 4, 10 qui s'éteignent à des vitesses différentes), trémolo du moteur, coup de maillet */
+    vibes: function (a, t, f, out, nodes, v) {
+      var trem = a.createGain();
+      trem.gain.value = .8;
+      tremolo(a).connect(trem.gain);
+      trem.connect(out);
+      [[1, 1, 2.4], [4, .32, .9], [10, .1, .25]].forEach(function (p) {
+        var g = a.createGain();
+        g.gain.setValueAtTime(p[1], t);
+        g.gain.setTargetAtTime(0, t + .004, p[2]);
+        g.connect(trem);
+        mkOsc(a, nodes, t, "sine", f * p[0], g, 0, 0);
+      });
+      burst(a, t, 3500, 1.5, .22, .02, out);
+      nodes.forEach(function (n) { n.stop(t + 9); });
+      v.rel = .35; v.hold = .2;
+    }
+  };
+  /* niveaux de sortie réglés par mesure pour que tous les instruments sonnent aussi fort que le piano */
+  var LEVEL = { epiano: .077, organ: .033, church: .036, rock: .045, strings: .05, synth: .054, vibes: .08 };
+
+  function playSynth(a, t, g, m) {
+    var f = TUNE * Math.pow(2, (m - 69) / 12), nodes = [], v = { g: g, t: t, nodes: nodes };
+    var out = a.createGain();
+    out.gain.value = LEVEL[instId] || .3;
+    out.connect(g);
+    SYNTH[instId](a, t, f, out, nodes, v);
+    v.s = nodes[0];
+    /* trop de notes en même temps : la plus ancienne s'éteint vite (protège le processeur) */
+    liveSynth = liveSynth.filter(function (x) { return !x.dead; });
+    if (liveSynth.length >= MAX_SYNTH_VOICES) { var old = liveSynth.shift(); old.rel = .03; old.hold = 0; release(old); }
+    liveSynth.push(v);
+    v.s.onended = function () { v.dead = true; };
+    return v;
+  }
+
+  function setInstrument(id) {
+    if (!SYNTH[id] && id !== "piano") return;
+    instId = id;
+    $("pn_inst").value = id;
+    try { localStorage.setItem("dactylo.piano.inst.v1", JSON.stringify(id)); } catch (e) {}
+    refreshLcd();
+  }
+
   /* Joue une touche (ou une note MIDI m0). Renvoie la « voix » à relâcher plus tard, ou null sans audio. */
   function play(k, vel, m0) {
     var a = getAudio();
@@ -596,6 +816,7 @@
     var sample = pickSample(m);
     g.gain.value = vel || 1;
     g.connect(master);
+    if (instId !== "piano") return playSynth(a, t, g, m);
     if (sample) {
       var src = a.createBufferSource();
       src.buffer = buffers[sample.n];
@@ -625,12 +846,13 @@
     if (!v || !audioCtx) return;
     try {
       var now = audioCtx.currentTime;
-      var start = Math.max(now, v.t + MIN_HOLD);
+      var hold = v.hold != null ? v.hold : MIN_HOLD, tc = v.rel || RELEASE_TC;
+      var start = Math.max(now, v.t + hold);
       var gain = v.g.gain;
       gain.cancelScheduledValues(now);
       gain.setValueAtTime(gain.value, now);
-      gain.setTargetAtTime(0, start, RELEASE_TC);
-      if (v.s && v.s.stop) v.s.stop(start + RELEASE_TC * 8);
+      gain.setTargetAtTime(0, start, tc);
+      (v.nodes || [v.s]).forEach(function (n) { try { if (n && n.stop) n.stop(start + tc * 8); } catch (e) {} });
     } catch (e) {}
   }
 
@@ -738,6 +960,7 @@
   }
 
   /* écran du piano : mode, morceau, tempo, octaves, accordage, écho */
+  function instLabel() { var r = ""; INSTRUMENTS.forEach(function (x) { if (x[0] === instId) r = x[1]; }); return r; }
   function refreshLcd() {
     var names = { free: "Mode libre", learn: "Apprendre", rhythm: "Rythme", lesson: "Leçons" };
     var l1 = names[game.mode];
@@ -746,7 +969,7 @@
     $("lcd1").textContent = l1;
     $("lcd2").textContent = metro.bpm + " BPM · " + metro.beats + " temps" + (metro.on ? " · tic-tac" : "");
     $("lcd3").textContent = "Octaves " + (4 + game.oct) + "–" + (5 + game.oct) + " · La " + TUNE + " Hz · écho " +
-      (echo.on ? Math.round(echo.time * 1000) + " ms" : "non") + (sustainOn ? " · Pédale" : "");
+      (echo.on ? Math.round(echo.time * 1000) + " ms" : "non") + (sustainOn ? " · Pédale" : "") + (instId !== "piano" ? " · " + instLabel() : "");
   }
 
   /* --- records, enregistrés par joueur --- */
@@ -1411,6 +1634,21 @@
     this.blur();
   };
   fillSongs();
+
+  /* choix de l'instrument : mémorisé ; on l'entend tout de suite (accord de Do) */
+  $("pn_inst").innerHTML = INSTRUMENTS.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + "</option>"; }).join("");
+  try {
+    var savedInst = JSON.parse(localStorage.getItem("dactylo.piano.inst.v1"));
+    if (savedInst && (SYNTH[savedInst] || savedInst === "piano")) instId = savedInst;
+  } catch (e) {}
+  $("pn_inst").value = instId;
+  $("pn_inst").onchange = function () {
+    setInstrument(this.value);
+    this.blur();
+    if (!getAudio()) return;
+    var vs = ["C4", "E4", "G4"].map(function (n) { return play(null, .8, noteToMidi(n)); });
+    setTimeout(function () { vs.forEach(release); }, 650);
+  };
   $("pn_les").innerHTML = LESSONS.map(function (l, i) { return '<option value="' + i + '">' + l.name + "</option>"; }).join("");
 
   $("pn_oct").onclick = function (e) {
@@ -1906,6 +2144,8 @@
     setSustain: setSustain, sustain: function () { return sustainOn; },
     setEcho: setEcho, echo: echo, knobs: knobs,
     importMidi: importMidiBuffer, songTools: updateSongTools,
+    setInstrument: setInstrument, instrument: function () { return instId; }, instruments: INSTRUMENTS,
+    voiceCount: function () { return liveSynth.filter(function (x) { return !x.dead; }).length; },
     _draw: draw, _update: update
   };
 

@@ -55,7 +55,7 @@ Règle : uniquement des airs dont je suis sûr de la mélodie ; tout doit tenir 
 Règle de travail : **un GO par étape**, un changement testé à la fois, commit direct sur `main`.
 Les autres instruments n'ont pas d'échantillons : ils sont **synthétisés avec Web Audio** (oscillateurs, enveloppes, modulation), donc hors ligne et sans fichiers en plus. Je ne peux pas écouter : les hauteurs, l'attaque et l'extinction se contrôlent par mesure ; le **timbre se juge à l'oreille**, par l'utilisateur.
 
-**Étape 1 — Banque d'instruments** *(à faire en premier)*
+**Étape 1 — Banque d'instruments** *(FAIT)*
 - Sélecteur « Instrument » dans le panneau, 8 sons : **Piano** (échantillons actuels, par défaut), **Piano électrique** (type Rhodes), **Orgue jazz** (type Hammond, 9 tirettes, clic d'attaque), **Orgue d'église** (tuyaux, plein), **Orgue rock** (mordant, vibrato), **Cordes** (ensemble, attaque lente), **Synthé** (lead, filtre qui s'ouvre), **Vibraphone** (lames qui résonnent).
 - Fonctionne avec : touches, pédale, écho, octaves, accord, leçons, mélodies importées. Un orgue tient la note tant que la touche est enfoncée. Polyphonie : 8 notes sans saturation. Le tic-tac n'est pas touché.
 - Choix mémorisé (clé `dactylo.piano.inst.v1`).
