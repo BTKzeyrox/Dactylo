@@ -215,6 +215,7 @@
     "body.fit #v-piano .pcard{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;margin-bottom:0}",
     "body.fit .ppanel{flex:none}",
     "body.fit .pstage{flex:1 1 auto;min-height:230px}",
+    ".ptoast{position:absolute;left:50%;top:10px;transform:translateX(-50%);max-width:92%;padding:8px 14px;border-radius:12px;background:rgba(16,14,24,.95);color:#ffe9b8;border:2px solid #ffb347;font:600 .85rem Poppins,Arial,sans-serif;z-index:6;text-align:center}.ptoast.err{border-color:#f0948c;color:#ffd5d0}.ptoast[hidden]{display:none}",
     "body.fit #pn_cv{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:none;max-height:none}",
     "body.fit #pn_help{display:none}",
     "body.fit .ppanel{display:flex;flex-wrap:wrap;align-items:stretch}",
@@ -259,6 +260,9 @@
           '</div></div>',
           '<div class="pgrp" id="pg_play">',
             '<select class="psel" id="pn_song" aria-label="Mélodie"></select>',
+            '<button class="pbtn" id="pn_imp" type="button" style="display:none" aria-label="Importer un fichier MIDI"><i class="led"></i>Importer</button>',
+            '<button class="pbtn" id="pn_del" type="button" style="display:none" aria-label="Supprimer ce morceau importé"><i class="led"></i>Supprimer</button>',
+            '<input type="file" id="pn_file" accept=".mid,.midi,audio/midi,audio/x-midi" hidden>',
             '<select class="psel" id="pn_les" aria-label="Leçon" style="display:none"></select>',
             '<div class="pbtns" id="pn_spd">',
               '<button class="pbtn" data-s=".7" aria-pressed="false"><i class="led"></i>Lent</button>',
@@ -309,6 +313,7 @@
         '<canvas id="pn_cv" width="' + W + '" height="' + H + '" aria-label="Piano"></canvas>',
         '<div class="pn_load" id="pn_load"></div>',
         '<div class="res hide" id="pn_res"></div>',
+        '<div class="ptoast" id="pn_toast" role="status" aria-live="polite" hidden></div>',
       '</div>',
       '<p class="note" id="pn_help"></p>',
     '</div>'
@@ -1171,6 +1176,7 @@
     });
     $("pn_spd").style.display = m === "rhythm" ? "" : "none";
     $("pn_song").style.display = m === "learn" || m === "rhythm" ? "" : "none";
+    updateSongTools();
     $("pn_les").style.display = m === "lesson" ? "" : "none";
     $("pg_play").style.display = m === "free" ? "none" : "";
     $("pn_res").classList.add("hide");
@@ -1190,7 +1196,221 @@
     refreshLcd();
   }
 
-  $("pn_song").innerHTML = SONGS.map(function (s, i) { return '<option value="' + i + '">' + s[0] + "</option>"; }).join("");
+  /* ================= Import de morceaux MIDI ================= */
+
+  /* Le fichier est lu sur l'appareil, rien n'est envoyé. La mélodie principale devient une mélodie comme les autres
+     (Apprendre et Rythme). Les notes hors de la plage jouable (Do4 à Mi5) sont décalées d'octaves entières. */
+  var BUILTIN_SONGS = SONGS.length, MAX_USER_SONGS = 20, MAX_NOTES = 400, SONG_KEY = "dactylo.piano.songs.v1";
+  var LOW_MIDI = 60, HIGH_MIDI = 76;   // Do4 … Mi5
+  var PC_NAMES = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"];
+  function midiName(m) { return PC_NAMES[m % 12] + (Math.floor(m / 12) - 1); }
+  function cleanTitle(s) {
+    s = String(s || "").replace(/\.(mid|midi)$/i, "").replace(/[<>&"'`\\]/g, "").replace(/_+/g, " ").replace(/\s+/g, " ").trim();
+    return (s || "Morceau importé").slice(0, 40);
+  }
+  function fail(msg) { var e = new Error(msg); e.user = true; return e; }
+
+  /* lit un fichier MIDI standard : renvoie { ppq, tempos: [{tick, us}], parts: { clé: { notes: [{s, e, p}] } } } */
+  function readMidi(buf) {
+    var d = new DataView(buf), len = buf.byteLength, pos = 0;
+    function u8() { if (pos >= len) throw fail("Fichier MIDI illisible ou corrompu."); return d.getUint8(pos++); }
+    function tag() { var s = "", i; for (i = 0; i < 4; i++) s += String.fromCharCode(u8()); return s; }
+    function varlen() { var v = 0, i, b; for (i = 0; i < 4; i++) { b = u8(); v = (v << 7) | (b & 127); if (!(b & 128)) return v; } throw fail("Fichier MIDI illisible ou corrompu."); }
+    if (len < 14 || tag() !== "MThd") throw fail("Ce fichier n'est pas un fichier MIDI valide.");
+    var hl = d.getUint32(4), div = d.getUint16(12);
+    if (div & 0x8000) throw fail("Ce MIDI utilise un minutage SMPTE, non pris en charge.");
+    if (!div) throw fail("Ce fichier n'est pas un fichier MIDI valide.");
+    pos = 8 + hl;
+    var parts = {}, tempos = [], trk = 0;
+    while (pos + 8 <= len && trk < 64) {
+      var t = tag(), l = d.getUint32(pos); pos += 4;
+      var end = Math.min(len, pos + l);
+      if (t !== "MTrk") { pos = end; continue; }
+      var tick = 0, running = 0, open = {};
+      var close = function (key, at) {
+        var st = open[key] && open[key].shift();
+        if (st == null) return;
+        var part = parts[trk + ":" + (key >> 7)] || (parts[trk + ":" + (key >> 7)] = { notes: [] });
+        part.notes.push({ s: st, e: Math.max(st + 1, at), p: key & 127 });
+      };
+      while (pos < end) {
+        tick += varlen();
+        var st = u8();
+        if (st < 0x80) { if (!running) throw fail("Fichier MIDI illisible ou corrompu."); pos--; st = running; }
+        else if (st < 0xF0) running = st;
+        if (st === 0xFF) {
+          var type = u8(), ml = varlen();
+          if (type === 0x51 && ml === 3 && pos + 3 <= len) tempos.push({ tick: tick, us: (d.getUint8(pos) << 16) | (d.getUint8(pos + 1) << 8) | d.getUint8(pos + 2) });
+          pos += ml;
+        } else if (st === 0xF0 || st === 0xF7) {
+          pos += varlen();
+        } else {
+          var kind = st & 0xF0, ch = st & 15, a = u8(), b = (kind === 0xC0 || kind === 0xD0) ? 0 : u8();
+          if (a > 127 || b > 127) throw fail("Fichier MIDI illisible ou corrompu.");
+          var key = (ch << 7) | a;
+          if (kind === 0x90 && b > 0) { if (ch !== 9) (open[key] = open[key] || []).push(tick); }
+          else if (kind === 0x80 || kind === 0x90) close(key, tick);
+        }
+      }
+      Object.keys(open).forEach(function (k) { while (open[k].length) close(+k, tick); });
+      pos = end;
+      trk++;
+    }
+    return { ppq: div, tempos: tempos.sort(function (x, y) { return x.tick - y.tick; }), parts: parts };
+  }
+
+  /* fichier MIDI -> { title, bpm, notation, … } ; lève une erreur avec un message pour l'utilisateur */
+  function midiToSong(buf, filename) {
+    var m;
+    try { m = readMidi(buf); }
+    catch (e) { throw e && e.user ? e : fail("Fichier MIDI illisible ou corrompu."); }
+    /* piste de mélodie : beaucoup de notes, et plutôt aiguës */
+    var best = null, bestScore = 0;
+    Object.keys(m.parts).forEach(function (k) {
+      var n = m.parts[k].notes;
+      if (n.length < 4) return;
+      var avg = n.reduce(function (a, x) { return a + x.p; }, 0) / n.length;
+      var score = n.length * Math.max(.25, Math.min(1.5, (avg - 36) / 36));
+      if (score > bestScore) { bestScore = score; best = n; }
+    });
+    if (!best) throw fail("Aucune mélodie trouvée dans ce fichier (moins de 4 notes).");
+    var ppq = m.ppq, eps = ppq / 16, seq = [], gs = -1e9;
+    best.slice().sort(function (a, b) { return a.s - b.s || b.p - a.p; }).forEach(function (n) {
+      if (seq.length && n.s - gs < eps) { if (n.p > seq[seq.length - 1].p) seq[seq.length - 1] = n; return; }
+      seq.push(n); gs = n.s;
+    });
+    /* positions en temps, calées sur 1/8 de temps */
+    var q = function (x) { return Math.round(x / ppq * 8) / 8; };
+    var items = [];
+    seq.forEach(function (n) {
+      var b0 = q(n.s);
+      if (items.length && b0 <= items[items.length - 1].b0) return;
+      items.push({ b0: b0, bd: Math.max(.125, q(n.e - n.s)), p: n.p });
+    });
+    var truncated = items.length > MAX_NOTES;
+    if (truncated) items = items.slice(0, MAX_NOTES);
+    if (items.length < 4) throw fail("Aucune mélodie trouvée dans ce fichier (moins de 4 notes).");
+    /* décalage d'octaves : celui qui laisse le moins de notes hors de la plage ; le reste est ramené dans la plage */
+    var shift = 0, bestOut = 1e9, k;
+    for (k = -5; k <= 5; k++) {
+      var out = items.filter(function (it) { var v = it.p + 12 * k; return v < LOW_MIDI || v > HIGH_MIDI; }).length;
+      if (out < bestOut || (out === bestOut && Math.abs(k) < Math.abs(shift))) { bestOut = out; shift = k; }
+    }
+    var folded = 0;
+    items.forEach(function (it) {
+      var v = it.p + 12 * shift;
+      if (v < LOW_MIDI || v > HIGH_MIDI) { folded++; while (v < LOW_MIDI) v += 12; while (v > HIGH_MIDI) v -= 12; }
+      it.m = v;
+    });
+    /* notation : silences (R) et durées */
+    var fmt = function (x) { return String(Math.round(x * 1000) / 1000); };
+    var first = items[0].b0, cursor = 0, toks = [];
+    items.forEach(function (it, i) {
+      var start = it.b0 - first;
+      if (start > cursor + 1e-9) toks.push("R:" + fmt(start - cursor));
+      var next = i + 1 < items.length ? items[i + 1].b0 - first : start + it.bd;
+      var avail = next - start, dur = avail - it.bd < .25 ? avail : it.bd;
+      toks.push(midiName(it.m) + (dur === 1 ? "" : ":" + fmt(dur)));
+      cursor = start + dur;
+    });
+    var bpm = m.tempos.length ? Math.round(6e7 / m.tempos[0].us) : 120, clamped = false;
+    if (bpm < 40 || bpm > 220) { bpm = Math.max(40, Math.min(220, bpm)); clamped = true; }
+    var changes = m.tempos.some(function (t) { return t.us !== m.tempos[0].us; });
+    return { title: cleanTitle(filename), bpm: bpm, notation: toks.join(" "), count: items.length,
+             shift: shift, folded: folded, truncated: truncated, tempoChanges: changes, clamped: clamped };
+  }
+
+  var toastTimer = 0;
+  function toast(msg, isErr) {
+    var el = $("pn_toast");
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.toggle("err", !!isErr);
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, isErr ? 7000 : 6500);
+  }
+  function saveUserSongs() {
+    try { localStorage.setItem(SONG_KEY, JSON.stringify(SONGS.slice(BUILTIN_SONGS))); return true; } catch (e) { return false; }
+  }
+  function fillSongs() {
+    var sel = $("pn_song"), i;
+    sel.innerHTML = "";
+    for (i = 0; i < SONGS.length; i++) {
+      var o = document.createElement("option");
+      o.value = i;
+      o.textContent = (i >= BUILTIN_SONGS ? "★ " : "") + SONGS[i][0];
+      sel.appendChild(o);
+    }
+    sel.value = game.song;
+  }
+  function updateSongTools() {
+    var on = game.mode === "learn" || game.mode === "rhythm";
+    $("pn_imp").style.display = on ? "" : "none";
+    $("pn_del").style.display = on && game.song >= BUILTIN_SONGS ? "" : "none";
+  }
+
+  /* morceaux importés gardés sur l'appareil (on revérifie tout ce qu'on relit) */
+  try {
+    var savedSongs = JSON.parse(localStorage.getItem(SONG_KEY));
+    if (Array.isArray(savedSongs)) savedSongs.slice(0, MAX_USER_SONGS).forEach(function (s) {
+      var okTok = /^(R|[A-G][b#]?[0-9])(:[0-9]+(\.[0-9]+)?)?$/;
+      if (Array.isArray(s) && typeof s[0] === "string" && typeof s[2] === "string" && s[2].length < 8000 &&
+          +s[1] >= 40 && +s[1] <= 220 && s[2].split(" ").every(function (t) { return okTok.test(t); })) {
+        SONGS.push([cleanTitle(s[0]), Math.round(+s[1]), s[2]]);
+      }
+    });
+  } catch (e) {}
+
+  function importMidiBuffer(buf, filename) {
+    var r;
+    try { r = midiToSong(buf, filename); }
+    catch (e) { return { ok: false, error: e && e.user ? e.message : "Fichier MIDI illisible ou corrompu." }; }
+    if (SONGS.length - BUILTIN_SONGS >= MAX_USER_SONGS) return { ok: false, error: "Limite de " + MAX_USER_SONGS + " morceaux importés : supprimez-en un d'abord." };
+    SONGS.push([r.title, r.bpm, r.notation]);
+    r.stored = saveUserSongs();
+    game.song = SONGS.length - 1;
+    game.phase = "idle";
+    fillSongs();
+    updateSongTools();
+    refreshLcd();
+    var msg = "« " + r.title + " » importé : " + r.count + " notes, " + r.bpm + " BPM.";
+    if (r.shift) msg += " Décalé de " + Math.abs(r.shift) + " octave" + (Math.abs(r.shift) > 1 ? "s" : "") + (r.shift > 0 ? " vers le haut." : " vers le bas.");
+    if (r.folded) msg += " " + r.folded + " note" + (r.folded > 1 ? "s" : "") + " hors plage ramenée" + (r.folded > 1 ? "s" : "") + " dans Do4–Mi5.";
+    if (r.truncated) msg += " Tronqué aux " + MAX_NOTES + " premières notes.";
+    if (r.tempoChanges) msg += " Tempo variable : seul le tempo de départ est gardé.";
+    if (r.clamped) msg += " Tempo ramené entre 40 et 220 BPM.";
+    if (!r.stored) msg += " Mémoire pleine : le morceau sera perdu à la fermeture.";
+    toast(msg, false);
+    r.ok = true;
+    return r;
+  }
+  $("pn_imp").onclick = function () { $("pn_file").click(); };
+  $("pn_file").onchange = function () {
+    var f = this.files && this.files[0];
+    this.value = "";
+    if (!f) return;
+    if (f.size > 1048576) { toast("Fichier trop gros (1 Mo maximum).", true); return; }
+    var rd = new FileReader();
+    rd.onload = function () { var r = importMidiBuffer(rd.result, f.name); if (!r.ok) toast(r.error, true); };
+    rd.onerror = function () { toast("Impossible de lire ce fichier.", true); };
+    rd.readAsArrayBuffer(f);
+  };
+  $("pn_del").onclick = function () {
+    var i = game.song;
+    if (i < BUILTIN_SONGS || !SONGS[i]) return;
+    if (!window.confirm("Supprimer « " + SONGS[i][0] + " » ?")) return;
+    SONGS.splice(i, 1);
+    saveUserSongs();
+    game.song = 0;
+    game.phase = "idle";
+    fillSongs();
+    updateSongTools();
+    refreshLcd();
+    toast("Morceau supprimé.", false);
+    this.blur();
+  };
+  fillSongs();
   $("pn_les").innerHTML = LESSONS.map(function (l, i) { return '<option value="' + i + '">' + l.name + "</option>"; }).join("");
 
   $("pn_oct").onclick = function (e) {
@@ -1205,7 +1425,7 @@
     refreshLcd();
     this.blur();
   };
-  $("pn_song").onchange = function () { game.song = +this.value; game.phase = "idle"; refreshLcd(); this.blur(); };
+  $("pn_song").onchange = function () { game.song = +this.value; game.phase = "idle"; updateSongTools(); refreshLcd(); this.blur(); };
   $("pn_mode").onclick = function (e) {
     var b = e.target.closest("[data-mode]");
     if (b) { setMode(b.dataset.mode); b.blur(); }
@@ -1685,6 +1905,7 @@
     _buf: buffers, pick: pickSample, setOct: setOct, oct: octShift,
     setSustain: setSustain, sustain: function () { return sustainOn; },
     setEcho: setEcho, echo: echo, knobs: knobs,
+    importMidi: importMidiBuffer, songTools: updateSongTools,
     _draw: draw, _update: update
   };
 
