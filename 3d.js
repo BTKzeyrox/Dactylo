@@ -25,7 +25,7 @@ function ik(l,r,dy){var D=Math.hypot(r,dy),ang=Math.atan2(dy,r),best=null;
  tx=l[0]*Math.cos(b);ty=l[0]*Math.sin(b);b+=best.a2;tx+=l[1]*Math.cos(b);ty+=l[1]*Math.sin(b);b+=best.a3;tx+=l[2]*Math.cos(b);ty+=l[2]*Math.sin(b);
  return {a:[a1,best.a2,best.a3],err:Math.hypot(tx-r,ty-dy)}}
 H3.init=function(box){
- var cv=document.createElement("canvas"),r=gl(cv);if(!r)return false;
+ var cv=document.createElement("canvas"),r=gl(cv);if(!r)return false;r.localClippingEnabled=true;
  box.innerHTML="";box.appendChild(cv);r.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
  var sc=new T.Scene(),cam=new T.PerspectiveCamera(24,2,.1,100);
  var hemi=new T.HemisphereLight(0xffffff,isDark()?0x9aa6c2:0xe6d8c0,1.3);sc.add(hemi,new T.AmbientLight(0xffffff,.55));var dl=new T.DirectionalLight(0xffffff,.8);dl.position.set(-2,6,4);sc.add(dl);
@@ -33,7 +33,7 @@ H3.init=function(box){
  var outM=new T.MeshBasicMaterial({color:OUT(),side:T.BackSide}),kOutM=new T.MeshBasicMaterial({color:0xbfae92,side:T.BackSide}),preM=new T.MeshBasicMaterial({colorWrite:false});
  var skins=[];function sk(){var m=new T.MeshToonMaterial({color:SKIN(),gradientMap:gm,transparent:true,opacity:.84,depthWrite:false});skins.push(m);return m}
  var nailM=new T.MeshToonMaterial({color:0xf3dccd,gradientMap:gm,transparent:true,opacity:.92,depthWrite:false}),cuffM=new T.MeshToonMaterial({color:isDark()?0xcfd6ea:0xfff5e6,gradientMap:gm,transparent:true,opacity:.78,depthWrite:false});
- function part(geo,mat,parent,t,o2,ghost,ro){var m=new T.Mesh(geo,mat);geo.computeBoundingSphere();if(o2!=="none"){var o=new T.Mesh(geo,o2||outM);o.scale.setScalar(1+(t||.05)/Math.max(.1,geo.boundingSphere.radius));m.add(o)}if(ghost)m.add(new T.Mesh(geo,preM));if(ro)m.renderOrder=ro;parent.add(m);return m}
+ function part(geo,mat,parent,t,o2,ghost,ro){var m=new T.Mesh(geo,mat);geo.computeBoundingSphere();if(o2!=="none"){var o=new T.Mesh(geo,o2||outM);o.scale.setScalar(1+(t||.05)/Math.max(.1,geo.boundingSphere.radius));m.add(o)}if(ghost)m.add(new T.Mesh(geo,ghost===true?preM:ghost));if(ro)m.renderOrder=ro;parent.add(m);return m}
  /* clavier complet */
  var keys={},kg=new T.Group(),baseM=new T.MeshToonMaterial({color:isDark()?0x9aa6c2:0xf1e8d2,gradientMap:gm,transparent:true,opacity:.45,depthWrite:false});
  var base=part(rbox(7.2,.14,3.1,.1,4),baseM,kg,.03,"none",false,1);base.position.set(3.15,KT-.2,.1);
@@ -55,19 +55,32 @@ H3.init=function(box){
  /* mains */
  var grp=new T.Group(),hands=[],F={},acts={},hl={},REST=[-.04,-.16,-.12];
  grp.add(kg);
- function finger(k,rb,mat){var g=new T.Group(),segs=[],par=g,len=[.66*k,.48*k,.38*k],rad=[rb,rb*.88,rb*.78,rb*.68];
+ function finger(k,rb,mat,om,gh){var g=new T.Group(),segs=[],par=g,len=[.66*k,.48*k,.38*k],rad=[rb,rb*.88,rb*.78,rb*.68];
   for(var s=0;s<3;s++){var pv=new T.Group();pv.position.z=s?-len[s-1]:0;par.add(pv);par=pv;segs.push(pv);
-   var cyl=new T.CylinderGeometry(rad[s],rad[s+1],len[s],14);cyl.rotateX(Math.PI/2);cyl.translate(0,0,-len[s]/2);part(cyl,mat,pv,.045,null,true,4);part(new T.SphereGeometry(rad[s]*.98,14,10),mat,pv,.045,null,true,4)}
-  var tip=part(new T.SphereGeometry(rad[3],14,10),mat,segs[2],.045,null,true,4);tip.position.z=-len[2];
+   var cyl=new T.CylinderGeometry(rad[s],rad[s+1],len[s],14);cyl.rotateX(Math.PI/2);cyl.translate(0,0,-len[s]/2);part(cyl,mat,pv,.045,om||null,gh||true,4);part(new T.SphereGeometry(rad[s]*.98,14,10),mat,pv,.045,om||null,gh||true,4)}
+  var tip=part(new T.SphereGeometry(rad[3],14,10),mat,segs[2],.045,om||null,gh||true,4);tip.position.z=-len[2];
   var n=new T.Mesh(new T.SphereGeometry(rad[3]*.86,12,8),nailM);n.scale.set(.95,.3,1.35);n.position.set(0,rad[3]*.72,-len[2]*.72);n.renderOrder=5;segs[2].add(n);
   return {g:g,segs:segs,len:len,L:len[0]+len[1]+len[2],rt:rad[3],ang:REST.slice(),yaw:0,p:0,mat:mat}}
- var spec={1:[-.78,.8,.9],2:[-.33,.96,1],3:[.12,1,1.03],4:[.56,.94,1]};
- [0,1].forEach(function(h){var s=h?-1:1,hg=new T.Group(),H={g:hg,objs:[],ox:0,oz:0,right:h},pm0=sk();
-  var palm=part(rbox(2,.46,2,.22,8,true),pm0,hg,.06,null,true,4);palm.position.set(0,0,.4);
+ /* Découpe sous le pouce : le bord intérieur de la main suit une ligne droite, du bas du clavier jusqu'au poignet.
+   Tout ce qui dépasse de cette ligne vers le centre (bosse sous le pouce, base du pouce, coins de la paume) est coupé.
+   Repère de la main : u = distance vers le centre du clavier, z = vers l'utilisateur.
+   La ligne va de (u0,z0), au bord de la main au niveau du bas du clavier, à (u1,z1), en haut du poignet. */
+var CUT={u0:1.146,z0:.047,u1:.646,z1:1.42},outHs=[];
+function cutMats(s){var pa=new T.Plane(),pb=new T.Plane(new T.Vector3(0,0,1),0),cl=function(m){m.clippingPlanes=[pa,pb];m.clipIntersection=true;return m};
+ var o=cl(new T.MeshBasicMaterial({color:OUT(),side:T.BackSide}));outHs.push(o);
+ return {pa:pa,pb:pb,s:s,cl:cl,out:o,pre:cl(new T.MeshBasicMaterial({colorWrite:false}))}}
+/* les plans sont en coordonnées du monde : on les replace à chaque image avec la main (qui ne fait que se déplacer) */
+function cutStrip(s){var zs=.15,us=CUT.u0+(CUT.u1-CUT.u0)*(zs-CUT.z0)/(CUT.z1-CUT.z0),dx=s*(CUT.u1-us),dz=CUT.z1-zs,mt=new T.MeshBasicMaterial({color:OUT()});outHs.push(mt);
+ var m=new T.Mesh(new T.BoxGeometry(.05,.5,Math.hypot(dx,dz)),mt);m.position.set(s*(us+CUT.u1)/2,0,(zs+CUT.z1)/2);m.rotation.y=Math.atan2(dx,dz);m.renderOrder=4;return m}
+function cutUpdate(H){var c=H.cut,P=H.g.position,n=new T.Vector3(-c.s*(CUT.z1-CUT.z0),0,CUT.u1-CUT.u0).normalize();
+ c.pa.normal.copy(n);c.pa.constant=-(n.x*(P.x+c.s*CUT.u0)+n.z*(P.z+CUT.z0));c.pb.constant=-(P.z+CUT.z1)}
+var spec={1:[-.78,.8,.9],2:[-.33,.96,1],3:[.12,1,1.03],4:[.56,.94,1]};
+ [0,1].forEach(function(h){var s=h?-1:1,hg=new T.Group(),H={g:hg,objs:[],ox:0,oz:0,right:h},pm0=sk(),ct=H.cut=cutMats(s);ct.cl(pm0);
+  var palm=part(rbox(2,.46,2,.22,8,true),pm0,hg,.06,ct.out,ct.pre,4);palm.position.set(0,0,.4);
   for(var f=1;f<=4;f++){var id=h?9-f:f,sp=spec[f],fg=finger(sp[1]*1.12,.15*sp[2],sk());fg.g.position.set(s*sp[0],.03,-.6);hg.add(fg.g);fg.id=id;fg.H=H;(F[id]=F[id]||[]).push(fg);H.objs.push(fg);
    var kn=part(new T.SphereGeometry(.19*sp[2],12,8),fg.mat,hg,.045,null,true,4);kn.position.set(s*sp[0],.17,-.5);kn.scale.set(1,.55,1)}
-  var mound=part(new T.SphereGeometry(.5,14,10),pm0,hg,.05,null,true,4);mound.scale.set(.8,.5,1.35);mound.position.set(s*.78,-.04,.55);mound.rotation.y=s*.25;
-  var th=finger(1.1,.19,sk());th.g.position.set(s*.93,0,.62);th.id=9;th.H=H;th.right=!!h;th.thumb=true;hg.add(th.g);(F[9]=F[9]||[]).push(th);H.objs.push(th);
+  var mound=part(new T.SphereGeometry(.5,14,10),pm0,hg,.05,ct.out,ct.pre,4);mound.scale.set(.8,.5,1.35);mound.position.set(s*.78,-.04,.55);mound.rotation.y=s*.25;
+  var th=finger(1.1,.19,ct.cl(sk()),ct.out,ct.pre);th.g.position.set(s*.93,0,.62);th.id=9;th.H=H;th.right=!!h;th.thumb=true;hg.add(th.g);(F[9]=F[9]||[]).push(th);H.objs.push(th);hg.add(cutStrip(s));
   var wg=new T.CylinderGeometry(.62,.5,1.5,18);wg.rotateX(Math.PI/2);var wr=part(wg,pm0,hg,.05,null,true,4);wr.position.set(0,-.02,2.1);wr.scale.y=.74;
   var cg=new T.CylinderGeometry(.7,.7,.6,20);cg.rotateX(Math.PI/2);var cu=part(cg,cuffM,hg,.04,null,false,5);cu.position.set(0,-.02,2.75);cu.scale.y=.85;
   H.home=new T.Vector3(h?keys.m.x-.78:keys.q.x+.78,.62,1.75);hg.position.copy(H.home);grp.add(hg);hands.push(H)});
@@ -79,7 +92,7 @@ H3.init=function(box){
  function step(dt,t){
   all.forEach(function(o){var lst=acts[o.id],k=lst&&(o.id!==9||o.right)?keys[lst[Math.floor(t/1500)%lst.length]]:null;o.key=k;o.want.copy(k?new T.Vector3(k.x,KT+o.rt+(o.p>0?0:.17),k.z):homeT(o))});
   hands.forEach(function(H){var ox=0,oz=0;H.objs.forEach(function(o){if(!o.key||o.thumb)return;var kx=H.home.x+o.g.position.x,kz=H.home.z+o.g.position.z,dx=o.want.x-kx,dz=o.want.z-kz,rr=Math.hypot(dx,dz),lim=o.L*.96;if(rr>lim){var e=rr-lim;ox=dx/rr*e;oz=dz/rr*e}});
-   var q=Math.min(1,dt*9);H.ox+=(ox-H.ox)*q;H.oz+=(oz-H.oz)*q;H.g.position.set(H.home.x+H.ox,H.home.y,H.home.z+H.oz)});
+   var q=Math.min(1,dt*9);H.ox+=(ox-H.ox)*q;H.oz+=(oz-H.oz)*q;H.g.position.set(H.home.x+H.ox,H.home.y,H.home.z+H.oz);cutUpdate(H)});
   all.forEach(function(o){o.tp.lerp(o.want,1-Math.exp(-dt*16));var Hp=o.H.g.position,kx=Hp.x+o.g.position.x,ky=Hp.y+o.g.position.y,kz=Hp.z+o.g.position.z,dx=o.tp.x-kx,dz=o.tp.z-kz,dy=o.tp.y-ky,rr=Math.hypot(dx,dz),yaw=0,ang=REST;
    if(dz<-.05){var res=ik(o.len,rr,dy),ok=res.err<.05;
     if(!ok&&o.thumb){var D=Math.hypot(rr,dy),s2=Math.max(.5*o.L,Math.min(.995*o.L,D))/D;res=ik(o.len,rr*s2,dy*s2);ok=true}
@@ -99,7 +112,7 @@ H3.init=function(box){
  H3.keys=function(list){acts={};hl={};(list||[]).forEach(function(x){if(x&&keys[x.k])add(x.f,x.k)})};
  H3.set=function(ids){acts={};hl={};var els=document.querySelectorAll("#kb .key.next");for(var q=0;q<els.length;q++){var k=els[q].dataset.k,m=/(?:^|\s)f(\d)(?:\s|$)/.exec(els[q].className);if(m&&keys[k])add(+m[1],k)}};
  H3.press=function(id){(F[id]||[]).forEach(function(o){if(!o.thumb||o.right)o.p=.16})};
- H3.recolor=function(){accent.set(css("--acc"));outM.color.set(OUT());hemi.groundColor.set(isDark()?0x9aa6c2:0xe6d8c0);cuffM.color.set(isDark()?0xcfd6ea:0xfff5e6);baseM.color.set(isDark()?0x9aa6c2:0xf1e8d2)};
+ H3.recolor=function(){accent.set(css("--acc"));outM.color.set(OUT());outHs.forEach(function(m){m.color.set(OUT())});hemi.groundColor.set(isDark()?0x9aa6c2:0xe6d8c0);cuffM.color.set(isDark()?0xcfd6ea:0xfff5e6);baseM.color.set(isDark()?0x9aa6c2:0xf1e8d2)};
  return true};
 
 /* ---------- Course 3D ---------- */
