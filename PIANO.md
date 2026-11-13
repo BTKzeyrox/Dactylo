@@ -61,7 +61,7 @@ Les autres instruments n'ont pas d'échantillons : ils sont **synthétisés avec
 - Choix mémorisé (clé `dactylo.piano.inst.v1`).
 - Tests (Chromium + analyseur audio) : hauteur mesurée de chaque note de chaque instrument ; arrêt net au relâchement ; pas de saturation à 8 notes ; mise en page toujours sur une seule page ; mémorisation ; secours si Web Audio manque. Cache `sw.js` en v45.
 
-**Étape 2 — Effets de clavier pro**
+**Étape 2 — Effets de clavier pro** *(FAIT)*
 - **Réverbération** (salle / église) avec dosage ; **chorus** ; **vibrato / Leslie** (haut-parleur rotatif) pour les orgues ; **Attaque** et **Relâche** réglables.
 - Boutons rotatifs dans le style « piano de scène », réglages mémorisés, remise à zéro par double clic. Tout passe par le limiteur de sortie existant ; le tic-tac reste hors effets.
 - Tests : mesure de la queue de réverbération, du niveau de crête (jamais au-dessus de 0 dB), de la profondeur du vibrato ; mise en page une page.

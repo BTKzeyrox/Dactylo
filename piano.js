@@ -289,6 +289,15 @@
             '<button class="pbtn" id="pt_la" title="Joue le La pour accorder">♪ La</button>',
             '<button class="pbtn" id="pt_rs" title="Remettre le La à 440 Hz">440</button>',
           '</div>',
+          '<div class="pgrp" id="pg_fx">',
+            '<select class="psel" id="fx_rv" aria-label="Réverbération" title="Réverbération : le son résonne dans une salle"><option value="none">Réverb. : aucune</option><option value="room">Réverb. : salle</option><option value="church">Réverb. : église</option></select>',
+            '<div class="pk" id="kn_rv"></div>',
+            '<select class="psel" id="fx_md" aria-label="Modulation" title="Chorus, vibrato ou haut-parleur rotatif (Leslie)"><option value="none">Modul. : aucune</option><option value="chorus">Chorus</option><option value="vibrato">Vibrato</option><option value="les_slow">Leslie lent</option><option value="les_fast">Leslie rapide</option></select>',
+            '<div class="pk" id="kn_md"></div>',
+          '</div>',
+          '<div class="pgrp" id="pg_env">',
+            '<div class="pk" id="kn_at"></div><div class="pk" id="kn_rl"></div>',
+          '</div>',
           '<div class="pgrp pmetro">',
             '<div class="mowrap"><div class="mo" id="mo" title="Cliquez pour démarrer ou arrêter le métronome"><svg viewBox="0 0 120 170" role="img" aria-label="Métronome"><path d="M24 164 L96 164 L77 22 L43 22 Z" fill="#7a4a2d" stroke="#25150a" stroke-width="3" stroke-linejoin="round"/><path d="M33 152 L87 152 L73 36 L47 36 Z" fill="#a46a41" opacity=".6"/><g stroke="#2a190d" stroke-width="1.5" opacity=".55"><line x1="52" y1="52" x2="68" y2="52"/><line x1="50" y1="72" x2="70" y2="72"/><line x1="48" y1="92" x2="72" y2="92"/><line x1="46" y1="112" x2="74" y2="112"/><line x1="44" y1="132" x2="76" y2="132"/></g><rect x="18" y="160" width="84" height="9" rx="3" fill="#3a2314" stroke="#25150a" stroke-width="2"/><g id="mo_arm" transform="rotate(0 60 140)"><rect x="58.5" y="2" width="3" height="140" rx="1.5" fill="#dcd6e8" stroke="#6d6580" stroke-width="1"/><rect id="mo_w" x="52" y="14" width="16" height="14" rx="3" fill="#e0b04a" stroke="#6b4a10" stroke-width="1.5"/></g><circle cx="60" cy="140" r="7" fill="#e0b04a" stroke="#6b4a10" stroke-width="2"/></svg></div><span class="pdots" id="pm_dots"></span></div>',
             '<div class="pmctl">',
@@ -422,6 +431,17 @@
   knobs.metroVol = makeKnob($("kn_mv"), { label: "Tic-tac", min: 0, max: 100, step: 1, def: 60, fmt: pct,
     onChange: function (v) { metro.vol = v / 100; if (metroGain) metroGain.gain.value = metro.vol; saveMetro(); } });
 
+  knobs.rvMix = makeKnob($("kn_rv"), { label: "Réverb.", min: 0, max: 100, step: 1, def: 30, fmt: pct,
+    onChange: function (v) { setFx({ rvMix: v, rv: fx.rv === "none" && v > 0 ? "room" : fx.rv }); } });
+  knobs.mdMix = makeKnob($("kn_md"), { label: "Modul.", min: 0, max: 100, step: 1, def: 60, fmt: pct,
+    onChange: function (v) { setFx({ mdMix: v, md: fx.md === "none" && v > 0 ? "chorus" : fx.md }); } });
+  knobs.attack = makeKnob($("kn_at"), { label: "Attaque", min: 0, max: 100, step: 1, def: 0,
+    fmt: function (v) { return Math.round(Math.pow(v / 100, 2) * 1200) + " ms"; },
+    onChange: function (v) { setFx({ at: v }); } });
+  knobs.release = makeKnob($("kn_rl"), { label: "Relâche", min: 0, max: 100, step: 1, def: 44,
+    fmt: function (v) { return "×" + Math.pow(40, (v - 44) / 100).toFixed(1); },
+    onChange: function (v) { setFx({ rl: v }); } });
+
   /* carte dans le catalogue des jeux */
   var gamesList = $("gl");
   function addCatalogCard() {
@@ -487,6 +507,7 @@
         master.gain.value = volume;
         outNode = makeLimiter();
         master.connect(outNode);
+        buildFx(audioCtx);
         buildEcho();
       } catch (e) {
         audioCtx = null;
@@ -815,7 +836,9 @@
     var m = m0 == null ? k.midi + 12 * octShift() : m0;
     var sample = pickSample(m);
     g.gain.value = vel || 1;
-    g.connect(master);
+    var atk = attackSec();
+    if (atk > .004) { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel || 1, t + atk); }
+    g.connect(fxIn || master);
     if (instId !== "piano") return playSynth(a, t, g, m);
     if (sample) {
       var src = a.createBufferSource();
@@ -846,7 +869,7 @@
     if (!v || !audioCtx) return;
     try {
       var now = audioCtx.currentTime;
-      var hold = v.hold != null ? v.hold : MIN_HOLD, tc = v.rel || RELEASE_TC;
+      var hold = v.hold != null ? v.hold : MIN_HOLD, tc = (v.rel || RELEASE_TC) * releaseFactor();
       var start = Math.max(now, v.t + hold);
       var gain = v.g.gain;
       gain.cancelScheduledValues(now);
@@ -1996,6 +2019,124 @@
   $("pe_on").onclick = function () { getAudio(); setEcho({ on: !echo.on }); this.blur(); };
   setEcho();
 
+  /* ================= Effets de clavier pro ================= */
+
+  /* Chemin du son : notes -> bus d'effets (modulation, puis réverbération) -> volume -> écho -> limiteur -> sortie.
+     Modulation : chorus (deux lignes à retard qui bougent), vibrato (retard qui bouge, 100 % mouillé) ou Leslie
+     (haut-parleur rotatif : graves et aigus séparés à 800 Hz, chacun avec son effet Doppler et son trémolo, qui
+     accélèrent ou ralentissent doucement). Réverbération : convolution avec une réponse de salle fabriquée par calcul
+     (bruit qui s'éteint, de plus en plus sourd). Attaque et relâche s'appliquent à toutes les notes.
+     Le tic-tac du métronome ne passe pas par ces effets. Si le navigateur ne sait pas faire ces effets,
+     le piano marche quand même, sans eux. */
+  var fx = { rv: "none", rvMix: 30, md: "none", mdMix: 60, at: 0, rl: 44 };
+  var fxIn = null, fxNodes = null;
+  function attackSec() { return Math.pow(fx.at / 100, 2) * 1.2; }          // 0 à 1,2 s
+  function releaseFactor() { return Math.pow(40, (fx.rl - 44) / 100); }     // ×0,2 à ×8 (×1 par défaut)
+
+  function makeIR(a, rt60, pre, damp, seed0) {
+    var sr = a.sampleRate, len = Math.floor(sr * (rt60 * 1.15 + pre)), buf = a.createBuffer(2, len, sr), ch, i;
+    for (ch = 0; ch < 2; ch++) {
+      var d = buf.getChannelData(ch), y = 0, s = seed0 + ch * 7919;
+      for (i = 0; i < len; i++) {
+        var t = i / sr - pre;
+        if (t < 0) { d[i] = 0; continue; }
+        s = (s * 1664525 + 1013904223) >>> 0;
+        var x = s / 2147483648 - 1, al = Math.max(.07, .85 * Math.exp(-t * damp));
+        y += al * (x - y);                       // de plus en plus sourd avec le temps
+        d[i] = y * Math.exp(-6.9078 * t / rt60); // -60 dB au bout de rt60 secondes
+      }
+    }
+    return buf;
+  }
+  function buildFx(a) {
+    try {
+      if (!a.createConvolver || !a.createDelay) return;
+      var gn = function (v) { var n = a.createGain(); n.gain.value = v; return n; };
+      var lfo = function (f) { var o = a.createOscillator(); o.frequency.value = f; o.start(); return o; };
+      var wire = function (o, depth, param) { var d = gn(depth); o.connect(d); d.connect(param); };
+      var n = { in: gn(1), out: gn(1), dry: gn(1), ch: gn(0), vib: gn(0), les: gn(0), rvA: gn(0), rvB: gn(0) };
+      n.in.connect(n.dry); n.dry.connect(n.out);
+      [[.018, .8, .0035], [.026, 1.1, .0045]].forEach(function (c) {      // chorus
+        var d = a.createDelay(.1);
+        d.delayTime.value = c[0];
+        wire(lfo(c[1]), c[2], d.delayTime);
+        n.in.connect(d); d.connect(n.ch);
+      });
+      n.ch.connect(n.out);
+      var vd = a.createDelay(.1);                                           // vibrato
+      vd.delayTime.value = .006;
+      wire(lfo(5.6), .0012, vd.delayTime);
+      n.in.connect(vd); vd.connect(n.vib); n.vib.connect(n.out);
+      n.drum = lfo(.66); n.horn = lfo(.83);                                 // Leslie
+      var lp = a.createBiquadFilter(), hp = a.createBiquadFilter();
+      lp.type = "lowpass"; lp.frequency.value = 800; hp.type = "highpass"; hp.frequency.value = 800;
+      n.in.connect(lp); n.in.connect(hp);
+      [[lp, n.drum, .004, .0006, .85, .15], [hp, n.horn, .003, .0004, .75, .25]].forEach(function (r) {
+        var d = a.createDelay(.05), amp = gn(r[4]);
+        d.delayTime.value = r[2];
+        wire(r[1], r[3], d.delayTime);
+        wire(r[1], r[5], amp.gain);
+        r[0].connect(d); d.connect(amp); amp.connect(n.les);
+      });
+      n.les.connect(n.out);
+      var cA = a.createConvolver(), cB = a.createConvolver();               // réverbération : salle et église
+      cA.buffer = makeIR(a, 1.9, .015, 1.8, 1234567);
+      cB.buffer = makeIR(a, 4.8, .035, 1.0, 7654321);
+      n.out.connect(cA); cA.connect(n.rvA); n.rvA.connect(master);
+      n.out.connect(cB); cB.connect(n.rvB); n.rvB.connect(master);
+      n.out.connect(master);
+      fxNodes = n;
+      fxIn = n.in;
+      applyFx(true);
+    } catch (e) { fxNodes = null; fxIn = null; }
+  }
+  function applyFx(first) {
+    if (!fxNodes) return;
+    var n = fxNodes, t = audioCtx.currentTime, d = fx.mdMix / 100, tc = first ? .001 : .05, rv = fx.rvMix / 100 * .9;
+    var set = function (node, v) { node.gain.setTargetAtTime(v, t, tc); };
+    set(n.dry, fx.md === "vibrato" || fx.md.indexOf("les") === 0 ? 1 - d : 1);
+    set(n.ch, fx.md === "chorus" ? .7 * d : 0);
+    set(n.vib, fx.md === "vibrato" ? d : 0);
+    set(n.les, fx.md.indexOf("les") === 0 ? d : 0);
+    var fast = fx.md === "les_fast";
+    n.horn.frequency.setTargetAtTime(fast ? 6.8 : .83, t, .7);   // le haut-parleur accélère ou ralentit doucement
+    n.drum.frequency.setTargetAtTime(fast ? 6 : .66, t, 1.4);
+    set(n.rvA, fx.rv === "room" ? rv : 0);
+    set(n.rvB, fx.rv === "church" ? rv : 0);
+  }
+  function setFx(opts) {
+    if (opts) {
+      if ("rv" in opts && ["none", "room", "church"].indexOf(opts.rv) >= 0) fx.rv = opts.rv;
+      if ("md" in opts && ["none", "chorus", "vibrato", "les_slow", "les_fast"].indexOf(opts.md) >= 0) fx.md = opts.md;
+      if ("rvMix" in opts) fx.rvMix = Math.round(clampNum(opts.rvMix, 0, 100));
+      if ("mdMix" in opts) fx.mdMix = Math.round(clampNum(opts.mdMix, 0, 100));
+      if ("at" in opts) fx.at = Math.round(clampNum(opts.at, 0, 100));
+      if ("rl" in opts) fx.rl = Math.round(clampNum(opts.rl, 0, 100));
+    }
+    $("fx_rv").value = fx.rv;
+    $("fx_md").value = fx.md;
+    knobs.rvMix.set(fx.rvMix);
+    knobs.mdMix.set(fx.mdMix);
+    knobs.attack.set(fx.at);
+    knobs.release.set(fx.rl);
+    applyFx();
+    try { localStorage.setItem("dactylo.piano.fx.v1", JSON.stringify(fx)); } catch (e) {}
+  }
+  try {
+    var savedFx = JSON.parse(localStorage.getItem("dactylo.piano.fx.v1"));
+    if (savedFx) {
+      if (["none", "room", "church"].indexOf(savedFx.rv) >= 0) fx.rv = savedFx.rv;
+      if (["none", "chorus", "vibrato", "les_slow", "les_fast"].indexOf(savedFx.md) >= 0) fx.md = savedFx.md;
+      fx.rvMix = Math.round(clampNum(savedFx.rvMix, 0, 100));
+      fx.mdMix = Math.round(clampNum(savedFx.mdMix, 0, 100));
+      fx.at = Math.round(clampNum(savedFx.at, 0, 100));
+      fx.rl = Math.round(clampNum(savedFx.rl, 0, 100));
+    }
+  } catch (e) {}
+  $("fx_rv").onchange = function () { setFx({ rv: this.value }); this.blur(); };
+  $("fx_md").onchange = function () { setFx({ md: this.value }); this.blur(); };
+  setFx();
+
   /* ================= 8. Moteur des leçons ================= */
 
   /* instant visé pour l'étape i d'une leçon chronométrée : préparation, puis un accord tous les 2 temps */
@@ -2144,7 +2285,7 @@
     setSustain: setSustain, sustain: function () { return sustainOn; },
     setEcho: setEcho, echo: echo, knobs: knobs,
     importMidi: importMidiBuffer, songTools: updateSongTools,
-    setInstrument: setInstrument, instrument: function () { return instId; }, instruments: INSTRUMENTS,
+    fx: fx, setFx: setFx, setInstrument: setInstrument, instrument: function () { return instId; }, instruments: INSTRUMENTS,
     voiceCount: function () { return liveSynth.filter(function (x) { return !x.dead; }).length; },
     _draw: draw, _update: update
   };
