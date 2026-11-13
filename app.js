@@ -468,7 +468,9 @@ document.addEventListener("visibilitychange",function(){if(document.hidden)MUS.p
 function boot(){dbLoad();Q("i.pxi").forEach(function(e){e.outerHTML=pxsvg(e.dataset.i)});Q("[data-m]").forEach(function(e){e.innerHTML=pix(CAT,CATP,"cat")});$("hands").innerHTML=handsSVG();if(window.H3&&H3.init($("hands")))$("hands").classList.add("h3d");net();
  lchips();gf();gl();lobby();sim();plist();
  if(DB.cur&&prof()){enter(DB.cur)}else{S.fs=newProf().fs;bars();begin();$("login").classList.add("on");setTimeout(function(){$("pseudo").focus()},100)}
- try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}}
+ }
 
+/* utilisé par update.js : savoir si une partie est en cours (frappe ou mini-jeu) avant de recharger la page pour une mise à jour */
+window.DactyloApp={busy:function(){return !!((S.start&&!S.done&&S.stage>0)||(G&&!G.done))},save:dbSave};
 boot();
 })();

@@ -20,3 +20,18 @@ Jeu de piano avec de vraies notes échantillonnées (Do3 à Mi6 en mode libre, D
 ## Crédits
 - Sons de piano : soundfont **FluidR3_GM** (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public.
+
+## Mises à jour automatiques
+
+Le site (et l'appli installée) se met à jour tout seul, sans rien changer à la main quand on modifie `app.js`, `piano.js`, `style.css`, `index.html`, etc.
+
+- `sw.js` revérifie les fichiers du site auprès du serveur à chaque ouverture et sur demande. Si l'un a changé, il met son cache à jour et prévient la page.
+- `update.js` enregistre le service worker, cherche du nouveau au lancement, au retour sur l'appli, au retour du réseau et toutes les 5 minutes, puis recharge la page.
+- Le rechargement n'interrompt jamais une partie de frappe, un mini-jeu ou le piano en cours : il attend le repos (3 s sans action). Après 10 minutes sans aucune action, il recharge quand même. La progression est enregistrée juste avant.
+- Garde-fou : au plus 3 rechargements automatiques en 2 minutes par session.
+- À la toute première installation il n'y a pas de rechargement.
+
+À savoir :
+- Les gros fichiers qui changent rarement (sons, polices, icônes, `three.min.js`) sont servis depuis le cache sans revérification. Si vous en remplacez un en gardant le même nom, changez `V` dans `sw.js`.
+- Si vous ajoutez un nouveau fichier au site, ajoutez-le à `SHELL` (code) ou `STATIC` (gros fichiers) dans `sw.js` pour qu'il marche hors ligne.
+- Les personnes qui ont encore l'ancienne version reçoivent la nouvelle à leur prochaine ouverture ; ensuite tout est automatique.
