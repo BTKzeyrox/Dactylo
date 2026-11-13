@@ -353,6 +353,16 @@ button.st.on{border-color:var(--pc,var(--acc))}button.st.on i{background:var(--p
 .mkfab{display:none;position:fixed;right:14px;bottom:calc(86px + env(safe-area-inset-bottom,0px));z-index:30;font:700 .95rem var(--fb);padding:12px 18px;border-radius:99px;border:3px solid var(--acc);background:var(--acc);color:var(--onacc);box-shadow:0 4px 0 rgba(0,0,0,.18);min-height:48px}
 @media (pointer:coarse){body.typing:not(.kbd) .mkfab{display:block}}
 body.kbd aside{display:none}
+.sbhide{font-size:.8rem;padding:6px 10px;margin:-6px 0 8px;min-height:0}
+.sbshow{display:none;position:fixed;top:10px;left:10px;z-index:30;width:42px;height:42px;padding:0;border-radius:12px;border:3px solid var(--line2);background:var(--card);color:var(--ink);font-size:1.25rem;line-height:1;cursor:pointer;box-shadow:0 3px 0 var(--line2)}
+.sbshow:hover{background:var(--accs)}
+.sbshow:focus-visible{outline:3px solid var(--acc2);outline-offset:2px}
+body.sbh .sbshow{display:block}
+body.sbh aside{display:none}
+body.sbh .app{grid-template-columns:minmax(0,1fr)}
+body.sbh main{padding-left:max(64px,clamp(14px,4vw,44px))}
+@media (min-width:761px){aside{overflow-y:auto;overflow-x:hidden}}
+@media (max-width:760px){.sbhide{order:99;margin:0;font-size:.62rem;min-width:52px;text-align:center}.sbshow{top:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:10px}body.sbh main{padding-left:clamp(14px,4vw,44px);padding-bottom:70px}body.sbh.fit main{height:var(--vvh,100dvh)}}
 @media (max-width:760px){
  .app{grid-template-columns:minmax(0,1fr)}
  main{min-width:0;overflow-x:hidden}

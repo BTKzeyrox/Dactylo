@@ -9,7 +9,7 @@
 
    Les gros fichiers qui ne changent presque jamais (STATIC : sons, polices, icônes, three.min.js) sont servis depuis
    le cache sans revérification. Si vous en remplacez un en gardant le même nom, changez V : cela relance tout. */
-const V = "dactylo-v41";
+const V = "dactylo-v42";
 
 const SHELL = ["./", "index.html", "style.css", "app.js", "piano.js", "3d.js", "update.js", "manifest.webmanifest"];
 const STATIC = [

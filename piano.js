@@ -211,6 +211,20 @@
     ".pstage .res{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:5;background:var(--card);text-align:center;min-width:min(330px,90%);margin:0;box-shadow:0 8px 0 var(--line2)}",
     ".pn_load{position:absolute;left:0;right:0;top:8px;text-align:center;font-size:.8rem;color:#fff;opacity:.9;pointer-events:none}",
     "#pn_help{margin:8px 0 0}",
+    /* page unique, sans défilement : le panneau est compact et le clavier prend toute la place restante */
+    "body.fit #v-piano .pcard{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;margin-bottom:0}",
+    "body.fit .ppanel{flex:none}",
+    "body.fit .pstage{flex:1 1 auto;min-height:230px}",
+    "body.fit #pn_cv{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:none;max-height:none}",
+    "body.fit #pn_help{display:none}",
+    "body.fit .ppanel{display:flex;flex-wrap:wrap;align-items:stretch}",
+    "body.fit .pgrid{display:contents}",
+    "body.fit .ptop{flex:1 1 260px;min-width:0}",
+    "body.fit .pstats{margin:0 0 0 auto;gap:16px;align-self:center;padding:6px 12px;border-radius:12px;background:rgba(0,0,0,.22)}",
+    "body.fit .pstats strong{color:#ffb347}body.fit .pstats span{color:#b7aeca}",
+    "@media(max-height:900px){body.fit #v-piano h1{display:none}body.fit .pcard{padding:8px}body.fit .ppanel{gap:8px;padding:8px 10px;margin-bottom:8px}body.fit .ptop{gap:10px}body.fit .plcd{padding:7px 10px;gap:3px}body.fit .plcd .l3{display:none}body.fit .pgrid{gap:8px}body.fit .pgrp{padding:6px 8px;gap:6px}body.fit .pbtn{padding:6px 10px 6px 25px}body.fit .pbtn.round{padding:0}body.fit .pk{width:60px}body.fit .pk .knob{width:48px;height:48px}body.fit .pk.big{width:72px}body.fit .pk.big .knob{width:60px;height:60px}body.fit .mo{width:60px;height:86px}body.fit .pmetro{flex:1 1 300px}body.fit .pstats strong{font-size:.9rem;line-height:1.2}body.fit .pstats span{font-size:.68rem}}",
+    "@media(max-height:760px){body.fit .pk{width:52px}body.fit .pk .knob{width:40px;height:40px}body.fit .pk.big{width:60px}body.fit .pk.big .knob{width:50px;height:50px}body.fit .mo{width:50px;height:72px}body.fit .pkval{display:none}body.fit .plcd .l2{display:none}body.fit .pstage{min-height:190px}}",
+    "@media(max-width:760px){body.fit .ppanel{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;-webkit-overflow-scrolling:touch}body.fit .ppanel>*{flex:none}body.fit .ptop{flex:0 0 270px}body.fit .pgrp{flex-wrap:nowrap}body.fit .pstats{margin-left:0}body.fit .pstage{min-height:150px}}",
     "@media(max-width:560px){.ptop{grid-template-columns:1fr}.pk.big{justify-self:end}.plcd{font-size:.66rem}}"
   ].join("");
   document.head.appendChild(styleEl);
@@ -283,12 +297,12 @@
             '</div>',
           '</div>',
         '</div>',
-      '</div>',
-      '<div class="pstats">',
+        '<div class="pstats">',
         '<div><strong id="pn_score">0</strong><span>score</span></div>',
         '<div><strong id="pn_combo">0</strong><span>série</span></div>',
         '<div><strong id="pn_acc">100%</strong><span>précision</span></div>',
         '<div><strong id="pn_prog">0%</strong><span>avancement</span></div>',
+      '</div>',
       '</div>',
       '<div class="pstage">',
         '<canvas id="pn_cv" width="' + W + '" height="' + H + '" aria-label="Piano"></canvas>',
@@ -1078,6 +1092,18 @@
     else if (!on && rafId) { cancelAnimationFrame(rafId); rafId = 0; }
   }
 
+  /* le clavier garde ses proportions et prend toute la place restante (la souris et le tactile restent justes : le calcul des touches suit la taille affichée) */
+  function fitCanvas() {
+    if (!sec.classList.contains("on") || !document.body.classList.contains("fit")) return;
+    var st = cv.parentNode, aw = st.clientWidth, ah = st.clientHeight;
+    if (!aw || !ah) return;
+    var w = Math.max(120, Math.floor(Math.min(aw, ah * W / H)));
+    cv.style.width = w + "px";
+    cv.style.height = Math.round(w * H / W) + "px";
+  }
+  if (window.ResizeObserver) new ResizeObserver(fitCanvas).observe(cv.parentNode);
+  window.addEventListener("resize", fitCanvas);
+
   function visible() { return sec.classList.contains("on"); }
   new MutationObserver(function () {
     if (visible()) {
@@ -1085,6 +1111,8 @@
       helpText();
       refreshUI();
       runLoop(true);
+      fitCanvas();
+      requestAnimationFrame(fitCanvas);
     } else {
       runLoop(false);
       metroStop();

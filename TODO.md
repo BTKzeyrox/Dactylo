@@ -198,3 +198,4 @@
 - [ ] Disposition QWERTY et textes en anglais (bloqués dans Réglages pour l'instant)
 - [ ] Touches Entrée, Retour arrière et Tab
 - [ ] Version mobile et tactile
+- [x] Menu latéral masquable (bouton « ◀ Masquer » / « ☰ », choix mémorisé, aussi sur téléphone) ; piano en une seule page sans défilement (mode fit, clavier redimensionné automatiquement, panneau compact : bande défilante horizontale sur téléphone) ; cache sw.js v42
