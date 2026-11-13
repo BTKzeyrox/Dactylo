@@ -163,25 +163,55 @@
   styleEl.textContent = [
     "#v-piano h1{margin-bottom:8px}",
     ".pcard{padding:14px}",
-    ".pnbar{gap:10px;margin-bottom:8px}",
-    ".pnbar select,.pmet select{font:600 .9rem var(--fb);padding:7px 10px;border-radius:12px;border:3px solid var(--line2);background:var(--solid);color:var(--ink);max-width:100%}",
+    /* panneau de commandes : un piano de scène, graphite, écran ambre, boutons ronds */
+    ".ppanel{display:grid;gap:12px;margin-bottom:12px;padding:14px;border-radius:20px;border:3px solid #0f0c14;color:#e9e3f2;background:linear-gradient(180deg,#2d2738 0,#1a1622 100%);box-shadow:inset 0 2px 0 rgba(255,255,255,.1),inset 0 -4px 0 rgba(0,0,0,.35),0 6px 0 var(--line2)}",
+    ".ptop{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center}",
+    ".plcd{display:grid;gap:5px;min-width:0;padding:12px 14px;border-radius:10px;border:3px solid #0a0703;background:#1d1409;color:#ffb347;font:400 .72rem/1.35 var(--fs),monospace;text-shadow:0 0 7px rgba(255,179,71,.55);box-shadow:inset 0 3px 10px rgba(0,0,0,.7),0 1px 0 rgba(255,255,255,.12)}",
+    ".plcd div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+    ".plcd .l1{font-size:.9rem}",
+    ".plcd .l3{opacity:.6}",
+    ".pgrid{display:flex;flex-wrap:wrap;gap:10px}",
+    ".pgrp{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.22);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),inset 0 0 0 2px rgba(0,0,0,.25)}",
+    ".pbtns{display:flex;flex-wrap:wrap;align-items:center;gap:6px}",
+    /* boutons de piano : touche carrée avec voyant, qui s'enfonce quand on appuie */
+    ".pbtn{position:relative;padding:8px 12px 8px 27px;border:2px solid #0f0c14;border-radius:8px;background:linear-gradient(180deg,#4b4359,#2f2a3a);color:#e9e3f2;font:600 .8rem var(--fb);cursor:pointer;box-shadow:0 3px 0 #0f0c14,inset 0 1px 0 rgba(255,255,255,.2);transition:transform .05s,box-shadow .05s}",
+    ".pbtn:active{transform:translateY(2px);box-shadow:0 1px 0 #0f0c14,inset 0 1px 0 rgba(255,255,255,.2)}",
+    ".pbtn .led{position:absolute;left:10px;top:50%;width:9px;height:9px;margin-top:-4.5px;border-radius:50%;background:#3a2a12;box-shadow:inset 0 1px 2px rgba(0,0,0,.7)}",
+    ".pbtn[aria-pressed=true] .led{background:#ffb347;box-shadow:0 0 8px 2px rgba(255,179,71,.7)}",
+    ".pbtn.round{width:34px;height:34px;padding:0;border-radius:50%;font-size:1.1rem;line-height:1}",
+    ".pbtn.go{padding-left:14px;background:linear-gradient(180deg,#5fcb7d,#2b8a48);color:#06210f}",
+    ".pbtn:disabled{opacity:.4;cursor:default}",
+    ".pbtn:focus-visible,.knob:focus-visible,.psel:focus-visible{outline:3px solid #fff;outline-offset:2px}",
+    ".psel{max-width:220px;padding:7px 10px;border:2px solid #0f0c14;border-radius:8px;background:#16121c;color:#ffb347;font:600 .85rem var(--fb)}",
+    ".poct{min-width:92px;text-align:center;color:#ffb347;font:400 .7rem var(--fs)}",
+    /* boutons rotatifs */
+    ".pk{display:grid;justify-items:center;gap:1px;width:76px}",
+    ".pk .knob{width:64px;height:64px;border-radius:50%;cursor:ns-resize;touch-action:none}",
+    ".pk.big{width:96px}",
+    ".pk.big .knob{width:84px;height:84px}",
+    ".knob svg{display:block;width:100%;height:100%}",
+    ".pklab{color:#b7aeca;font:600 .72rem var(--fb)}",
+    ".pkval{min-height:1em;color:#ffb347;font:400 .62rem var(--fs)}",
+    /* métronome */
+    ".pmetro{flex:1 1 380px}",
+    ".mowrap{display:grid;flex:none;justify-items:center;gap:6px}",
+    ".mo{width:104px;height:148px;cursor:pointer}",
+    ".mo svg{display:block;width:100%;height:100%;filter:drop-shadow(0 4px 0 rgba(0,0,0,.35))}",
+    ".pmctl{display:flex;flex:1;flex-wrap:wrap;align-items:center;gap:8px}",
+    ".pdots{display:inline-flex;gap:6px}",
+    ".pdots i{display:inline-block;width:12px;height:12px;border-radius:50%;background:#3a2a12;box-shadow:inset 0 1px 2px rgba(0,0,0,.7)}",
+    ".pdots i.on{background:#ffb347;box-shadow:0 0 8px 2px rgba(255,179,71,.7)}",
+    ".pdots i.ac.on{background:#ff6a3d;box-shadow:0 0 8px 2px rgba(255,106,61,.7)}",
+    /* compteurs et scène */
     ".pstats{display:flex;gap:22px;flex-wrap:wrap;margin:4px 0 8px}",
     ".pstats strong{font:400 1rem var(--fs);display:block;line-height:1.4}",
     ".pstats span{font-size:.75rem;color:var(--mute)}",
-    ".pstage{position:relative;display:flex;justify-content:center;border-radius:16px;overflow:hidden;border:3px solid var(--line2);background:#10131f}",
+    ".pstage{position:relative;display:flex;justify-content:center;border-radius:16px;overflow:hidden;border:3px solid #0f0c14;background:#0d0a12}",
     "#pn_cv{display:block;max-width:100%;max-height:min(58vh,520px);width:auto;height:auto;touch-action:none;cursor:pointer}",
     ".pstage .res{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:5;background:var(--card);text-align:center;min-width:min(330px,90%);margin:0;box-shadow:0 8px 0 var(--line2)}",
     ".pn_load{position:absolute;left:0;right:0;top:8px;text-align:center;font-size:.8rem;color:#fff;opacity:.9;pointer-events:none}",
     "#pn_help{margin:8px 0 0}",
-    "#pn_vol{width:110px;accent-color:var(--acc)}",
-    ".pmet{gap:10px;margin:0 0 8px;align-items:center}",
-    ".pmet input[type=range]{accent-color:var(--acc);width:140px}",
-    "#pt_val{min-width:150px}",
-    "#pm_val,#pt_val,#pe_val{font:400 .85rem var(--fs);min-width:92px;text-align:center}",
-    ".pdots{display:inline-flex;gap:6px}",
-    ".pdots i{width:14px;height:14px;border-radius:4px;background:var(--line2);display:inline-block}",
-    ".pdots i.on{background:var(--acc)}",
-    ".pdots i.ac.on{background:#F2A93B}"
+    "@media(max-width:560px){.ptop{grid-template-columns:1fr}.pk.big{justify-self:end}.plcd{font-size:.66rem}}"
   ].join("");
   document.head.appendChild(styleEl);
 
@@ -201,53 +231,58 @@
   sec.innerHTML = [
     '<h1>Piano</h1>',
     '<div class="card pcard">',
-      '<div class="row pnbar">',
-        '<div class="chips" id="pn_mode" style="margin:0">',
-          '<button class="chip" data-m="free" aria-pressed="true">Libre</button>',
-          '<button class="chip" data-m="learn" aria-pressed="false">Apprendre</button>',
-          '<button class="chip" data-m="rhythm" aria-pressed="false">Rythme</button>',
-          '<button class="chip" data-m="lesson" aria-pressed="false">Leçons</button>',
+      '<div class="ppanel">',
+        '<div class="ptop">',
+          '<div class="plcd" role="status" aria-label="Écran du piano"><div class="l1" id="lcd1"></div><div class="l2" id="lcd2"></div><div class="l3" id="lcd3"></div></div>',
+          '<div class="pk big" id="kn_vol"></div>',
         '</div>',
-        '<select id="pn_song" aria-label="Mélodie"></select>',
-        '<select id="pn_les" aria-label="Leçon" style="display:none"></select>',
-        '<div class="chips" id="pn_oct" style="margin:0;align-items:center">',
-          '<button class="chip" data-o="-1" aria-label="Octave plus grave" aria-pressed="false">−</button>',
-          '<span class="note" id="pn_octl">Octaves 4–5</span>',
-          '<button class="chip" data-o="1" aria-label="Octave plus aiguë" aria-pressed="false">+</button>',
+        '<div class="pgrid">',
+          '<div class="pgrp"><div class="pbtns" id="pn_mode">',
+            '<button class="pbtn" data-mode="free" aria-pressed="true"><i class="led"></i>Libre</button>',
+            '<button class="pbtn" data-mode="learn" aria-pressed="false"><i class="led"></i>Apprendre</button>',
+            '<button class="pbtn" data-mode="rhythm" aria-pressed="false"><i class="led"></i>Rythme</button>',
+            '<button class="pbtn" data-mode="lesson" aria-pressed="false"><i class="led"></i>Leçons</button>',
+          '</div></div>',
+          '<div class="pgrp" id="pg_play">',
+            '<select class="psel" id="pn_song" aria-label="Mélodie"></select>',
+            '<select class="psel" id="pn_les" aria-label="Leçon" style="display:none"></select>',
+            '<div class="pbtns" id="pn_spd">',
+              '<button class="pbtn" data-s=".7" aria-pressed="false"><i class="led"></i>Lent</button>',
+              '<button class="pbtn" data-s="1" aria-pressed="true"><i class="led"></i>Normal</button>',
+              '<button class="pbtn" data-s="1.3" aria-pressed="false"><i class="led"></i>Rapide</button>',
+            '</div>',
+            '<button class="pbtn go" id="pn_go">▶ Jouer</button>',
+          '</div>',
+          '<div class="pgrp">',
+            '<div class="pbtns" id="pn_oct">',
+              '<button class="pbtn round" data-o="-1" aria-label="Octave plus grave">−</button>',
+              '<span class="poct" id="pn_octl">Octaves 4–5</span>',
+              '<button class="pbtn round" data-o="1" aria-label="Octave plus aiguë">+</button>',
+            '</div>',
+            '<button class="pbtn" id="pn_ped" aria-pressed="false" title="Pédale de sustain (barre Espace)"><i class="led"></i>Pédale</button>',
+          '</div>',
+          '<div class="pgrp">',
+            '<button class="pbtn" id="pe_on" aria-pressed="false" title="Ajoute des répétitions du son, comme dans une grande salle"><i class="led"></i>Écho</button>',
+            '<div class="pk" id="kn_ed"></div><div class="pk" id="kn_ef"></div>',
+          '</div>',
+          '<div class="pgrp">',
+            '<div class="pk" id="kn_tu"></div>',
+            '<button class="pbtn" id="pt_la" title="Joue le La pour accorder">♪ La</button>',
+            '<button class="pbtn" id="pt_rs" title="Remettre le La à 440 Hz">440</button>',
+          '</div>',
+          '<div class="pgrp pmetro">',
+            '<div class="mowrap"><div class="mo" id="mo" title="Cliquez pour démarrer ou arrêter le métronome"><svg viewBox="0 0 120 170" role="img" aria-label="Métronome"><path d="M24 164 L96 164 L77 22 L43 22 Z" fill="#7a4a2d" stroke="#25150a" stroke-width="3" stroke-linejoin="round"/><path d="M33 152 L87 152 L73 36 L47 36 Z" fill="#a46a41" opacity=".6"/><g stroke="#2a190d" stroke-width="1.5" opacity=".55"><line x1="52" y1="52" x2="68" y2="52"/><line x1="50" y1="72" x2="70" y2="72"/><line x1="48" y1="92" x2="72" y2="92"/><line x1="46" y1="112" x2="74" y2="112"/><line x1="44" y1="132" x2="76" y2="132"/></g><rect x="18" y="160" width="84" height="9" rx="3" fill="#3a2314" stroke="#25150a" stroke-width="2"/><g id="mo_arm" transform="rotate(0 60 140)"><rect x="58.5" y="2" width="3" height="140" rx="1.5" fill="#dcd6e8" stroke="#6d6580" stroke-width="1"/><rect id="mo_w" x="52" y="14" width="16" height="14" rx="3" fill="#e0b04a" stroke="#6b4a10" stroke-width="1.5"/></g><circle cx="60" cy="140" r="7" fill="#e0b04a" stroke="#6b4a10" stroke-width="2"/></svg></div><span class="pdots" id="pm_dots"></span></div>',
+            '<div class="pmctl">',
+              '<div class="pk" id="kn_bpm"></div><div class="pk" id="kn_mv"></div>',
+              '<div class="pbtns">',
+                '<button class="pbtn" id="pm_go" aria-pressed="false"><i class="led"></i>Tic-tac</button>',
+                '<button class="pbtn round" id="pm_dn" aria-label="Plus lent">−</button>',
+                '<button class="pbtn round" id="pm_up" aria-label="Plus rapide">+</button>',
+              '</div>',
+              '<select class="psel" id="pm_beats" aria-label="Mesure"><option value="2">2 temps</option><option value="3">3 temps</option><option value="4" selected>4 temps</option><option value="6">6 temps</option></select>',
+            '</div>',
+          '</div>',
         '</div>',
-        '<div class="chips" style="margin:0"><button class="chip" id="pn_ped" aria-pressed="false" title="Pédale de sustain (barre Espace)">Pédale</button></div>',
-        '<div class="chips" id="pn_spd" style="margin:0">',
-          '<button class="chip" data-s=".7" aria-pressed="false">Lent</button>',
-          '<button class="chip" data-s="1" aria-pressed="true">Normal</button>',
-          '<button class="chip" data-s="1.3" aria-pressed="false">Rapide</button>',
-        '</div>',
-        '<button class="btn p" id="pn_go">Jouer</button>',
-        '<label class="note" style="margin-left:auto">Volume <input type="range" id="pn_vol" min="0" max="100" value="80" aria-label="Volume"></label>',
-      '</div>',
-      '<div class="row pmet">',
-        '<button class="btn" id="pm_go">▶ Tic-tac</button>',
-        '<button class="chip" id="pm_dn" aria-label="Plus lent" aria-pressed="false">−</button>',
-        '<input type="range" id="pm_bpm" min="40" max="220" value="100" aria-label="Tempo">',
-        '<button class="chip" id="pm_up" aria-label="Plus rapide" aria-pressed="false">+</button>',
-        '<strong id="pm_val">100 BPM</strong>',
-        '<select id="pm_beats" aria-label="Mesure"><option value="2">2 temps</option><option value="3">3 temps</option><option value="4" selected>4 temps</option><option value="6">6 temps</option></select>',
-        '<span class="pdots" id="pm_dots"></span>',
-        '<label class="note">Volume tic-tac <input type="range" id="pm_vol" min="0" max="100" value="60" aria-label="Volume du tic-tac"></label>',
-      '</div>',
-      '<div class="row pmet">',
-        '<button class="chip" id="pe_on" aria-pressed="false" title="Ajoute des répétitions du son, comme dans une grande salle">Écho</button>',
-        '<label class="note">Délai <input type="range" id="pe_time" min="100" max="800" step="10" value="300" aria-label="Délai de l\'écho"></label>',
-        '<label class="note">Répétitions <input type="range" id="pe_fb" min="0" max="80" step="5" value="40" aria-label="Nombre de répétitions de l\'écho"></label>',
-        '<strong id="pe_val">300 ms · 40 %</strong>',
-      '</div>',
-      '<div class="row pmet">',
-        '<b class="note">Accordage</b>',
-        '<label class="note">La <input type="range" id="pt_hz" min="430" max="450" step="1" value="440" aria-label="Fréquence du La"></label>',
-        '<strong id="pt_val">440 Hz (0 cents)</strong>',
-        '<button class="chip" id="pt_dn" aria-label="Plus grave" aria-pressed="false">−</button>',
-        '<button class="chip" id="pt_up" aria-label="Plus aigu" aria-pressed="false">+</button>',
-        '<button class="btn" id="pt_la">♪ Jouer le La</button>',
-        '<button class="btn" id="pt_rs">Remettre à 440</button>',
       '</div>',
       '<div class="pstats">',
         '<div><strong id="pn_score">0</strong><span>score</span></div>',
@@ -267,6 +302,104 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var cv = $("pn_cv"), ctx = cv.getContext("2d");
+
+  /* ---------- Boutons rotatifs ----------
+     Glisser vers le haut ou la droite augmente, vers le bas ou la gauche diminue (Maj = réglage fin).
+     Molette, flèches (Page haut/bas : grands pas, Début/Fin : min/max) et double-clic (valeur d'origine) marchent aussi. */
+  var KNOB_FROM = -135, KNOB_SPAN = 270;   // le bouton tourne de -135° à +135°
+  function polar(r, deg) {
+    var a = deg * Math.PI / 180;
+    return (50 + r * Math.sin(a)).toFixed(2) + " " + (50 - r * Math.cos(a)).toFixed(2);
+  }
+  function knobSvg() {
+    var ticks = "", i;
+    for (i = 0; i <= 10; i++) {
+      var d = KNOB_FROM + KNOB_SPAN * i / 10, a = polar(41, d).split(" "), b = polar(47, d).split(" ");
+      ticks += '<line x1="' + a[0] + '" y1="' + a[1] + '" x2="' + b[0] + '" y2="' + b[1] + '" stroke="#7b7190" stroke-width="' + (i % 5 ? 1.4 : 2.4) + '" stroke-linecap="round"/>';
+    }
+    return '<svg viewBox="0 0 100 100" aria-hidden="true">' + ticks +
+      '<path d="M ' + polar(37, KNOB_FROM) + ' A 37 37 0 1 1 ' + polar(37, KNOB_FROM + KNOB_SPAN) + '" fill="none" stroke="#0e0b13" stroke-width="4" stroke-linecap="round"/>' +
+      '<path class="karc" d="" fill="none" stroke="#ffb347" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="50" cy="50" r="29" fill="#16121d" stroke="#08060b" stroke-width="2"/>' +
+      '<g class="kcap"><circle cx="50" cy="50" r="25" fill="#3b3548"/>' +
+      '<circle cx="50" cy="50" r="25" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="1.5"/>' +
+      '<line x1="50" y1="28" x2="50" y2="39" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></g>' +
+      '<ellipse cx="43" cy="40" rx="12" ry="7" fill="rgba(255,255,255,.1)"/></svg>';
+  }
+  /* o : { label, min, max, step, def, fmt(v) -> texte, onChange(v) } ; renvoie { el, get, set (sans onChange), change (avec onChange) } */
+  function makeKnob(host, o) {
+    var min = o.min, max = o.max, step = o.step || 1, val = o.def, fmt = o.fmt || String;
+    var coarse = Math.max(1, Math.round((max - min) / step / 50));   // pas de la molette
+    host.innerHTML = '<div class="knob" tabindex="0" role="slider" aria-label="' + o.label + '" aria-valuemin="' + min + '" aria-valuemax="' + max + '">' + knobSvg() +
+      '</div><span class="pklab">' + o.label + '</span><span class="pkval"></span>';
+    var el = host.firstChild, cap = el.querySelector(".kcap"), arc = el.querySelector(".karc"), out = host.querySelector(".pkval");
+    function snap(v) {
+      var n = Math.round((Math.max(min, Math.min(max, +v)) - min) / step) * step + min;
+      return Math.max(min, Math.min(max, Math.round(n * 1e6) / 1e6));
+    }
+    function render() {
+      var frac = (val - min) / (max - min), deg = KNOB_FROM + KNOB_SPAN * frac;
+      cap.setAttribute("transform", "rotate(" + deg.toFixed(1) + " 50 50)");
+      arc.setAttribute("d", frac > .001 ? "M " + polar(37, KNOB_FROM) + " A 37 37 0 " + (KNOB_SPAN * frac > 180 ? 1 : 0) + " 1 " + polar(37, deg) : "");
+      el.setAttribute("aria-valuenow", val);
+      el.setAttribute("aria-valuetext", fmt(val));
+      out.textContent = fmt(val);
+    }
+    function set(v, silent) {
+      v = snap(v);
+      if (v === val) return;
+      val = v;
+      render();
+      if (!silent && o.onChange) o.onChange(val);
+    }
+    var drag = null;
+    el.addEventListener("pointerdown", function (e) {
+      e.preventDefault();
+      el.focus();
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      drag = { id: e.pointerId, x: e.clientX, y: e.clientY, v: val };
+    });
+    el.addEventListener("pointermove", function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var d = (drag.y - e.clientY) + (e.clientX - drag.x);
+      set(drag.v + d / (e.shiftKey ? 600 : 150) * (max - min));
+    });
+    function stop(e) { if (drag && e.pointerId === drag.id) drag = null; }
+    el.addEventListener("pointerup", stop);
+    el.addEventListener("pointercancel", stop);
+    el.addEventListener("wheel", function (e) { e.preventDefault(); set(val + (e.deltaY < 0 ? 1 : -1) * step * coarse); }, { passive: false });
+    el.addEventListener("dblclick", function () { set(o.def); });
+    el.addEventListener("keydown", function (e) {
+      var k = e.key, v = null;
+      if (k === "ArrowUp" || k === "ArrowRight") v = val + step;
+      else if (k === "ArrowDown" || k === "ArrowLeft") v = val - step;
+      else if (k === "PageUp") v = val + step * 10;
+      else if (k === "PageDown") v = val - step * 10;
+      else if (k === "Home") v = min;
+      else if (k === "End") v = max;
+      if (v === null) return;
+      e.preventDefault();
+      e.stopPropagation();   // les flèches règlent le bouton, elles ne changent pas l'octave
+      set(v);
+    });
+    render();
+    return { el: el, get: function () { return val; }, set: function (v) { set(v, true); }, change: function (v) { set(v); } };
+  }
+
+  var knobs = {};
+  function pct(v) { return v + " %"; }
+  knobs.volume = makeKnob($("kn_vol"), { label: "Volume", min: 0, max: 100, step: 1, def: 80, fmt: pct,
+    onChange: function (v) { volume = v / 100; if (master) master.gain.value = volume; } });
+  knobs.echoTime = makeKnob($("kn_ed"), { label: "Délai", min: 100, max: 800, step: 10, def: 300, fmt: function (v) { return v + " ms"; },
+    onChange: function (v) { setEcho({ time: v / 1000 }); } });
+  knobs.echoFb = makeKnob($("kn_ef"), { label: "Répétitions", min: 0, max: 80, step: 5, def: 40, fmt: pct,
+    onChange: function (v) { setEcho({ fb: v / 100 }); } });
+  knobs.tune = makeKnob($("kn_tu"), { label: "Accord", min: 430, max: 450, step: 1, def: 440, fmt: function (v) { return v + " Hz"; },
+    onChange: function (v) { setTune(v); } });
+  knobs.bpm = makeKnob($("kn_bpm"), { label: "Tempo", min: 40, max: 220, step: 1, def: 100, fmt: function (v) { return v + " BPM"; },
+    onChange: function (v) { setBpm(v); } });
+  knobs.metroVol = makeKnob($("kn_mv"), { label: "Tic-tac", min: 0, max: 100, step: 1, def: 60, fmt: pct,
+    onChange: function (v) { metro.vol = v / 100; if (metroGain) metroGain.gain.value = metro.vol; saveMetro(); } });
 
   /* carte dans le catalogue des jeux */
   var gamesList = $("gl");
@@ -458,6 +591,7 @@
       heldVoices = [];
     }
     $("pn_ped").setAttribute("aria-pressed", on);
+    refreshLcd();
   }
 
   /* arrête tout (changement de page, fenêtre qui perd le focus) */
@@ -548,6 +682,18 @@
       (m === "lesson" ? "<br><b>" + LESSONS[game.les].name + "</b> : " + LESSONS[game.les].desc : "") +
       (m === "free" ? " Flèches <b>↑ ↓</b> ou boutons − / + : changer d'octave (3 à 6). Glissez la souris ou le doigt sur les touches pour un glissando." : "") +
       " <b>Espace</b> : pédale de sustain (les notes continuent de résonner).";
+  }
+
+  /* écran du piano : mode, morceau, tempo, octaves, accordage, écho */
+  function refreshLcd() {
+    var names = { free: "Mode libre", learn: "Apprendre", rhythm: "Rythme", lesson: "Leçons" };
+    var l1 = names[game.mode];
+    if (game.mode === "learn" || game.mode === "rhythm") l1 += " · " + SONGS[game.song][0];
+    else if (game.mode === "lesson") l1 += " · " + LESSONS[game.les].name;
+    $("lcd1").textContent = l1;
+    $("lcd2").textContent = metro.bpm + " BPM · " + metro.beats + " temps" + (metro.on ? " · tic-tac" : "");
+    $("lcd3").textContent = "Octaves " + (4 + game.oct) + "–" + (5 + game.oct) + " · La " + TUNE + " Hz · écho " +
+      (echo.on ? Math.round(echo.time * 1000) + " ms" : "non") + (sustainOn ? " · Pédale" : "");
   }
 
   /* --- records, enregistrés par joueur --- */
@@ -724,17 +870,9 @@
     var i, f;
     for (i = 0; i < 8; i++) {
       f = i / 7;
-      ctx.fillStyle = "rgb(" + [27 + 16 * f | 0, 34 + 24 * f | 0, 54 + 49 * f | 0] + ")";
+      ctx.fillStyle = "rgb(" + [22 + 14 * f | 0, 18 + 12 * f | 0, 32 + 24 * f | 0] + ")";
       ctx.fillRect(0, i * KEY_Y / 8, W, KEY_Y / 8 + 1);
     }
-    /* étoiles qui scintillent */
-    ctx.fillStyle = "#fff";
-    for (i = 0; i < 36; i++) {
-      var x = (i * 197) % W, y = (i * 83) % KEY_Y;
-      ctx.globalAlpha = Math.floor(t * 1.5 + i) % 3 ? .55 : .25;
-      ctx.fillRect(x - x % 4, y - y % 4, 4, 4);
-    }
-    ctx.globalAlpha = 1;
     /* colonnes des 10 touches blanches */
     for (i = 0; i < 10; i++) {
       ctx.fillStyle = i % 2 ? "rgba(255,255,255,.03)" : "rgba(255,255,255,.07)";
@@ -768,19 +906,54 @@
     });
   }
 
+  /* dégradés du clavier, créés une seule fois */
+  var gradWhite = null, gradBlack = null, gradPressed = null, gradCheek = null;
+  function makeGradients() {
+    function grad(y0, y1, stops) {
+      var g = ctx.createLinearGradient(0, y0, 0, y1);
+      stops.forEach(function (st) { g.addColorStop(st[0], st[1]); });
+      return g;
+    }
+    gradWhite = grad(KEY_Y, H, [[0, "#e3dccb"], [.1, "#fffdf6"], [.8, "#fbf7ec"], [1, "#d6cfbd"]]);
+    gradBlack = grad(KEY_Y, KEY_Y + 80, [[0, "#4d475b"], [.8, "#18141f"], [1, "#050407"]]);
+    gradPressed = grad(KEY_Y, H, [[0, "#ffd58a"], [1, "#f2a93b"]]);
+    gradCheek = grad(KEY_Y, H, [[0, "#2c2635"], [1, "#0d0a12"]]);
+  }
+
+  /* clavier de piano de concert : joues noires, feutre rouge, touches ivoire et ébène */
   function drawKeyboard(hint) {
-    ctx.fillStyle = "#1a1424";
+    if (!gradWhite) makeGradients();
+    ctx.fillStyle = "#0d0a12";
     ctx.fillRect(0, KEY_Y, W, H - KEY_Y);
+    ctx.fillStyle = gradCheek;
+    ctx.fillRect(0, KEY_Y, 50, H - KEY_Y);
+    ctx.fillRect(850, KEY_Y, 50, H - KEY_Y);
+    ctx.fillStyle = "rgba(255,255,255,.1)";
+    ctx.fillRect(0, KEY_Y, 50, 2);
+    ctx.fillRect(850, KEY_Y, 50, 2);
+    ctx.fillStyle = "#d9a441";
+    ctx.font = '700 11px Poppins,Arial,sans-serif';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Dactylo", 25, KEY_Y + 24);
+    ctx.globalAlpha = .6;
+    ctx.fillText("Piano", 25, KEY_Y + 40);
+    ctx.globalAlpha = 1;
+    /* feutre rouge au-dessus des touches */
+    ctx.fillStyle = "#7d1d2b";
+    ctx.fillRect(50, KEY_Y - 5, 800, 5);
+    ctx.fillStyle = "rgba(255,255,255,.18)";
+    ctx.fillRect(50, KEY_Y - 5, 800, 1);
     /* touches blanches */
     keys.forEach(function (k) {
       if (!k.white) return;
-      var pressed = game.down[k.code], dy = pressed ? 4 : 0;
-      ctx.fillStyle = "#3A2F45";
+      var pressed = game.down[k.code], dy = pressed ? 3 : 0;
+      ctx.fillStyle = "#1c1722";
       ctx.fillRect(k.x, KEY_Y, k.w, H - KEY_Y);
-      ctx.fillStyle = pressed ? "#F2A93B" : hint[k.code] ? PASTEL[k.f] : "#FFFDF6";
-      ctx.fillRect(k.x + 2, KEY_Y + dy, k.w - 4, H - KEY_Y - 4 - dy);
-      ctx.fillStyle = "rgba(58,47,69,.12)";
-      ctx.fillRect(k.x + 2, H - 14, k.w - 4, 10);
+      ctx.fillStyle = pressed ? gradPressed : hint[k.code] ? PASTEL[k.f] : gradWhite;
+      ctx.fillRect(k.x + 1, KEY_Y + dy, k.w - 2, H - KEY_Y - 5 - dy);
+      ctx.fillStyle = "rgba(60,48,40,.2)";
+      ctx.fillRect(k.x + 1, H - 17, k.w - 2, 12);
       ctx.fillStyle = "#3A2F45";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -795,12 +968,16 @@
     keys.forEach(function (k) {
       if (k.white) return;
       var pressed = game.down[k.code], dy = pressed ? 3 : 0;
-      ctx.fillStyle = "#1a1424";
+      ctx.fillStyle = "rgba(0,0,0,.55)";
       ctx.fillRect(k.x - 2, KEY_Y, k.w + 4, 86);
-      ctx.fillStyle = pressed ? "#F2A93B" : hint[k.code] ? PASTEL[k.f] : "#3B3050";
+      ctx.fillStyle = pressed ? "#F2A93B" : hint[k.code] ? PASTEL[k.f] : gradBlack;
       ctx.fillRect(k.x, KEY_Y + dy, k.w, 80 - dy);
-      ctx.fillStyle = "rgba(255,255,255,.18)";
-      ctx.fillRect(k.x + 4, KEY_Y + dy + 4, 6, 64);
+      if (!pressed && !hint[k.code]) {
+        ctx.fillStyle = "rgba(255,255,255,.16)";
+        ctx.fillRect(k.x + 4, KEY_Y + 4, 5, 56);
+        ctx.fillStyle = "rgba(255,255,255,.07)";
+        ctx.fillRect(k.x + 3, KEY_Y + 62, k.w - 6, 14);
+      }
       ctx.fillStyle = pressed || hint[k.code] ? "#3A2F45" : "#FFFDF6";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -809,15 +986,27 @@
     });
   }
 
-  /* voyant de la pédale de sustain, à droite du clavier */
+  /* voyant de la pédale de sustain, sur la joue droite du clavier */
   function drawPedal() {
-    ctx.fillStyle = sustainOn ? "#F2A93B" : "#3B3050";
-    ctx.fillRect(856, KEY_Y + 10, 38, 22);
-    ctx.fillStyle = sustainOn ? "#3A2F45" : "#FFFDF6";
-    ctx.font = '700 11px Poppins,Arial,sans-serif';
+    ctx.fillStyle = "#08060b";
+    ctx.beginPath();
+    ctx.arc(875, KEY_Y + 24, 11, 0, Math.PI * 2);
+    ctx.fill();
+    if (sustainOn) {
+      ctx.fillStyle = "rgba(255,179,71,.28)";
+      ctx.beginPath();
+      ctx.arc(875, KEY_Y + 24, 16, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = sustainOn ? "#ffb347" : "#3a2a12";
+    ctx.beginPath();
+    ctx.arc(875, KEY_Y + 24, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#cfc7d8";
+    ctx.font = '600 10px Poppins,Arial,sans-serif';
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("PÉD.", 875, KEY_Y + 21);
+    ctx.fillText("Pédale", 875, KEY_Y + 48);
   }
 
   function drawEffects() {
@@ -882,6 +1071,7 @@
     lastTime = t;
     update(dt);
     draw(t);
+    drawMetroObject();
   }
   function runLoop(on) {
     if (on && !rafId) { lastTime = nowSec(); rafId = requestAnimationFrame(frame); }
@@ -914,26 +1104,28 @@
     setOct(0);
     game.phase = "idle";
     game.notes = [];
-    Array.prototype.forEach.call(document.querySelectorAll("#pn_mode .chip"), function (b) {
-      b.setAttribute("aria-pressed", b.dataset.m === m);
+    Array.prototype.forEach.call(document.querySelectorAll("#pn_mode [data-mode]"), function (b) {
+      b.setAttribute("aria-pressed", b.dataset.mode === m);
     });
     $("pn_spd").style.display = m === "rhythm" ? "" : "none";
     $("pn_song").style.display = m === "learn" || m === "rhythm" ? "" : "none";
     $("pn_les").style.display = m === "lesson" ? "" : "none";
-    $("pn_go").style.display = m === "free" ? "none" : "";
+    $("pg_play").style.display = m === "free" ? "none" : "";
     $("pn_res").classList.add("hide");
     game.score = 0; game.combo = 0;
     game.hits = game.miss = game.wrong = game.done = 0;
     helpText();
     refreshUI();
+    refreshLcd();
   }
 
   function setOct(d) {
     game.oct = Math.max(-1, Math.min(1, game.oct + d));
     $("pn_octl").textContent = "Octaves " + (4 + game.oct) + "–" + (5 + game.oct);
-    Array.prototype.forEach.call(document.querySelectorAll("#pn_oct .chip"), function (b) {
+    Array.prototype.forEach.call(document.querySelectorAll("#pn_oct [data-o]"), function (b) {
       b.disabled = (+b.dataset.o < 0 && game.oct <= -1) || (+b.dataset.o > 0 && game.oct >= 1);
     });
+    refreshLcd();
   }
 
   $("pn_song").innerHTML = SONGS.map(function (s, i) { return '<option value="' + i + '">' + s[0] + "</option>"; }).join("");
@@ -948,22 +1140,22 @@
     game.phase = "idle";
     $("pn_res").classList.add("hide");
     helpText();
+    refreshLcd();
     this.blur();
   };
-  $("pn_song").onchange = function () { game.song = +this.value; game.phase = "idle"; this.blur(); };
+  $("pn_song").onchange = function () { game.song = +this.value; game.phase = "idle"; refreshLcd(); this.blur(); };
   $("pn_mode").onclick = function (e) {
-    var b = e.target.closest("[data-m]");
-    if (b) { setMode(b.dataset.m); b.blur(); }
+    var b = e.target.closest("[data-mode]");
+    if (b) { setMode(b.dataset.mode); b.blur(); }
   };
   $("pn_spd").onclick = function (e) {
     var b = e.target.closest("[data-s]");
     if (!b) return;
     game.spd = +b.dataset.s;
-    Array.prototype.forEach.call(document.querySelectorAll("#pn_spd .chip"), function (x) { x.setAttribute("aria-pressed", x === b); });
+    Array.prototype.forEach.call(document.querySelectorAll("#pn_spd [data-s]"), function (x) { x.setAttribute("aria-pressed", x === b); });
     b.blur();
   };
   $("pn_go").onclick = function () { getAudio(); start(); this.blur(); };
-  $("pn_vol").oninput = function () { volume = this.value / 100; if (master) master.gain.value = volume; };
   $("pn_ped").onclick = function () { setSustain(!sustainOn); this.blur(); };
 
   /* touche enfoncée / relâchée (clavier, souris ou tactile) */
@@ -1071,8 +1263,32 @@
 
   /* Métronome (tic-tac) : indépendant des modes, réglable de 40 à 220 BPM.
      Les clics sont programmés un peu à l'avance sur l'horloge audio, donc le rythme reste régulier. */
-  var metro = { on: false, bpm: 100, beats: 4, vol: .6, next: 0, beat: 0, q: [], tm: 0 };
+  var metro = { on: false, bpm: 100, beats: 4, vol: .6, next: 0, beat: 0, q: [], tm: 0, lastT: null, swings: 0 };
   var metroGain = null;
+
+  /* L'objet métronome : un balancier qui touche un côté à chaque clic. lastT = instant du dernier clic joué,
+     swings = nombre de clics joués (pair ou impair = côté du balancier). Le poids monte quand le tempo ralentit. */
+  var moArm = $("mo_arm"), moWeight = $("mo_w"), moAngle = 0, MO_AMP = 28;
+  function updateMetroWeight() {
+    if (moWeight) moWeight.setAttribute("y", (14 + (metro.bpm - 40) / 180 * 90).toFixed(1));
+  }
+  function drawMetroObject() {
+    if (!moArm) return;
+    if (metro.on && audioCtx) {
+      if (metro.lastT == null) {
+        moAngle = MO_AMP;   // départ : balancier à droite, prêt à partir
+      } else {
+        var nextT = metro.q.length ? metro.q[0].t : metro.next;
+        var span = Math.max(.05, nextT - metro.lastT);
+        var phase = Math.max(0, Math.min(1, (audioCtx.currentTime - metro.lastT) / span));
+        moAngle = (metro.swings % 2 ? 1 : -1) * MO_AMP * Math.cos(Math.PI * phase);
+      }
+    } else {
+      moAngle += (0 - moAngle) * .25;   // à l'arrêt, le balancier revient doucement au centre
+      if (Math.abs(moAngle) < .05) moAngle = 0;
+    }
+    moArm.setAttribute("transform", "rotate(" + moAngle.toFixed(2) + " 60 140)");
+  }
 
   function clampNum(v, lo, hi) { v = +v; return isNaN(v) ? lo : Math.max(lo, Math.min(hi, v)); }
 
@@ -1100,8 +1316,9 @@
   }
   function setBpm(v) {
     metro.bpm = Math.round(clampNum(v, 40, 220));
-    $("pm_bpm").value = metro.bpm;
-    $("pm_val").textContent = metro.bpm + " BPM";
+    knobs.bpm.set(metro.bpm);
+    updateMetroWeight();
+    refreshLcd();
     saveMetro();
   }
 
@@ -1126,7 +1343,12 @@
       metro.next += spb;
       metro.beat = (metro.beat + 1) % metro.beats;
     }
-    while (metro.q.length && metro.q[0].t <= audioCtx.currentTime) lightDot(metro.q.shift().b);
+    while (metro.q.length && metro.q[0].t <= audioCtx.currentTime) {
+      var click = metro.q.shift();
+      lightDot(click.b);
+      metro.lastT = click.t;
+      metro.swings++;
+    }
   }
   function metroStart() {
     var a = getAudio();
@@ -1136,27 +1358,30 @@
     metro.on = true;
     metro.beat = 0;
     metro.q = [];
+    metro.lastT = null;
+    metro.swings = 0;
     metro.next = a.currentTime + .08;
     metro.t0 = metro.next;   // instant du premier temps (sert aux leçons chronométrées)
     metroTick();
     if (!metro.tm) metro.tm = setInterval(metroTick, 25);
-    $("pm_go").textContent = "■ Tic-tac";
+    $("pm_go").setAttribute("aria-pressed", true);
+    refreshLcd();
   }
   function metroStop() {
     metro.on = false;
     if (metro.tm) { clearInterval(metro.tm); metro.tm = 0; }
     metro.q = [];
     lightDot(-1);
-    $("pm_go").textContent = "▶ Tic-tac";
+    $("pm_go").setAttribute("aria-pressed", false);
+    refreshLcd();
   }
   $("pm_go").onclick = function () { if (metro.on) metroStop(); else metroStart(); this.blur(); };
-  $("pm_bpm").oninput = function () { setBpm(this.value); };
+  $("mo").onclick = function () { if (metro.on) metroStop(); else metroStart(); };
   $("pm_dn").onclick = function () { setBpm(metro.bpm - 1); this.blur(); };
   $("pm_up").onclick = function () { setBpm(metro.bpm + 1); this.blur(); };
-  $("pm_beats").onchange = function () { metro.beats = +this.value; metro.beat = 0; drawDots(); saveMetro(); this.blur(); };
-  $("pm_vol").oninput = function () { metro.vol = this.value / 100; if (metroGain) metroGain.gain.value = metro.vol; saveMetro(); };
+  $("pm_beats").onchange = function () { metro.beats = +this.value; metro.beat = 0; drawDots(); saveMetro(); refreshLcd(); this.blur(); };
   $("pm_beats").value = metro.beats;
-  $("pm_vol").value = Math.round(metro.vol * 100);
+  knobs.metroVol.set(Math.round(metro.vol * 100));
   drawDots();
   setBpm(metro.bpm);
 
@@ -1167,14 +1392,10 @@
   } catch (e) {}
   function setTune(v) {
     TUNE = Math.round(clampNum(v, 430, 450));
-    $("pt_hz").value = TUNE;
-    var cents = Math.round(1200 * Math.log(TUNE / 440) / Math.LN2);
-    $("pt_val").textContent = TUNE + " Hz (" + (cents > 0 ? "+" : "") + cents + " cents)";
+    knobs.tune.set(TUNE);
+    refreshLcd();
     try { localStorage.setItem("dactylo.piano.tune.v1", JSON.stringify(TUNE)); } catch (e) {}
   }
-  $("pt_hz").oninput = function () { setTune(this.value); };
-  $("pt_dn").onclick = function () { setTune(TUNE - 1); this.blur(); };
-  $("pt_up").onclick = function () { setTune(TUNE + 1); this.blur(); };
   $("pt_rs").onclick = function () { setTune(440); this.blur(); };
   $("pt_la").onclick = function () {
     getAudio();
@@ -1201,15 +1422,13 @@
     }
     var ms = Math.round(echo.time * 1000), pct = Math.round(echo.fb * 100);
     $("pe_on").setAttribute("aria-pressed", echo.on);
-    $("pe_time").value = ms;
-    $("pe_fb").value = pct;
-    $("pe_val").textContent = ms + " ms · " + pct + " %";
+    knobs.echoTime.set(ms);
+    knobs.echoFb.set(pct);
+    refreshLcd();
     applyEcho();
     try { localStorage.setItem("dactylo.piano.echo.v1", JSON.stringify({ on: echo.on, time: echo.time, fb: echo.fb })); } catch (e) {}
   }
   $("pe_on").onclick = function () { getAudio(); setEcho({ on: !echo.on }); this.blur(); };
-  $("pe_time").oninput = function () { setEcho({ time: this.value / 1000 }); };
-  $("pe_fb").oninput = function () { setEcho({ fb: this.value / 100 }); };
   setEcho();
 
   /* ================= 8. Moteur des leçons ================= */
@@ -1358,7 +1577,7 @@
     start: start, setMode: setMode, parse: parseMelody,
     _buf: buffers, pick: pickSample, setOct: setOct, oct: octShift,
     setSustain: setSustain, sustain: function () { return sustainOn; },
-    setEcho: setEcho, echo: echo,
+    setEcho: setEcho, echo: echo, knobs: knobs,
     _draw: draw, _update: update
   };
 

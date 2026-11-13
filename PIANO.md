@@ -45,6 +45,7 @@ Règle : uniquement des airs dont je suis sûr de la mélodie ; tout doit tenir 
 - **Leçons d'accords : FAIT** (mode « Leçons », 6 leçons).
 - **Correctifs piano : FAIT** : relâchement progressif (une note sonne au moins 0,3 s puis s'éteint en douceur), glissando souris/tactile en mode Libre (plusieurs doigts possibles), plus de plantage sans Web Audio (message clair, leçons sans chrono), `piano.js` réécrit lisiblement (même API `window.Piano`).
 - **Écho : FAIT** : ligne à retard avec répétitions de plus en plus sourdes ; bouton « Écho », réglages « Délai » (100–800 ms) et « Répétitions » (0–80 %), mémorisés. Désactivé par défaut ; le tic-tac du métronome n'est pas touché.
+- **Nouveau design « piano de scène » : FAIT** : panneau graphite avec écran LCD ambre (mode, morceau, tempo, octaves, accord, écho), boutons de piano à voyant (modes, vitesse, pédale, écho, tic-tac), boutons rotatifs ronds (volume, délai et répétitions de l'écho, accord, tempo, volume du tic-tac ; glisser, molette, flèches, double-clic = valeur d'origine), objet métronome à balancier synchronisé sur l'horloge audio (le poids monte quand le tempo ralentit ; clic dessus = démarrer/arrêter), clavier avec feutre rouge, touches ivoire/ébène et joues noires. Les boutons de mode utilisent `data-mode` et non `data-m` : `app.js` remplit tout élément `[data-m]` avec l'icône du chat.
 - À faire ensuite : import de morceaux (MIDI), leçons main droite / main gauche, 1 panneau Réglages + durée des notes, 4 clavier pro. Les 4 mélodies restantes (3.2) attendent après.
 
 ## 4. Vérifications prévues
