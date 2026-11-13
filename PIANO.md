@@ -46,7 +46,32 @@ Règle : uniquement des airs dont je suis sûr de la mélodie ; tout doit tenir 
 - **Correctifs piano : FAIT** : relâchement progressif (une note sonne au moins 0,3 s puis s'éteint en douceur), glissando souris/tactile en mode Libre (plusieurs doigts possibles), plus de plantage sans Web Audio (message clair, leçons sans chrono), `piano.js` réécrit lisiblement (même API `window.Piano`).
 - **Écho : FAIT** : ligne à retard avec répétitions de plus en plus sourdes ; bouton « Écho », réglages « Délai » (100–800 ms) et « Répétitions » (0–80 %), mémorisés. Désactivé par défaut ; le tic-tac du métronome n'est pas touché.
 - **Nouveau design « piano de scène » : FAIT** : panneau graphite avec écran LCD ambre (mode, morceau, tempo, octaves, accord, écho), boutons de piano à voyant (modes, vitesse, pédale, écho, tic-tac), boutons rotatifs ronds (volume, délai et répétitions de l'écho, accord, tempo, volume du tic-tac ; glisser, molette, flèches, double-clic = valeur d'origine), objet métronome à balancier synchronisé sur l'horloge audio (le poids monte quand le tempo ralentit ; clic dessus = démarrer/arrêter), clavier avec feutre rouge, touches ivoire/ébène et joues noires. Les boutons de mode utilisent `data-mode` et non `data-m` : `app.js` remplit tout élément `[data-m]` avec l'icône du chat.
-- À faire ensuite : import de morceaux (MIDI), leçons main droite / main gauche, 1 panneau Réglages + durée des notes, 4 clavier pro. Les 4 mélodies restantes (3.2) attendent après.
+- **Menu latéral masquable + piano sur une seule page sans défilement : FAIT** (clavier redimensionné, panneau compact).
+- **Tic-tac en vrais sons : FAIT** (Bois / Clic / Cloche) et **écho corrigé : FAIT** (ping-pong, limiteur de sortie).
+- **Import de morceaux MIDI : FAIT** (Apprendre et Rythme, 20 morceaux gardés sur l'appareil).
+- À faire ensuite : le plan « instruments et clavier pro » (§3.6), puis leçons main droite / main gauche, puis les 4 mélodies restantes (3.2).
+
+### 3.6 Instruments et clavier pro — plan en 3 étapes (demande du 13/11)
+Règle de travail : **un GO par étape**, un changement testé à la fois, commit direct sur `main`.
+Les autres instruments n'ont pas d'échantillons : ils sont **synthétisés avec Web Audio** (oscillateurs, enveloppes, modulation), donc hors ligne et sans fichiers en plus. Je ne peux pas écouter : les hauteurs, l'attaque et l'extinction se contrôlent par mesure ; le **timbre se juge à l'oreille**, par l'utilisateur.
+
+**Étape 1 — Banque d'instruments** *(à faire en premier)*
+- Sélecteur « Instrument » dans le panneau, 8 sons : **Piano** (échantillons actuels, par défaut), **Piano électrique** (type Rhodes), **Orgue jazz** (type Hammond, 9 tirettes, clic d'attaque), **Orgue d'église** (tuyaux, plein), **Orgue rock** (mordant, vibrato), **Cordes** (ensemble, attaque lente), **Synthé** (lead, filtre qui s'ouvre), **Vibraphone** (lames qui résonnent).
+- Fonctionne avec : touches, pédale, écho, octaves, accord, leçons, mélodies importées. Un orgue tient la note tant que la touche est enfoncée. Polyphonie : 8 notes sans saturation. Le tic-tac n'est pas touché.
+- Choix mémorisé (clé `dactylo.piano.inst.v1`).
+- Tests (Chromium + analyseur audio) : hauteur mesurée de chaque note de chaque instrument ; arrêt net au relâchement ; pas de saturation à 8 notes ; mise en page toujours sur une seule page ; mémorisation ; secours si Web Audio manque. Cache `sw.js` en v45.
+
+**Étape 2 — Effets de clavier pro**
+- **Réverbération** (salle / église) avec dosage ; **chorus** ; **vibrato / Leslie** (haut-parleur rotatif) pour les orgues ; **Attaque** et **Relâche** réglables.
+- Boutons rotatifs dans le style « piano de scène », réglages mémorisés, remise à zéro par double clic. Tout passe par le limiteur de sortie existant ; le tic-tac reste hors effets.
+- Tests : mesure de la queue de réverbération, du niveau de crête (jamais au-dessus de 0 dB), de la profondeur du vibrato ; mise en page une page.
+
+**Étape 3 — Jeu avancé**
+- **Transposition** de −6 à +6 demi-tons : les touches ne bougent pas, le son change ; elle s'ajoute aux octaves et à l'accord, dans tous les modes ; affichage LCD « Transp. +2 », mémorisée, double clic pour remettre à 0.
+- **Superposition de deux sons** (par exemple piano + cordes) avec dosage entre les deux.
+- Tests : hauteur mesurée pour chaque transposition et chaque octave ; superposition sans saturation ; mise en page une page.
+
+Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux sons, main gauche / main droite), arpégiateur, enregistrement multipiste.
 
 ## 4. Vérifications prévues
 1. Chaque touche joue le bon échantillon ; les notes transposées utilisent la bonne vitesse de lecture.
