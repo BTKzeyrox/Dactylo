@@ -23,7 +23,7 @@ Total des 24 échantillons : environ 1,1 Mo.
 - Les 7 nouveaux fichiers vont dans le cache préinstallé (`sw.js`).
 
 ### 3.2 Plus de mélodies (domaine public)
-Ajouter : **Joyeux anniversaire**, **Douce nuit**, **Mary avait un petit agneau**, **London Bridge**, **Row, row, row your boat** → 11 mélodies au total.
+**FAIT** : **Mary avait un petit agneau**, **London Bridge**, **Row, row, row your boat** et **Joyeux anniversaire** (écrit en Fa pour tenir dans la plage) → 10 mélodies intégrées. **Douce nuit** est laissée de côté : elle monte jusqu'au Fa5, au-dessus du clavier.
 Règle : uniquement des airs dont je suis sûr de la mélodie ; tout doit tenir dans Do4–Mi5. Vérification automatique : toutes les notes existent sur le clavier.
 
 ### 3.3 Enregistrer ses propres morceaux
