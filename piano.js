@@ -426,7 +426,7 @@
     onChange: function (v) { volume = v / 100; if (master) master.gain.value = volume; } });
   knobs.echoTime = makeKnob($("kn_ed"), { label: "Délai", min: 100, max: 800, step: 10, def: 300, fmt: function (v) { return v + " ms"; },
     onChange: function (v) { setEcho({ time: v / 1000 }); } });
-  knobs.echoFb = makeKnob($("kn_ef"), { label: "Répétitions", min: 0, max: 70, step: 5, def: 40, fmt: pct,
+  knobs.echoFb = makeKnob($("kn_ef"), { label: "Répétitions", min: 0, max: 60, step: 5, def: 40, fmt: pct,
     onChange: function (v) { setEcho({ fb: v / 100 }); } });
   knobs.tune = makeKnob($("kn_tu"), { label: "Accord", min: 430, max: 450, step: 1, def: 440, fmt: function (v) { return v + " Hz"; },
     onChange: function (v) { setTune(v); } });
@@ -482,23 +482,75 @@
   var voices = {};             // note en cours par touche : { s: source, g: gain, t: début }
   var sustainOn = false;       // pédale de sustain enfoncée
   var heldVoices = [];         // notes relâchées mais maintenues par la pédale
-  var echo = { on: false, time: .3, fb: .4 };   // écho : délai (secondes) et répétitions (0 à .7)
+  var echo = { on: false, time: .3, fb: .4 };   // écho : délai (secondes) et répétitions (0 à .6)
   var echoSend = null, echoWet = null, echoDelayL = null, echoDelayR = null, echoFbL = null, echoFbR = null;
   var outNode = null;   // limiteur de sortie : tout passe par lui pour que les accords + l'écho ne saturent pas
 
   var SAMPLE_NAMES = "C3 Eb3 Gb3 A3 C4 Db4 D4 Eb4 E4 F4 Gb4 G4 Ab4 A4 Bb4 B4 C5 Db5 D5 Eb5 E5 A5 C6 Eb6".split(" ");
 
-  /* limiteur : compresseur réglé pour ne rien laisser dépasser 0 dB (sans lui, un accord + l'écho peuvent craquer) */
+  /* Étage de sortie (tout le son passe par ici, y compris l'écho ; le tic-tac aussi) :
+       1. limiteur transparent : il ne touche à rien tant que le niveau reste sous -1 dB (seuil -1 dB, genou 2 dB,
+          rapport 20), puis baisse le son sans le déformer ;
+       2. compensation du gain automatique du compresseur (Web Audio en ajoute un, on le mesure et on l'annule) :
+          le niveau de sortie est exactement celui de la somme des notes, sans gain caché ;
+       3. écrêtage doux de dernier recours : linéaire jusqu'à 0,95, puis courbe qui tend vers 0,995 sans couper net.
+     Avant : un compresseur dur (seuil -4 dB, rapport 20) qui ajoutait +2,3 dB à tout et écrasait presque tous les
+     accords. Mesuré sur un sinus de 440 Hz : distorsion de 0 % jusqu'à 0 dB, 0,15 % à +2 dB de surcharge. */
+  var COMP = { threshold: -1, knee: 2, ratio: 20, attack: .003, release: .12 };
+  var OUT_TRIM = 1.0, OUT_MAKEUP0 = 1.033;   // pas de gain ajouté ; gain automatique mesuré du compresseur avec ces réglages
+  var outComp = null, outTrim = null, limitUntil = 0, limitShown = false;
+  function setComp(c) {
+    c.threshold.value = COMP.threshold; c.knee.value = COMP.knee; c.ratio.value = COMP.ratio;
+    c.attack.value = COMP.attack; c.release.value = COMP.release;
+  }
+  function softClipCurve() {
+    var N = 4096, cv = new Float32Array(N), K = .95, C = .995, W = C - K, i;
+    for (i = 0; i < N; i++) {
+      var x = (i / (N - 1) * 2 - 1) * 2, ax = Math.abs(x);   // la courbe couvre -2 à +2 (le gain avant elle est de 0,5)
+      var y = ax <= K ? ax : K + W * Math.tanh((ax - K) / W);
+      cv[i] = x < 0 ? -y : y;
+    }
+    return cv;
+  }
+  /* mesure le gain automatique du compresseur sur ce navigateur (sinus sous le seuil) et le compense */
+  function calibrateOutput() {
+    try {
+      if (!window.OfflineAudioContext) return;
+      var sr = audioCtx.sampleRate, len = Math.floor(sr * .5), oc = new OfflineAudioContext(1, len, sr);
+      var o = oc.createOscillator(), g = oc.createGain(), c = oc.createDynamicsCompressor();
+      o.frequency.value = 440; g.gain.value = .05;
+      setComp(c);
+      o.connect(g); g.connect(c); c.connect(oc.destination); o.start();
+      oc.startRendering().then(function (buf) {
+        var d = buf.getChannelData(0), s = 0, n = 0, i;
+        for (i = Math.floor(sr * .2); i < len; i++) { s += d[i] * d[i]; n++; }
+        var gain = Math.sqrt(s / n) / (.05 / Math.SQRT2);
+        if (gain > .5 && gain < 3 && outTrim) outTrim.gain.setTargetAtTime(OUT_TRIM / gain * .5, audioCtx.currentTime, .05);
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  /* voyant « LIMITE » : si le compresseur baisse le son de plus de 3 dB, l'écran LCD le dit un instant */
+  function watchLevel() {
+    if (!outComp) return;
+    var r = outComp.reduction;
+    r = typeof r === "number" ? r : (r && r.value) || 0;
+    if (r < -3) limitUntil = Date.now() + 1200;
+    var on = Date.now() < limitUntil;
+    if (on !== limitShown) { limitShown = on; refreshLcd(); }
+  }
   function makeLimiter() {
     try {
-      var lim = audioCtx.createDynamicsCompressor();
-      lim.threshold.value = -4;
-      lim.knee.value = 0;
-      lim.ratio.value = 20;
-      lim.attack.value = .002;
-      lim.release.value = .12;
-      lim.connect(audioCtx.destination);
-      return lim;
+      var c = audioCtx, comp = c.createDynamicsCompressor(), sc = c.createWaveShaper();
+      setComp(comp);
+      outTrim = c.createGain();
+      outTrim.gain.value = OUT_TRIM / OUT_MAKEUP0 * .5;
+      sc.curve = softClipCurve();
+      sc.oversample = "2x";
+      comp.connect(outTrim); outTrim.connect(sc); sc.connect(c.destination);
+      outComp = comp;
+      calibrateOutput();
+      setInterval(watchLevel, 100);
+      return comp;
     } catch (e) {
       return audioCtx.destination;
     }
@@ -529,7 +581,7 @@
 
   /* Écho « ping-pong » : le son passe par deux lignes à retard qui se renvoient l'une à l'autre.
      La 1re répétition sort à gauche, la 2e à droite, la 3e à gauche… Chaque répétition est plus faible
-     (réglage « Répétitions », 70 % au maximum pour rester stable) et plus sourde (filtre passe-bas) ;
+     (réglage « Répétitions », 60 % au maximum pour rester stable) et plus sourde (filtre passe-bas) ;
      un filtre passe-haut dans la boucle empêche les graves de s'empiler.
      Désactiver l'écho coupe seulement l'envoi : les répétitions déjà parties s'éteignent naturellement.
      Le tic-tac du métronome ne passe pas par l'écho. Si le navigateur ne sait pas le faire,
@@ -571,7 +623,7 @@
     echoDelayR.delayTime.setTargetAtTime(echo.time, t, tc);
     echoFbL.gain.setTargetAtTime(echo.fb, t, .05);
     echoFbR.gain.setTargetAtTime(echo.fb, t, .05);
-    echoWet.gain.setTargetAtTime(.5, t, .05);
+    echoWet.gain.setTargetAtTime(.35, t, .05);
     echoSend.gain.setTargetAtTime(echo.on ? 1 : 0, t, .02);
   }
 
@@ -660,7 +712,7 @@
   function shaper() {
     if (!shaperCurve) {
       shaperCurve = new Float32Array(2048);
-      for (var i = 0; i < 2048; i++) shaperCurve[i] = Math.tanh(3.5 * (i / 1023.5 - 1));
+      for (var i = 0; i < 2048; i++) shaperCurve[i] = Math.tanh(2.5 * (i / 1023.5 - 1));
     }
     return shaperCurve;
   }
@@ -813,6 +865,15 @@
   /* niveaux de sortie réglés par mesure pour que tous les instruments sonnent aussi fort que le piano */
   var LEVEL = { epiano: .077, organ: .033, church: .036, rock: .045, strings: .05, synth: .054, vibes: .08 };
 
+  /* trop de notes en même temps : la plus ancienne s'éteint vite (protège le processeur et le niveau) */
+  var liveSamples = [], MAX_SAMPLE_VOICES = 24;
+  function capVoices(list, max, v) {
+    var alive = list.filter(function (x) { return !x.dead; });
+    while (alive.length >= max) { var old = alive.shift(); old.rel = .03; old.hold = 0; old.dead = true; release(old); }
+    alive.push(v);
+    if (v.s) v.s.onended = function () { v.dead = true; };
+    return alive;
+  }
   function playSynth(a, t, g, m, inst) {
     var f = TUNE * Math.pow(2, (m - 69) / 12), nodes = [], v = { g: g, t: t, nodes: nodes };
     var out = a.createGain();
@@ -820,11 +881,7 @@
     out.connect(g);
     SYNTH[inst](a, t, f, out, nodes, v);
     v.s = nodes[0];
-    /* trop de notes en même temps : la plus ancienne s'éteint vite (protège le processeur) */
-    liveSynth = liveSynth.filter(function (x) { return !x.dead; });
-    if (liveSynth.length >= MAX_SYNTH_VOICES) { var old = liveSynth.shift(); old.rel = .03; old.hold = 0; release(old); }
-    liveSynth.push(v);
-    v.s.onended = function () { v.dead = true; };
+    liveSynth = capVoices(liveSynth, MAX_SYNTH_VOICES, v);
     return v;
   }
 
@@ -850,9 +907,11 @@
   var layer = { id: "none", mix: 50 };
 
   function play(k, vel, m0) {
-    var v = playVoice(k, vel, m0, instId);
-    if (!v || m0 != null || layer.id === "none" || layer.id === instId || layer.mix <= 0) return v;
-    var v2 = playVoice(k, (vel || 1) * layer.mix / 100, m0, layer.id);
+    /* avec une couche, les deux sons se partagent la puissance : le total reste celui d'un son seul */
+    var on = m0 == null && layerOn(), r = layer.mix / 100, kMain = on ? 1 / Math.sqrt(1 + r * r) : 1;
+    var v = playVoice(k, (vel || 1) * kMain, m0, instId);
+    if (!v || !on) return v;
+    var v2 = playVoice(k, (vel || 1) * kMain * r, m0, layer.id);
     return v2 ? { parts: [v, v2], t: v.t } : v;
   }
 
@@ -873,7 +932,9 @@
       src.playbackRate.value = sample.rate * TUNE / 440;
       src.connect(g);
       src.start(t);
-      return { s: src, g: g, t: t };
+      var sv = { s: src, g: g, t: t };
+      liveSamples = capVoices(liveSamples, MAX_SAMPLE_VOICES, sv);
+      return sv;
     }
     /* son de secours : 4 harmoniques qui s'éteignent */
     var f = TUNE * Math.pow(2, (m - 69) / 12), oscs = [], i;
@@ -1026,6 +1087,7 @@
     var l1 = names[game.mode];
     if (game.mode === "learn" || game.mode === "rhythm") l1 += " · " + SONGS[game.song][0];
     else if (game.mode === "lesson") l1 += " · " + LESSONS[game.les].name;
+    if (limitShown) l1 = "! LIMITE !";
     $("lcd1").textContent = l1;
     $("lcd2").textContent = metro.bpm + " BPM · " + metro.beats + " temps" + (metro.on ? " · tic-tac" : "") + (TRANS ? " · Transp. " + transText(TRANS) : "");
     $("lcd3").textContent = "Octaves " + (4 + game.oct) + "–" + (5 + game.oct) + " · La " + TUNE + " Hz · écho " +
@@ -2030,20 +2092,20 @@
   };
   setTune(TUNE);
 
-  /* Écho : réglages mémorisés ; opts = { on, time (s), fb (0 à .7) } */
+  /* Écho : réglages mémorisés ; opts = { on, time (s), fb (0 à .6) } */
   try {
     var savedEcho = JSON.parse(localStorage.getItem("dactylo.piano.echo.v1"));
     if (savedEcho) {
       echo.on = !!savedEcho.on;
       echo.time = clampNum(savedEcho.time, .1, .8);
-      echo.fb = clampNum(savedEcho.fb, 0, .7);
+      echo.fb = clampNum(savedEcho.fb, 0, .6);
     }
   } catch (e) {}
   function setEcho(opts) {
     if (opts) {
       if ("on" in opts) echo.on = !!opts.on;
       if ("time" in opts) echo.time = clampNum(opts.time, .1, .8);
-      if ("fb" in opts) echo.fb = clampNum(opts.fb, 0, .7);
+      if ("fb" in opts) echo.fb = clampNum(opts.fb, 0, .6);
     }
     var ms = Math.round(echo.time * 1000), pct = Math.round(echo.fb * 100);
     $("pe_on").setAttribute("aria-pressed", echo.on);
@@ -2129,10 +2191,10 @@
   }
   function applyFx(first) {
     if (!fxNodes) return;
-    var n = fxNodes, t = audioCtx.currentTime, d = fx.mdMix / 100, tc = first ? .001 : .05, rv = fx.rvMix / 100 * .9;
+    var n = fxNodes, t = audioCtx.currentTime, d = fx.mdMix / 100, tc = first ? .001 : .05, rv = fx.rvMix / 100 * .6;
     var set = function (node, v) { node.gain.setTargetAtTime(v, t, tc); };
     set(n.dry, fx.md === "vibrato" || fx.md.indexOf("les") === 0 ? 1 - d : 1);
-    set(n.ch, fx.md === "chorus" ? .7 * d : 0);
+    set(n.ch, fx.md === "chorus" ? .5 * d : 0);
     set(n.vib, fx.md === "vibrato" ? d : 0);
     set(n.les, fx.md.indexOf("les") === 0 ? d : 0);
     var fast = fx.md === "les_fast";
@@ -2348,6 +2410,7 @@
     setEcho: setEcho, echo: echo, knobs: knobs,
     importMidi: importMidiBuffer, songTools: updateSongTools,
     fx: fx, setFx: setFx, setPlay: setPlay, layer: layer, trans: function () { return TRANS; }, noteLabel: noteLabel, setInstrument: setInstrument, instrument: function () { return instId; }, instruments: INSTRUMENTS,
+    sampleVoiceCount: function () { return liveSamples.filter(function (x) { return !x.dead; }).length; },
     voiceCount: function () { return liveSynth.filter(function (x) { return !x.dead; }).length; },
     _draw: draw, _update: update
   };
