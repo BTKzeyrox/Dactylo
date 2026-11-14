@@ -26,7 +26,7 @@ Autres octaves, 5 mélodies de plus, enregistrement de ses morceaux, mode deux j
 Les 7 notes supplémentaires sont déjà dans le dépôt (vérifiées par analyse du spectre).
 Taille : moyenne. Risque : faible. Vérification : tests automatiques + images.
 
-### Étape A2 — Piano v3 : instruments et clavier pro (voir `PIANO.md` §3.6) — priorité 1
+### Étape A2 — Piano v3 : instruments et clavier pro (voir `PIANO.md` §3.6) — FAIT (3 étapes)
 1) Banque de 8 instruments (piano électrique, orgues, cordes, synthé, vibraphone), 2) effets (réverbération, chorus, vibrato / Leslie, attaque et relâche), 3) transposition et superposition de deux sons. Un GO par étape.
 Taille : grande (étape 1 moyenne). Risque : moyen (timbres synthétisés à valider à l'oreille). Vérification : tests audio mesurés dans Chromium.
 Ensuite : leçons main droite / main gauche, puis les 4 mélodies restantes.

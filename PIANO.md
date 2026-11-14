@@ -66,7 +66,7 @@ Les autres instruments n'ont pas d'échantillons : ils sont **synthétisés avec
 - Boutons rotatifs dans le style « piano de scène », réglages mémorisés, remise à zéro par double clic. Tout passe par le limiteur de sortie existant ; le tic-tac reste hors effets.
 - Tests : mesure de la queue de réverbération, du niveau de crête (jamais au-dessus de 0 dB), de la profondeur du vibrato ; mise en page une page.
 
-**Étape 3 — Jeu avancé**
+**Étape 3 — Jeu avancé** *(FAIT)*
 - **Transposition** de −6 à +6 demi-tons : les touches ne bougent pas, le son change ; elle s'ajoute aux octaves et à l'accord, dans tous les modes ; affichage LCD « Transp. +2 », mémorisée, double clic pour remettre à 0.
 - **Superposition de deux sons** (par exemple piano + cordes) avec dosage entre les deux.
 - Tests : hauteur mesurée pour chaque transposition et chaque octave ; superposition sans saturation ; mise en page une page.

@@ -296,7 +296,11 @@
             '<div class="pk" id="kn_md"></div>',
           '</div>',
           '<div class="pgrp" id="pg_env">',
-            '<div class="pk" id="kn_at"></div><div class="pk" id="kn_rl"></div>',
+            '<div class="pk" id="kn_at"></div><div class="pk" id="kn_rl"></div><div class="pk" id="kn_tr"></div>',
+          '</div>',
+          '<div class="pgrp" id="pg_layer">',
+            '<select class="psel" id="pn_inst2" aria-label="Deuxième son (couche)" title="Joue un deuxième instrument en même temps"></select>',
+            '<div class="pk" id="kn_ly"></div>',
           '</div>',
           '<div class="pgrp pmetro">',
             '<div class="mowrap"><div class="mo" id="mo" title="Cliquez pour démarrer ou arrêter le métronome"><svg viewBox="0 0 120 170" role="img" aria-label="Métronome"><path d="M24 164 L96 164 L77 22 L43 22 Z" fill="#7a4a2d" stroke="#25150a" stroke-width="3" stroke-linejoin="round"/><path d="M33 152 L87 152 L73 36 L47 36 Z" fill="#a46a41" opacity=".6"/><g stroke="#2a190d" stroke-width="1.5" opacity=".55"><line x1="52" y1="52" x2="68" y2="52"/><line x1="50" y1="72" x2="70" y2="72"/><line x1="48" y1="92" x2="72" y2="92"/><line x1="46" y1="112" x2="74" y2="112"/><line x1="44" y1="132" x2="76" y2="132"/></g><rect x="18" y="160" width="84" height="9" rx="3" fill="#3a2314" stroke="#25150a" stroke-width="2"/><g id="mo_arm" transform="rotate(0 60 140)"><rect x="58.5" y="2" width="3" height="140" rx="1.5" fill="#dcd6e8" stroke="#6d6580" stroke-width="1"/><rect id="mo_w" x="52" y="14" width="16" height="14" rx="3" fill="#e0b04a" stroke="#6b4a10" stroke-width="1.5"/></g><circle cx="60" cy="140" r="7" fill="#e0b04a" stroke="#6b4a10" stroke-width="2"/></svg></div><span class="pdots" id="pm_dots"></span></div>',
@@ -438,6 +442,10 @@
   knobs.attack = makeKnob($("kn_at"), { label: "Attaque", min: 0, max: 100, step: 1, def: 0,
     fmt: function (v) { return Math.round(Math.pow(v / 100, 2) * 1200) + " ms"; },
     onChange: function (v) { setFx({ at: v }); } });
+  knobs.trans = makeKnob($("kn_tr"), { label: "Transpo.", min: -6, max: 6, step: 1, def: 0, fmt: function (v) { return transText(v) + " dt"; },
+    onChange: function (v) { setPlay({ trans: v }); } });
+  knobs.layerMix = makeKnob($("kn_ly"), { label: "Couche", min: 0, max: 100, step: 1, def: 50, fmt: pct,
+    onChange: function (v) { setPlay({ layerMix: v, layer: layer.id === "none" && v > 0 ? (instId === "strings" ? "piano" : "strings") : layer.id }); } });
   knobs.release = makeKnob($("kn_rl"), { label: "Relâche", min: 0, max: 100, step: 1, def: 44,
     fmt: function (v) { return "×" + Math.pow(40, (v - 44) / 100).toFixed(1); },
     onChange: function (v) { setFx({ rl: v }); } });
@@ -805,12 +813,12 @@
   /* niveaux de sortie réglés par mesure pour que tous les instruments sonnent aussi fort que le piano */
   var LEVEL = { epiano: .077, organ: .033, church: .036, rock: .045, strings: .05, synth: .054, vibes: .08 };
 
-  function playSynth(a, t, g, m) {
+  function playSynth(a, t, g, m, inst) {
     var f = TUNE * Math.pow(2, (m - 69) / 12), nodes = [], v = { g: g, t: t, nodes: nodes };
     var out = a.createGain();
-    out.gain.value = LEVEL[instId] || .3;
+    out.gain.value = LEVEL[inst] || .3;
     out.connect(g);
-    SYNTH[instId](a, t, f, out, nodes, v);
+    SYNTH[inst](a, t, f, out, nodes, v);
     v.s = nodes[0];
     /* trop de notes en même temps : la plus ancienne s'éteint vite (protège le processeur) */
     liveSynth = liveSynth.filter(function (x) { return !x.dead; });
@@ -829,17 +837,36 @@
   }
 
   /* Joue une touche (ou une note MIDI m0). Renvoie la « voix » à relâcher plus tard, ou null sans audio. */
+  /* Transposition (en demi-tons) : les touches ne bougent pas, le son change. Les notes qui sortiraient de la zone
+     où les échantillons sont fiables sont ramenées d'une octave (même nom de note). */
+  var TRANS = 0;
+  function soundMidi(m) {
+    m += TRANS;
+    while (m < 45) m += 12;
+    while (m > 91) m -= 12;
+    return m;
+  }
+  /* Couche : un deuxième instrument joué en même temps que le premier (niveau réglable). */
+  var layer = { id: "none", mix: 50 };
+
   function play(k, vel, m0) {
+    var v = playVoice(k, vel, m0, instId);
+    if (!v || m0 != null || layer.id === "none" || layer.id === instId || layer.mix <= 0) return v;
+    var v2 = playVoice(k, (vel || 1) * layer.mix / 100, m0, layer.id);
+    return v2 ? { parts: [v, v2], t: v.t } : v;
+  }
+
+  function playVoice(k, vel, m0, inst) {
     var a = getAudio();
     if (!a) return null;
     var t = a.currentTime, g = a.createGain();
-    var m = m0 == null ? k.midi + 12 * octShift() : m0;
+    var m = m0 == null ? soundMidi(k.midi + 12 * octShift()) : m0;
     var sample = pickSample(m);
     g.gain.value = vel || 1;
     var atk = attackSec();
     if (atk > .004) { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel || 1, t + atk); }
     g.connect(fxIn || master);
-    if (instId !== "piano") return playSynth(a, t, g, m);
+    if (inst !== "piano") return playSynth(a, t, g, m, inst);
     if (sample) {
       var src = a.createBufferSource();
       src.buffer = buffers[sample.n];
@@ -867,6 +894,7 @@
   /* Relâche une voix : elle sonne au moins MIN_HOLD secondes, puis s'éteint en douceur. */
   function release(v) {
     if (!v || !audioCtx) return;
+    if (v.parts) { v.parts.forEach(release); return; }
     try {
       var now = audioCtx.currentTime;
       var hold = v.hold != null ? v.hold : MIN_HOLD, tc = (v.rel || RELEASE_TC) * releaseFactor();
@@ -983,16 +1011,25 @@
   }
 
   /* écran du piano : mode, morceau, tempo, octaves, accordage, écho */
-  function instLabel() { var r = ""; INSTRUMENTS.forEach(function (x) { if (x[0] === instId) r = x[1]; }); return r; }
+  var FR_NAMES = ["Do", "Do#", "Ré", "Ré#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
+  /* nom sous la touche : en mode libre avec transposition, c'est la note qui sonne ; sinon la note de la touche */
+  function noteLabel(k) {
+    if (TRANS && game.mode === "free") { var m = soundMidi(k.midi + 12 * octShift()); return FR_NAMES[m % 12] + (Math.floor(m / 12) - 1); }
+    return k.fr + (Math.floor((k.midi + 12 * octShift()) / 12) - 1);
+  }
+  function transText(v) { return v > 0 ? "+" + v : v < 0 ? "-" + (-v) : "0"; }
+  function labelOf(id) { var r = ""; INSTRUMENTS.forEach(function (x) { if (x[0] === id) r = x[1]; }); return r; }
+  function layerOn() { return layer.id !== "none" && layer.id !== instId && layer.mix > 0; }
+  function instLabel() { return labelOf(instId); }
   function refreshLcd() {
     var names = { free: "Mode libre", learn: "Apprendre", rhythm: "Rythme", lesson: "Leçons" };
     var l1 = names[game.mode];
     if (game.mode === "learn" || game.mode === "rhythm") l1 += " · " + SONGS[game.song][0];
     else if (game.mode === "lesson") l1 += " · " + LESSONS[game.les].name;
     $("lcd1").textContent = l1;
-    $("lcd2").textContent = metro.bpm + " BPM · " + metro.beats + " temps" + (metro.on ? " · tic-tac" : "");
+    $("lcd2").textContent = metro.bpm + " BPM · " + metro.beats + " temps" + (metro.on ? " · tic-tac" : "") + (TRANS ? " · Transp. " + transText(TRANS) : "");
     $("lcd3").textContent = "Octaves " + (4 + game.oct) + "–" + (5 + game.oct) + " · La " + TUNE + " Hz · écho " +
-      (echo.on ? Math.round(echo.time * 1000) + " ms" : "non") + (sustainOn ? " · Pédale" : "") + (instId !== "piano" ? " · " + instLabel() : "");
+      (echo.on ? Math.round(echo.time * 1000) + " ms" : "non") + (sustainOn ? " · Pédale" : "") + (instId !== "piano" || layerOn() ? " · " + instLabel() + (layerOn() ? " + " + labelOf(layer.id) : "") : "");
   }
 
   /* --- records, enregistrés par joueur --- */
@@ -1260,7 +1297,7 @@
       ctx.fillText(k.label.toUpperCase(), k.cx, KEY_Y + 104);
       ctx.font = '600 13px Poppins,Arial,sans-serif';
       ctx.globalAlpha = .7;
-      ctx.fillText(k.fr + (Math.floor((k.midi + 12 * octShift()) / 12) - 1), k.cx, KEY_Y + 124);
+      ctx.fillText(noteLabel(k), k.cx, KEY_Y + 124);
       ctx.globalAlpha = 1;
     });
     /* touches noires, par-dessus */
@@ -2137,6 +2174,31 @@
   $("fx_md").onchange = function () { setFx({ md: this.value }); this.blur(); };
   setFx();
 
+  /* ================= Transposition et couche ================= */
+  function setPlay(opts) {
+    if (opts) {
+      if ("trans" in opts) TRANS = Math.round(clampNum(opts.trans, -6, 6));
+      if ("layer" in opts && (opts.layer === "none" || SYNTH[opts.layer] || opts.layer === "piano")) layer.id = opts.layer;
+      if ("layerMix" in opts) layer.mix = Math.round(clampNum(opts.layerMix, 0, 100));
+    }
+    knobs.trans.set(TRANS);
+    knobs.layerMix.set(layer.mix);
+    $("pn_inst2").value = layer.id;
+    refreshLcd();
+    try { localStorage.setItem("dactylo.piano.play.v1", JSON.stringify({ trans: TRANS, layer: layer.id, layerMix: layer.mix })); } catch (e) {}
+  }
+  $("pn_inst2").innerHTML = '<option value="none">Couche : aucune</option>' + INSTRUMENTS.map(function (x) { return '<option value="' + x[0] + '">+ ' + x[1] + "</option>"; }).join("");
+  try {
+    var savedPlay = JSON.parse(localStorage.getItem("dactylo.piano.play.v1"));
+    if (savedPlay) {
+      TRANS = Math.round(clampNum(savedPlay.trans, -6, 6));
+      layer.id = savedPlay.layer === "none" || SYNTH[savedPlay.layer] || savedPlay.layer === "piano" ? savedPlay.layer : "none";
+      layer.mix = Math.round(clampNum(savedPlay.layerMix, 0, 100));
+    }
+  } catch (e) {}
+  $("pn_inst2").onchange = function () { setPlay({ layer: this.value }); this.blur(); };
+  setPlay();
+
   /* ================= 8. Moteur des leçons ================= */
 
   /* instant visé pour l'étape i d'une leçon chronométrée : préparation, puis un accord tous les 2 temps */
@@ -2285,7 +2347,7 @@
     setSustain: setSustain, sustain: function () { return sustainOn; },
     setEcho: setEcho, echo: echo, knobs: knobs,
     importMidi: importMidiBuffer, songTools: updateSongTools,
-    fx: fx, setFx: setFx, setInstrument: setInstrument, instrument: function () { return instId; }, instruments: INSTRUMENTS,
+    fx: fx, setFx: setFx, setPlay: setPlay, layer: layer, trans: function () { return TRANS; }, noteLabel: noteLabel, setInstrument: setInstrument, instrument: function () { return instId; }, instruments: INSTRUMENTS,
     voiceCount: function () { return liveSynth.filter(function (x) { return !x.dead; }).length; },
     _draw: draw, _update: update
   };
