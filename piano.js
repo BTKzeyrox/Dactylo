@@ -484,22 +484,52 @@
   var heldVoices = [];         // notes relâchées mais maintenues par la pédale
   var echo = { on: false, time: .3, fb: .4 };   // écho : délai (secondes) et répétitions (0 à .7)
   var echoSend = null, echoWet = null, echoDelayL = null, echoDelayR = null, echoFbL = null, echoFbR = null;
-  var outNode = null;   // limiteur de sortie : tout passe par lui pour que les accords + l'écho ne saturent pas
+  var outNode = null;   // entrée du limiteur de sortie : le clavier (via le bus) , l'écho et le tic-tac y arrivent
+  var busOut = null;    // sortie du bus de mixage (compresseur doux) : c'est elle qui alimente l'écho
+  var MAX_HELD = 24;    // notes tenues par la pédale au maximum : au-delà, la plus ancienne s'éteint vite
 
   var SAMPLE_NAMES = "C3 Eb3 Gb3 A3 C4 Db4 D4 Eb4 E4 F4 Gb4 G4 Ab4 A4 Bb4 B4 C5 Db5 D5 Eb5 E5 A5 C6 Eb6".split(" ");
 
-  /* limiteur : compresseur réglé pour ne rien laisser dépasser 0 dB (sans lui, un accord + l'écho peuvent craquer) */
-  function makeLimiter() {
+  /* Chaîne de sortie : clavier -> volume -> BUS DOUX -> (écho) -> LIMITEUR -> ÉCRÊTAGE DOUX -> haut-parleurs
+
+     - Le bus est un compresseur doux (attaque lente, ratio 4) : quand on joue beaucoup de notes à la fois
+       (accords, pédale, écho), il baisse le niveau progressivement, sans déformer le son.
+     - L'écho est pris après le bus : ses répétitions ne font pas travailler le bus une 2e fois.
+     - Le limiteur n'attrape que les rares pointes restantes ; l'écrêtage doux arrondit ce qui resterait au-dessus
+       de 0 dB, pour que la sortie ne dépasse jamais la pleine échelle (pas de craquement).
+     - Le navigateur ajoute de lui-même du gain à un compresseur (mesuré : +4,8 dB pour le bus, +1,2 dB pour le limiteur).
+       On en retire une partie pour que les notes isolées gardent exactement le niveau qu'elles avaient avant (+2,3 dB). */
+  function dbGain(db) { var g = audioCtx.createGain(); g.gain.value = Math.pow(10, db / 20); return g; }
+  function compressor(thr, knee, ratio, attack, release) {
+    var c = audioCtx.createDynamicsCompressor();
+    c.threshold.value = thr; c.knee.value = knee; c.ratio.value = ratio; c.attack.value = attack; c.release.value = release;
+    return c;
+  }
+  /* transparent jusqu'à 0,85, puis s'arrondit en douceur vers 0,96 */
+  function softClipCurve() {
+    var n = 4096, c = new Float32Array(n), i, x, a;
+    for (i = 0; i < n; i++) {
+      x = i / (n - 1) * 2 - 1;
+      a = Math.abs(x);
+      c[i] = a < .85 ? x : (x < 0 ? -1 : 1) * (.85 + .15 * Math.tanh((a - .85) / .15));
+    }
+    return c;
+  }
+  function makeOutput() {
     try {
-      var lim = audioCtx.createDynamicsCompressor();
-      lim.threshold.value = -4;
-      lim.knee.value = 0;
-      lim.ratio.value = 20;
-      lim.attack.value = .002;
-      lim.release.value = .12;
-      lim.connect(audioCtx.destination);
+      var bus = compressor(-22, 20, 4, .015, .35), busFix = dbGain(-1.9);
+      var lim = compressor(-3, 3, 20, .003, .15), limFix = dbGain(-1.2);
+      var soft = audioCtx.createWaveShaper();
+      soft.curve = softClipCurve();
+      soft.oversample = "2x";
+      master.connect(bus); bus.connect(busFix);
+      busOut = busFix;
+      busOut.connect(lim);
+      lim.connect(limFix); limFix.connect(soft); soft.connect(audioCtx.destination);
       return lim;
     } catch (e) {
+      busOut = master;                      // le navigateur ne sait pas : on branche directement
+      master.connect(audioCtx.destination);
       return audioCtx.destination;
     }
   }
@@ -513,8 +543,7 @@
         audioCtx = new Ctor();
         master = audioCtx.createGain();
         master.gain.value = volume;
-        outNode = makeLimiter();
-        master.connect(outNode);
+        outNode = makeOutput();
         buildFx(audioCtx);
         buildEcho();
       } catch (e) {
@@ -546,7 +575,7 @@
       echoFbR = c.createGain();
       var hpL = filt("highpass", 160), lpL = filt("lowpass", 3200);
       var hpR = filt("highpass", 160), lpR = filt("lowpass", 3200);
-      master.connect(echoSend);
+      busOut.connect(echoSend);
       echoSend.connect(echoDelayL);
       echoDelayL.connect(hpL); hpL.connect(lpL); lpL.connect(echoFbL); echoFbL.connect(echoDelayR);
       echoDelayR.connect(hpR); hpR.connect(lpR); lpR.connect(echoFbR); echoFbR.connect(echoDelayL);
@@ -571,7 +600,9 @@
     echoDelayR.delayTime.setTargetAtTime(echo.time, t, tc);
     echoFbL.gain.setTargetAtTime(echo.fb, t, .05);
     echoFbR.gain.setTargetAtTime(echo.fb, t, .05);
-    echoWet.gain.setTargetAtTime(.5, t, .05);
+    /* niveau de l'écho compensé par les répétitions : sans cela, plus il y a de répétitions, plus l'écho est fort
+       (à 70 %, il doublait la puissance du son et faisait saturer). Ainsi, régler « Répétitions » allonge l'écho sans le rendre plus fort. */
+    echoWet.gain.setTargetAtTime(.4 * Math.sqrt(1 - echo.fb * echo.fb), t, .05);
     echoSend.gain.setTargetAtTime(echo.on ? 1 : 0, t, .02);
   }
 
@@ -905,6 +936,14 @@
       gain.setTargetAtTime(0, start, tc);
       (v.nodes || [v.s]).forEach(function (n) { try { if (n && n.stop) n.stop(start + tc * 8); } catch (e) {} });
     } catch (e) {}
+  }
+
+  /* relâche vite une voix, même composite (couche : { parts: [voix 1, voix 2] }) */
+  function quickRelease(v, rel) {
+    if (!v) return;
+    if (v.parts) { v.parts.forEach(function (p) { quickRelease(p, rel); }); return; }
+    v.hold = 0; v.rel = rel;
+    release(v);
   }
 
   /* Pédale de sustain : tant qu'elle est enfoncée, les notes relâchées continuent de sonner. */
@@ -1742,7 +1781,18 @@
   function keyDown(k) {
     if (game.down[k.code]) return;
     game.down[k.code] = 1;
-    voices[k.code] = play(k, 1);
+    /* même touche rejouée pendant que la pédale tient l'ancienne note : comme sur un vrai piano, la corde repart,
+       l'ancienne note s'éteint (sinon elles s'empilent) */
+    if (heldVoices.length) {
+      heldVoices = heldVoices.filter(function (h) {
+        if (h.code !== k.code) return true;
+        quickRelease(h, .12);
+        return false;
+      });
+    }
+    var nv = play(k, 1);
+    if (nv) nv.code = k.code;
+    voices[k.code] = nv;
     onPress(k);
   }
   function keyUp(k) {
@@ -1750,7 +1800,10 @@
     var v = voices[k.code];
     delete voices[k.code];
     if (!v) return;
-    if (sustainOn) heldVoices.push(v);   // la pédale maintient la note
+    if (sustainOn) {                     // la pédale maintient la note
+      heldVoices.push(v);
+      while (heldVoices.length > MAX_HELD) { var old = heldVoices.shift(); quickRelease(old, .2); }
+    }
     else release(v);
   }
 
