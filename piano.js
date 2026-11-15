@@ -83,11 +83,11 @@
 
   /* Mélodies du domaine public. Notation : Note[:temps], R = silence. [titre, tempo, notes] */
   var SONGS = [
-    ["Ode à la joie", 100, "E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4:1.5 D4:.5 D4:2 E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4:1.5 C4:.5 C4:2"],
-    ["Au clair de la lune", 96, "C4 C4 C4 D4 E4:2 D4:2 C4 E4 D4 D4 C4:4 C4 C4 C4 D4 E4:2 D4:2 C4 E4 D4 D4 C4:4"],
+    ["Ode à la joie", 100, "E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4:1.5 D4:.5 D4:2 E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4:1.5 C4:.5 C4:2 D4 D4 E4 C4 D4 E4:.5 F4:.5 E4 C4 D4 E4:.5 F4:.5 E4 D4 C4 D4 G4:2 E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4:1.5 C4:.5 C4:2"],
+    ["Au clair de la lune", 96, "C5 C5 C5 D5 E5:2 D5:2 C5 E5 D5 D5 C5:4 C5 C5 C5 D5 E5:2 D5:2 C5 E5 D5 D5 C5:4 D5 D5 D5 D5 A4:2 A4:2 D5 C5 B4 A4 G4:4 C5 C5 C5 D5 E5:2 D5:2 C5 E5 D5 D5 C5:4"],
     ["Ah ! vous dirai-je, maman", 100, "C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2 G4 G4 F4 F4 E4 E4 D4:2 G4 G4 F4 F4 E4 E4 D4:2 C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2"],
     ["Frère Jacques", 100, "G4 A4 B4 G4 G4 A4 B4 G4 B4 C5 D5:2 B4 C5 D5:2 D5:.5 E5:.5 D5:.5 C5:.5 B4 G4 D5:.5 E5:.5 D5:.5 C5:.5 B4 G4 G4 D4 G4:2 G4 D4 G4:2"],
-    ["Jingle Bells", 120, "E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 E4 D4 D4 E4 D4:2 G4:2"],
+    ["Jingle Bells", 120, "E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 E4 D4 D4 E4 D4:2 G4:2 E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 G4 G4 F4 D4 C4:4"],
     ["Für Élise (début)", 96, "E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 G#4 B4 C5:2 R E4 E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 C5 B4 A4:3"],
     /* mélodies du domaine public ; tout tient dans Do4–Mi5 (Joyeux anniversaire est écrit en Fa pour y tenir) */
     ["Mary avait un petit agneau", 108, "E4 D4 C4 D4 E4 E4 E4:2 D4 D4 D4:2 E4 G4 G4:2 E4 D4 C4 D4 E4 E4 E4 E4 D4 D4 E4 D4 C4:4"],
@@ -275,6 +275,7 @@
               '<button class="pbtn" data-s="1" aria-pressed="true"><i class="led"></i>Normal</button>',
               '<button class="pbtn" data-s="1.3" aria-pressed="false"><i class="led"></i>Rapide</button>',
             '</div>',
+            '<select class="psel" id="pn_rep" aria-label="Couplets" title="Rejouer la mélodie plusieurs fois à la suite"><option value="1">Couplets : 1×</option><option value="2">Couplets : 2×</option><option value="3">Couplets : 3×</option></select>',
             '<button class="pbtn go" id="pn_go">▶ Jouer</button>',
           '</div>',
           '<div class="pgrp">',
@@ -1004,11 +1005,17 @@
   var game = {
     mode: "free", song: 0, spd: 1, phase: "idle", clock: 0, notes: [], idx: 0,
     score: 0, combo: 0, maxc: 0, hits: 0, miss: 0, wrong: 0, press: 0,
-    pop: [], pt: [], down: {}, done: 0, spdm: 1, oct: 0, les: 0, lt: 0, timed: false
+    pop: [], pt: [], down: {}, done: 0, spdm: 1, oct: 0, les: 0, lt: 0, timed: false, reps: 1
   };
 
+  /* « Couplets » : la mélodie est rejouée 1, 2 ou 3 fois à la suite, avec 2 temps de silence entre deux couplets */
+  function repeatSong(nota, n) {
+    var out = nota, i;
+    for (i = 1; i < n; i++) out += " R:2 " + nota;
+    return out;
+  }
   function songData() {
-    var d = SONGS[game.song], p = parseMelody(d[2]), beat = 60 / d[1] / game.spd;
+    var d = SONGS[game.song], p = parseMelody(repeatSong(d[2], game.reps)), beat = 60 / d[1] / game.spd;
     return {
       name: d[0],
       list: p.notes.map(function (n) {
@@ -1090,7 +1097,7 @@
   function refreshLcd() {
     var names = { free: "Mode libre", learn: "Apprendre", rhythm: "Rythme", lesson: "Leçons" };
     var l1 = names[game.mode];
-    if (game.mode === "learn" || game.mode === "rhythm") l1 += " · " + SONGS[game.song][0];
+    if (game.mode === "learn" || game.mode === "rhythm") l1 += " · " + SONGS[game.song][0] + (game.reps > 1 ? " ×" + game.reps : "");
     else if (game.mode === "lesson") l1 += " · " + LESSONS[game.les].name;
     if (limitShown) l1 = "! LIMITE !";
     $("lcd1").textContent = l1;
@@ -1100,7 +1107,7 @@
   }
 
   /* --- records, enregistrés par joueur --- */
-  function currentName() { return game.mode === "lesson" ? LESSONS[game.les].name : SONGS[game.song][0]; }
+  function currentName() { return game.mode === "lesson" ? LESSONS[game.les].name : SONGS[game.song][0] + (game.reps > 1 ? " ×" + game.reps : ""); }
 
   function currentUser() {
     try {
@@ -1526,6 +1533,7 @@
     });
     $("pn_spd").style.display = m === "rhythm" ? "" : "none";
     $("pn_song").style.display = m === "learn" || m === "rhythm" ? "" : "none";
+    $("pn_rep").style.display = m === "learn" || m === "rhythm" ? "" : "none";
     updateSongTools();
     $("pn_les").style.display = m === "lesson" ? "" : "none";
     $("pg_play").style.display = m === "free" ? "none" : "";
@@ -1761,6 +1769,20 @@
     this.blur();
   };
   fillSongs();
+
+  /* couplets : mémorisés */
+  try {
+    var savedReps = JSON.parse(localStorage.getItem("dactylo.piano.reps.v1"));
+    if (savedReps === 1 || savedReps === 2 || savedReps === 3) game.reps = savedReps;
+  } catch (e) {}
+  $("pn_rep").value = String(game.reps);
+  $("pn_rep").onchange = function () {
+    game.reps = +this.value;
+    game.phase = "idle";
+    try { localStorage.setItem("dactylo.piano.reps.v1", JSON.stringify(game.reps)); } catch (e) {}
+    refreshLcd();
+    this.blur();
+  };
 
   /* choix de l'instrument : mémorisé ; on l'entend tout de suite (accord de Do) */
   $("pn_inst").innerHTML = INSTRUMENTS.map(function (x) { return '<option value="' + x[0] + '">' + x[1] + "</option>"; }).join("");

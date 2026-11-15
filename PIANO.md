@@ -24,6 +24,7 @@ Total des 24 échantillons : environ 1,1 Mo.
 
 ### 3.2 Plus de mélodies (domaine public)
 **FAIT** : **Mary avait un petit agneau**, **London Bridge**, **Row, row, row your boat** et **Joyeux anniversaire** (écrit en Fa pour tenir dans la plage) → 10 mélodies intégrées. **Douce nuit** est laissée de côté : elle monte jusqu'au Fa5, au-dessus du clavier.
+**Mélodies complétées** : Ode à la joie (16 mesures : A, A', pont, A'), Au clair de la lune (4 phrases A A B A, écrite une octave plus haut pour que la phrase B, qui descend jusqu'au Sol grave, tienne dans le clavier) et Jingle Bells (2 refrains, fin « Sol Sol Fa Ré Do »), relues contre des partitions de référence (Wikipédia / Wicri pour Au clair de la lune, ABC pour l'Ode, tutoriel de piano pour Jingle Bells). Dans l'Ode, le Sol grave final du pont est joué une octave plus haut (Sol4). **Couplets** : réglage 1× / 2× / 3× en Apprendre et Rythme (la mélodie est rejouée à la suite, 2 temps de silence entre deux couplets, mémorisé, records séparés par nombre de couplets). Für Élise reste au 1er thème (la suite sort du clavier ou n'est pas sûre de mémoire) : pour une pièce entière, utiliser l'import MIDI.
 Règle : uniquement des airs dont je suis sûr de la mélodie ; tout doit tenir dans Do4–Mi5. Vérification automatique : toutes les notes existent sur le clavier.
 
 ### 3.3 Enregistrer ses propres morceaux
