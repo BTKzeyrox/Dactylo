@@ -39,7 +39,7 @@
   /* Relâchement : une note jouée ne s'arrête jamais avant MIN_HOLD, puis elle s'éteint
      progressivement (constante de temps RELEASE_TC : environ 1,5 s pour disparaître). Même sans écho ni réglage,
      aucun instrument ne coupe net : chacun a sa propre fin douce (v.rel de chaque son ci-dessous). */
-  var MIN_HOLD = .3;
+  var MIN_HOLD = 1;   // un piano sonne au moins 1 s même sur une frappe très brève (à la « Durée du son » par défaut)
   var RELEASE_TC = .3;
 
   /* Dispositions du clavier (positions physiques : [code, note, nom français]). Réglable avec « Touches » dans le panneau.
@@ -283,7 +283,7 @@
     "#pn_help{margin:8px 0 0}",
     /* filtre des fonctions du panneau : on n'affiche que les groupes de l'onglet choisi */
     ".ptabs{display:flex;flex-wrap:wrap;gap:6px}body.fit .ptabs{flex:1 1 100%}#pn_reset{margin-left:auto}",
-    ".ppanel[data-tab=jeu] .pgrp:not([data-tabs~=jeu]),.ppanel[data-tab=son] .pgrp:not([data-tabs~=son]),.ppanel[data-tab=effets] .pgrp:not([data-tabs~=effets]),.ppanel[data-tab=tic] .pgrp:not([data-tabs~=tic]){display:none!important}",
+    ".ppanel[data-tab=simple] .pgrp:not([data-tabs~=simple]){display:none!important}",
     "@media(max-width:760px){body.fit .ptabs{flex:0 0 auto;flex-wrap:nowrap}}",
     /* page unique, sans défilement : le panneau est compact et le clavier prend toute la place restante */
     "body.fit #v-piano .pcard{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;margin-bottom:0}",
@@ -326,22 +326,19 @@
           '<div class="pk big" id="kn_vol"></div>',
         '</div>',
         '<div class="ptabs" id="pn_tabs" role="group" aria-label="Filtrer les fonctions du piano">',
-          '<button class="pbtn" data-tab="jeu" aria-pressed="true"><i class="led"></i>Jeu</button>',
-          '<button class="pbtn" data-tab="son" aria-pressed="false"><i class="led"></i>Son</button>',
-          '<button class="pbtn" data-tab="effets" aria-pressed="false"><i class="led"></i>Effets</button>',
-          '<button class="pbtn" data-tab="tic" aria-pressed="false"><i class="led"></i>Tic-tac</button>',
-          '<button class="pbtn" data-tab="all" aria-pressed="false"><i class="led"></i>Tout</button>',
+          '<button class="pbtn" data-tab="simple" aria-pressed="true"><i class="led"></i>Simple</button>',
+          '<button class="pbtn" data-tab="adv" aria-pressed="false"><i class="led"></i>Avancé</button>',
           '<button class="pbtn" id="pn_reset" title="Remet les réglages d\'origine : instrument, effets, écho, couche, transposition, accord, volume, octave">↺ Réinitialiser</button>',
         '</div>',
         '<div class="pgrid">',
-          '<div class="pgrp" data-tabs="jeu"><div class="pbtns" id="pn_mode">',
+          '<div class="pgrp" data-tabs="simple"><div class="pbtns" id="pn_mode">',
             '<button class="pbtn" data-mode="free" aria-pressed="true"><i class="led"></i>Libre</button>',
             '<button class="pbtn" data-mode="learn" aria-pressed="false"><i class="led"></i>Apprendre</button>',
             '<button class="pbtn" data-mode="rhythm" aria-pressed="false"><i class="led"></i>Rythme</button>',
             '<button class="pbtn" data-mode="lesson" aria-pressed="false"><i class="led"></i>Leçons</button>',
           '</div></div>',
-          '<div class="pgrp" data-tabs="son"><select class="psel" id="pn_inst" aria-label="Instrument" title="Instrument"></select></div>',
-          '<div class="pgrp" id="pg_play" data-tabs="jeu">',
+          '<div class="pgrp" data-tabs="simple"><select class="psel" id="pn_inst" aria-label="Instrument" title="Instrument"></select></div>',
+          '<div class="pgrp" id="pg_play" data-tabs="simple">',
             '<select class="psel" id="pn_song" aria-label="Mélodie"></select>',
             '<button class="pbtn" id="pn_imp" type="button" style="display:none" aria-label="Importer un fichier MIDI"><i class="led"></i>Importer</button>',
             '<button class="pbtn" id="pn_del" type="button" style="display:none" aria-label="Supprimer ce morceau importé"><i class="led"></i>Supprimer</button>',
@@ -380,8 +377,9 @@
             '<select class="psel" id="fx_md" aria-label="Modulation" title="Chorus, vibrato ou haut-parleur rotatif (Leslie)"><option value="none">Modul. : aucune</option><option value="chorus">Chorus</option><option value="vibrato">Vibrato</option><option value="les_slow">Leslie lent</option><option value="les_fast">Leslie rapide</option></select>',
             '<div class="pk" id="kn_md"></div>',
           '</div>',
+          '<div class="pgrp" data-tabs="simple"><div class="pk" id="kn_rl"></div></div>',
           '<div class="pgrp" id="pg_env" data-tabs="son">',
-            '<div class="pk" id="kn_at"></div><div class="pk" id="kn_rl"></div><div class="pk" id="kn_tr"></div>',
+            '<div class="pk" id="kn_at"></div><div class="pk" id="kn_tr"></div>',
           '</div>',
           '<div class="pgrp" id="pg_layer" data-tabs="son">',
             '<select class="psel" id="pn_inst2" aria-label="Deuxième son (couche)" title="Joue un deuxième instrument en même temps"></select>',
@@ -531,9 +529,9 @@
     onChange: function (v) { setPlay({ trans: v }); } });
   knobs.layerMix = makeKnob($("kn_ly"), { label: "Couche", min: 0, max: 100, step: 1, def: 50, fmt: pct,
     onChange: function (v) { setPlay({ layerMix: v, layer: layer.id === "none" && v > 0 ? (instId === "strings" ? "piano" : "strings") : layer.id }); } });
-  /* Fondu : durée de l'extinction d'une note au relâchement (de 0,1 s à 10 s, 4 s par défaut) */
-  knobs.release = makeKnob($("kn_rl"), { label: "Fondu", min: 0, max: 100, step: 1, def: 80,
-    fmt: function (v) { var s = .1 * Math.pow(100, v / 100); return s < 1 ? Math.round(s * 1000) + " ms" : s.toFixed(1).replace(".", ",") + " s"; },
+  /* Durée du son : combien de temps une note résonne (0,3 s à 6 s, 3 s par défaut) : tenue minimale + fin douce */
+  knobs.release = makeKnob($("kn_rl"), { label: "Durée du son", min: 0, max: 100, step: 1, def: 77,
+    fmt: function (v) { return (.3 * Math.pow(20, v / 100)).toFixed(1).replace(".", ",") + " s"; },
     onChange: function (v) { setFx({ fd: v }); } });
 
   /* carte dans le catalogue des jeux */
@@ -1101,7 +1099,7 @@
     v.released = true;
     try {
       var now = audioCtx.currentTime;
-      var hold = v.hold != null ? v.hold : MIN_HOLD, tc = (v.rel || RELEASE_TC) * releaseFactor();
+      var f = releaseFactor(), hold = (v.hold != null ? v.hold : MIN_HOLD) * f, tc = (v.rel || RELEASE_TC) * f;
       var start = Math.max(now, v.t + hold);
       var gain = v.g.gain;
       gain.cancelScheduledValues(now);
@@ -1959,14 +1957,14 @@
     if (b && !b.disabled) { setOct(+b.dataset.o); b.blur(); }
   };
   /* onglets : Jeu / Son / Effets / Tic-tac / Tout (choix mémorisé) */
-  var TABS = ["jeu", "son", "effets", "tic", "all"], panelEl = sec.querySelector(".ppanel");
+  var TABS = ["simple", "adv"], panelEl = sec.querySelector(".ppanel");
   function setTab(t) {
-    if (TABS.indexOf(t) < 0) t = "jeu";
+    if (TABS.indexOf(t) < 0) t = "simple";
     panelEl.setAttribute("data-tab", t);
     Array.prototype.forEach.call(document.querySelectorAll("#pn_tabs [data-tab]"), function (b) {
       b.setAttribute("aria-pressed", b.dataset.tab === t);
     });
-    try { localStorage.setItem("dactylo.piano.tab.v1", t); } catch (e) {}
+    try { localStorage.setItem("dactylo.piano.tab.v2", t); } catch (e) {}
     fitCanvas();
   }
   $("pn_tabs").onclick = function (e) {
@@ -1977,7 +1975,7 @@
   function resetAll() {
     releaseAll();
     setInstrument("piano");
-    setFx({ rv: "none", rvMix: 30, md: "none", mdMix: 60, at: 0, fd: 80 });
+    setFx({ rv: "none", rvMix: 30, md: "none", mdMix: 60, at: 0, fd: 77 });
     setEcho({ on: false, time: .3, fb: .4 });
     setPlay({ trans: 0, layer: "none", layerMix: 50 });
     setTune(440);
@@ -2000,8 +1998,8 @@
     }
     rstBtn.blur();
   };
-  var savedTab = "jeu";
-  try { savedTab = localStorage.getItem("dactylo.piano.tab.v1") || "jeu"; } catch (e) {}
+  var savedTab = "simple";
+  try { savedTab = localStorage.getItem("dactylo.piano.tab.v2") || "simple"; } catch (e) {}
   setTab(savedTab);
   $("pn_perf").value = perfPref;
   $("pn_perf").onchange = function () {
@@ -2368,12 +2366,12 @@
      (bruit qui s'éteint, de plus en plus sourd). Attaque et relâche s'appliquent à toutes les notes.
      Le tic-tac du métronome ne passe pas par ces effets. Si le navigateur ne sait pas faire ces effets,
      le piano marche quand même, sans eux. */
-  var fx = { rv: "none", rvMix: 30, md: "none", mdMix: 60, at: 0, fd: 80 };
+  var fx = { rv: "none", rvMix: 30, md: "none", mdMix: 60, at: 0, fd: 77 };
   var fxIn = null, fxNodes = null;
   function attackSec() { return Math.pow(fx.at / 100, 2) * 1.2; }          // 0 à 1,2 s
-  function fadeSec() { return .1 * Math.pow(100, fx.fd / 100); }            // 0,1 s à 10 s (4 s par défaut) : temps pour que la note disparaisse
-  /* facteur appliqué à la constante de temps propre à chaque son (v.rel) : le piano disparaît en fadeSec() secondes, les autres gardent leur caractère */
-  function releaseFactor() { return fadeSec() / (RELEASE_TC * 6.9); }
+  function durSec() { return .3 * Math.pow(20, fx.fd / 100); }            // « Durée du son » : 0,3 s à 6 s (3 s par défaut)
+  /* facteur appliqué à la constante de temps propre à chaque son (v.rel) : la tenue et la fin de chaque son suivent la Durée du son, chacun garde son gardent leur caractère */
+  function releaseFactor() { return durSec() / 3; }   // 1 par défaut : la tenue minimale ET la fin douce de chaque son sont multipliées par ce facteur
 
   function makeIR(a, rt60, pre, damp, seed0) {
     var sr = a.sampleRate, len = Math.floor(sr * (rt60 * 1.15 + pre)), buf = a.createBuffer(2, len, sr), ch, i;

@@ -123,6 +123,11 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - **Marche nuptiale (Wagner)**, le chœur nuptial de Lohengrin (« Voici la mariée »), domaine public : 38 notes, environ 28 s. Écrite en Sol (D4 à D5) pour tenir sur 10 comme sur 21 touches. Notes relevées sur une tablature de référence ; le rythme est approché (notes pointées).
 - Pas encore : la Marche nuptiale de Mendelssohn (« Le Songe d'une nuit d'été »), notes non trouvées de façon fiable.
 
+## Panneau simplifié et « Durée du son » (v60)
+- Le panneau s'ouvre en **Simple** : mode, morceau, instrument, **Durée du son**, volume. Tous les autres réglages (octaves, touches, pédale, écho, réverbération, couche, accord, performance, métronome) sont sous **Avancé**. Remplace les onglets Jeu / Son / Effets / Tic-tac / Tout.
+- **Durée du son** (0,3 s à 6 s, 3 s par défaut) remplace « Fondu » : elle règle ensemble la tenue minimale (un piano sonne au moins 1 s même sur une frappe brève) et la fin douce du son. Valable pour tous les instruments (chacun garde son caractère).
+- Limite : les échantillons du piano durent 3,2 s ; au-delà, la note s'arrête d'elle-même.
+
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public. Ne pas ajouter de morceaux sous droits d'auteur.
