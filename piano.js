@@ -524,9 +524,10 @@
     onChange: function (v) { setPlay({ trans: v }); } });
   knobs.layerMix = makeKnob($("kn_ly"), { label: "Couche", min: 0, max: 100, step: 1, def: 50, fmt: pct,
     onChange: function (v) { setPlay({ layerMix: v, layer: layer.id === "none" && v > 0 ? (instId === "strings" ? "piano" : "strings") : layer.id }); } });
-  knobs.release = makeKnob($("kn_rl"), { label: "Relâche", min: 0, max: 100, step: 1, def: 44,
-    fmt: function (v) { return "×" + Math.pow(40, (v - 44) / 100).toFixed(1); },
-    onChange: function (v) { setFx({ rl: v }); } });
+  /* Fondu : durée de l'extinction d'une note au relâchement (de 0,1 s à 10 s, 4 s par défaut) */
+  knobs.release = makeKnob($("kn_rl"), { label: "Fondu", min: 0, max: 100, step: 1, def: 80,
+    fmt: function (v) { var s = .1 * Math.pow(100, v / 100); return s < 1 ? Math.round(s * 1000) + " ms" : s.toFixed(1).replace(".", ",") + " s"; },
+    onChange: function (v) { setFx({ fd: v }); } });
 
   /* carte dans le catalogue des jeux */
   var gamesList = $("gl");
@@ -946,7 +947,7 @@
   var LEVEL = { epiano: .077, organ: .033, church: .036, rock: .045, strings: .05, synth: .054, vibes: .08 };
 
   /* trop de notes en même temps : la plus ancienne s'éteint vite (protège le processeur et le niveau) */
-  var liveAll = [], MAX_VOICES = 24, polyBus = null;   // une seule limite pour échantillons, synthés et couche
+  var liveAll = [], MAX_VOICES = 32, polyBus = null;   // une seule limite pour échantillons, synthés et couche
   function capVoices(list, max, v) {
     var alive = list.filter(function (x) { return !x.dead; });
     while (alive.length >= max) { var old = alive.shift(); old.rel = .08; old.hold = 0; old.dead = true; release(old); }
@@ -958,7 +959,7 @@
   function polyUpdate() {
     if (!polyBus || !audioCtx) return;
     var n = 0;
-    liveAll.forEach(function (x) { if (!x.dead) n++; });
+    liveAll.forEach(function (x) { if (!x.dead) n += x.released ? .35 : 1; });   // une note en fondu pèse peu
     var target = n <= 4 ? 1 : Math.sqrt(4 / n), cur = polyBus.gain.value;
     polyBus.gain.setTargetAtTime(target, audioCtx.currentTime, target < cur ? .02 : .6);
   }
@@ -1046,6 +1047,7 @@
   function release(v) {
     if (!v || !audioCtx) return;
     if (v.parts) { v.parts.forEach(release); return; }
+    v.released = true;
     try {
       var now = audioCtx.currentTime;
       var hold = v.hold != null ? v.hold : MIN_HOLD, tc = (v.rel || RELEASE_TC) * releaseFactor();
@@ -1056,6 +1058,7 @@
       gain.setTargetAtTime(0, start, tc);
       (v.nodes || [v.s]).forEach(function (n) { try { if (n && n.stop) n.stop(start + tc * 8); } catch (e) {} });
     } catch (e) {}
+    polyUpdate();
   }
 
   /* Pédale de sustain : tant qu'elle est enfoncée, les notes relâchées continuent de sonner. */
@@ -2275,10 +2278,12 @@
      (bruit qui s'éteint, de plus en plus sourd). Attaque et relâche s'appliquent à toutes les notes.
      Le tic-tac du métronome ne passe pas par ces effets. Si le navigateur ne sait pas faire ces effets,
      le piano marche quand même, sans eux. */
-  var fx = { rv: "none", rvMix: 30, md: "none", mdMix: 60, at: 0, rl: 44 };
+  var fx = { rv: "none", rvMix: 30, md: "none", mdMix: 60, at: 0, fd: 80 };
   var fxIn = null, fxNodes = null;
   function attackSec() { return Math.pow(fx.at / 100, 2) * 1.2; }          // 0 à 1,2 s
-  function releaseFactor() { return Math.pow(40, (fx.rl - 44) / 100); }     // ×0,2 à ×8 (×1 par défaut)
+  function fadeSec() { return .1 * Math.pow(100, fx.fd / 100); }            // 0,1 s à 10 s (4 s par défaut) : temps pour que la note disparaisse
+  /* facteur appliqué à la constante de temps propre à chaque son (v.rel) : le piano disparaît en fadeSec() secondes, les autres gardent leur caractère */
+  function releaseFactor() { return fadeSec() / (RELEASE_TC * 6.9); }
 
   function makeIR(a, rt60, pre, damp, seed0) {
     var sr = a.sampleRate, len = Math.floor(sr * (rt60 * 1.15 + pre)), buf = a.createBuffer(2, len, sr), ch, i;
@@ -2380,14 +2385,14 @@
       if ("rvMix" in opts) fx.rvMix = Math.round(clampNum(opts.rvMix, 0, 100));
       if ("mdMix" in opts) fx.mdMix = Math.round(clampNum(opts.mdMix, 0, 100));
       if ("at" in opts) fx.at = Math.round(clampNum(opts.at, 0, 100));
-      if ("rl" in opts) fx.rl = Math.round(clampNum(opts.rl, 0, 100));
+      if ("fd" in opts) fx.fd = Math.round(clampNum(opts.fd, 0, 100));
     }
     $("fx_rv").value = fx.rv;
     $("fx_md").value = fx.md;
     knobs.rvMix.set(fx.rvMix);
     knobs.mdMix.set(fx.mdMix);
     knobs.attack.set(fx.at);
-    knobs.release.set(fx.rl);
+    knobs.release.set(fx.fd);
     applyFx();
     try { localStorage.setItem("dactylo.piano.fx.v1", JSON.stringify(fx)); } catch (e) {}
   }
@@ -2399,7 +2404,7 @@
       fx.rvMix = Math.round(clampNum(savedFx.rvMix, 0, 100));
       fx.mdMix = Math.round(clampNum(savedFx.mdMix, 0, 100));
       fx.at = Math.round(clampNum(savedFx.at, 0, 100));
-      fx.rl = Math.round(clampNum(savedFx.rl, 0, 100));
+      if (savedFx.fd != null) fx.fd = Math.round(clampNum(savedFx.fd, 0, 100));   // l'ancien réglage « Relâche » est abandonné
     }
   } catch (e) {}
   $("fx_rv").onchange = function () { setFx({ rv: this.value }); this.blur(); };

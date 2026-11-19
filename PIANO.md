@@ -63,7 +63,7 @@ Les autres instruments n'ont pas d'échantillons : ils sont **synthétisés avec
 - Tests (Chromium + analyseur audio) : hauteur mesurée de chaque note de chaque instrument ; arrêt net au relâchement ; pas de saturation à 8 notes ; mise en page toujours sur une seule page ; mémorisation ; secours si Web Audio manque. Cache `sw.js` en v45.
 
 **Étape 2 — Effets de clavier pro** *(FAIT)*
-- **Réverbération** (salle / église) avec dosage ; **chorus** ; **vibrato / Leslie** (haut-parleur rotatif) pour les orgues ; **Attaque** et **Relâche** réglables.
+- **Réverbération** (salle / église) avec dosage ; **chorus** ; **vibrato / Leslie** (haut-parleur rotatif) pour les orgues ; **Attaque** et **Fondu** réglables.
 - Boutons rotatifs dans le style « piano de scène », réglages mémorisés, remise à zéro par double clic. Tout passe par le limiteur de sortie existant ; le tic-tac reste hors effets.
 - Tests : mesure de la queue de réverbération, du niveau de crête (jamais au-dessus de 0 dB), de la profondeur du vibrato ; mise en page une page.
 
@@ -101,8 +101,10 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - Le dessin suit la taille de la scène : le clavier remplit toute la largeur et le bas, sans bandes vides ; la hauteur des touches s'adapte, nettes sur grand écran.
 - Onglets du panneau : **Jeu** (mode, morceau, octaves, touches, pédale), **Son** (instrument, couche, attaque/relâche/transposition, accordage), **Effets** (écho, réverbération, modulation), **Tic-tac** (métronome), **Tout**. Choix mémorisé, « Jeu » par défaut.
 
-## Fin de note douce (v54)
-- Sans écho ni réglage, aucun instrument ne coupe net au relâchement : piano ≈ 1,5 s de fondu, orgues et synthés 1 à 3 s selon le son (réglable avec « Relâche »). Une note volée (trop de notes) s'éteint aussi en fondu.
+## Fin de note douce (v55)
+- Réglage **Fondu** (0,1 s à 10 s, **4 s par défaut**) : temps que met une note à disparaître au relâchement ; chaque instrument garde son caractère (orgue plus court, cordes et vibraphone plus longs). Remplace l'ancien « Relâche ».
+- Limite : les échantillons du piano durent 3,2 s et s'éteignent d'eux-mêmes (≈ −17 dB par seconde) ; le fondu règle la fin après le relâchement, il ne rallonge pas l'échantillon.
+- Jusqu'à 32 voix ; une note en fondu pèse moins dans la baisse de volume des accords.
 
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
