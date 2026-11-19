@@ -429,7 +429,7 @@
   var knobs = {};
   function pct(v) { return v + " %"; }
   knobs.volume = makeKnob($("kn_vol"), { label: "Volume", min: 0, max: 100, step: 1, def: 80, fmt: pct,
-    onChange: function (v) { volume = v / 100; if (master) master.gain.value = volume; } });
+    onChange: function (v) { volume = v / 100; if (master) master.gain.setTargetAtTime(volume, audioCtx.currentTime, .02); } });
   knobs.echoTime = makeKnob($("kn_ed"), { label: "Délai", min: 100, max: 800, step: 10, def: 300, fmt: function (v) { return v + " ms"; },
     onChange: function (v) { setEcho({ time: v / 1000 }); } });
   knobs.echoFb = makeKnob($("kn_ef"), { label: "Répétitions", min: 0, max: 60, step: 5, def: 40, fmt: pct,
@@ -575,6 +575,8 @@
         master.connect(outNode);
         buildFx(audioCtx);
         buildEcho();
+        polyBus = audioCtx.createGain();
+        polyBus.connect(fxIn || master);
       } catch (e) {
         audioCtx = null;
         master = null;
@@ -684,7 +686,7 @@
     ["piano", "Piano"], ["epiano", "Piano électrique"], ["organ", "Orgue jazz"], ["church", "Orgue d'église"],
     ["rock", "Orgue rock"], ["strings", "Cordes"], ["synth", "Synthé"], ["vibes", "Vibraphone"]
   ];
-  var instId = "piano", MAX_SYNTH_VOICES = 20, liveSynth = [];
+  var instId = "piano";
   var lfoNode = null, vibNodes = {}, noiseBuffer = null, shaperCurve = null, tremNode = null;
 
   /* oscillateur lent partagé (vibrato, trémolo) */
@@ -872,13 +874,21 @@
   var LEVEL = { epiano: .077, organ: .033, church: .036, rock: .045, strings: .05, synth: .054, vibes: .08 };
 
   /* trop de notes en même temps : la plus ancienne s'éteint vite (protège le processeur et le niveau) */
-  var liveSamples = [], MAX_SAMPLE_VOICES = 24;
+  var liveAll = [], MAX_VOICES = 24, polyBus = null;   // une seule limite pour échantillons, synthés et couche
   function capVoices(list, max, v) {
     var alive = list.filter(function (x) { return !x.dead; });
     while (alive.length >= max) { var old = alive.shift(); old.rel = .03; old.hold = 0; old.dead = true; release(old); }
     alive.push(v);
-    if (v.s) v.s.onended = function () { v.dead = true; };
+    if (v.s) v.s.onended = function () { v.dead = true; polyUpdate(); };
     return alive;
+  }
+  /* plus il y a de notes en même temps, plus chacune baisse (puissance constante au-delà de 4 notes) : plus de saturation sur les accords */
+  function polyUpdate() {
+    if (!polyBus || !audioCtx) return;
+    var n = 0;
+    liveAll.forEach(function (x) { if (!x.dead) n++; });
+    var target = n <= 4 ? 1 : Math.sqrt(4 / n), cur = polyBus.gain.value;
+    polyBus.gain.setTargetAtTime(target, audioCtx.currentTime, target < cur ? .02 : .6);
   }
   function playSynth(a, t, g, m, inst) {
     var f = TUNE * Math.pow(2, (m - 69) / 12), nodes = [], v = { g: g, t: t, nodes: nodes };
@@ -887,7 +897,8 @@
     out.connect(g);
     SYNTH[inst](a, t, f, out, nodes, v);
     v.s = nodes[0];
-    liveSynth = capVoices(liveSynth, MAX_SYNTH_VOICES, v);
+    liveAll = capVoices(liveAll, MAX_VOICES, v);
+    polyUpdate();
     return v;
   }
 
@@ -930,7 +941,7 @@
     g.gain.value = vel || 1;
     var atk = attackSec();
     if (atk > .004) { g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel || 1, t + atk); }
-    g.connect(fxIn || master);
+    g.connect(polyBus || fxIn || master);
     if (inst !== "piano") return playSynth(a, t, g, m, inst);
     if (sample) {
       var src = a.createBufferSource();
@@ -939,7 +950,8 @@
       src.connect(g);
       src.start(t);
       var sv = { s: src, g: g, t: t };
-      liveSamples = capVoices(liveSamples, MAX_SAMPLE_VOICES, sv);
+      liveAll = capVoices(liveAll, MAX_VOICES, sv);
+      polyUpdate();
       return sv;
     }
     /* son de secours : 4 harmoniques qui s'éteignent */
@@ -1518,6 +1530,7 @@
   }).observe(sec, { attributes: true, attributeFilter: ["class"] });
   /* si la fenêtre perd le focus, on lâche tout (évite une pédale ou une touche « coincée ») */
   window.addEventListener("blur", releaseAll);
+  document.addEventListener("visibilitychange", function () { if (document.hidden) releaseAll(); });
 
   function setMode(m) {
     if (game.timed && metro.on) metroStop();
@@ -2180,23 +2193,24 @@
       var gn = function (v) { var n = a.createGain(); n.gain.value = v; return n; };
       var lfo = function (f) { var o = a.createOscillator(); o.frequency.value = f; o.start(); return o; };
       var wire = function (o, depth, param) { var d = gn(depth); o.connect(d); d.connect(param); };
-      var n = { in: gn(1), out: gn(1), dry: gn(1), ch: gn(0), vib: gn(0), les: gn(0), rvA: gn(0), rvB: gn(0) };
+      var n = { in: gn(1), out: gn(1), dry: gn(1), direct: gn(1), ch: gn(0), vib: gn(0), les: gn(0), rvA: gn(0), rvB: gn(0) };
+      n.lk = { ch: [], vib: [], les: [], rvA: [], rvB: [] }; n.on = {}; n.tm = {};   // liens entrée -> effet, branchés seulement si l'effet est actif
       n.in.connect(n.dry); n.dry.connect(n.out);
       [[.018, .8, .0035], [.026, 1.1, .0045]].forEach(function (c) {      // chorus
         var d = a.createDelay(.1);
         d.delayTime.value = c[0];
         wire(lfo(c[1]), c[2], d.delayTime);
-        n.in.connect(d); d.connect(n.ch);
+        n.lk.ch.push([n.in, d]); d.connect(n.ch);
       });
       n.ch.connect(n.out);
       var vd = a.createDelay(.1);                                           // vibrato
       vd.delayTime.value = .006;
       wire(lfo(5.6), .0012, vd.delayTime);
-      n.in.connect(vd); vd.connect(n.vib); n.vib.connect(n.out);
+      n.lk.vib.push([n.in, vd]); vd.connect(n.vib); n.vib.connect(n.out);
       n.drum = lfo(.66); n.horn = lfo(.83);                                 // Leslie
       var lp = a.createBiquadFilter(), hp = a.createBiquadFilter();
       lp.type = "lowpass"; lp.frequency.value = 800; hp.type = "highpass"; hp.frequency.value = 800;
-      n.in.connect(lp); n.in.connect(hp);
+      n.lk.les.push([n.in, lp], [n.in, hp]);
       [[lp, n.drum, .004, .0006, .85, .15], [hp, n.horn, .003, .0004, .75, .25]].forEach(function (r) {
         var d = a.createDelay(.05), amp = gn(r[4]);
         d.delayTime.value = r[2];
@@ -2208,27 +2222,48 @@
       var cA = a.createConvolver(), cB = a.createConvolver();               // réverbération : salle et église
       cA.buffer = makeIR(a, 1.9, .015, 1.8, 1234567);
       cB.buffer = makeIR(a, 4.8, .035, 1.0, 7654321);
-      n.out.connect(cA); cA.connect(n.rvA); n.rvA.connect(master);
-      n.out.connect(cB); cB.connect(n.rvB); n.rvB.connect(master);
-      n.out.connect(master);
+      n.lk.rvA.push([n.out, cA]); cA.connect(n.rvA); n.rvA.connect(master);
+      n.lk.rvB.push([n.out, cB]); cB.connect(n.rvB); n.rvB.connect(master);
+      n.out.connect(n.direct); n.direct.connect(master);
       fxNodes = n;
       fxIn = n.in;
       applyFx(true);
     } catch (e) { fxNodes = null; fxIn = null; }
   }
+  /* branche ou débranche un effet : débranché, il ne consomme plus de processeur (la queue de réverbération finit d'abord) */
+  function setLink(n, key, on, tail) {
+    if (on) {
+      if (n.tm[key]) { clearTimeout(n.tm[key]); n.tm[key] = 0; }
+      if (!n.on[key]) { n.lk[key].forEach(function (p) { p[0].connect(p[1]); }); n.on[key] = true; }
+    } else if (n.on[key] && !n.tm[key]) {
+      n.tm[key] = setTimeout(function () {
+        n.tm[key] = 0;
+        n.lk[key].forEach(function (p) { try { p[0].disconnect(p[1]); } catch (e) {} });
+        n.on[key] = false;
+      }, tail);
+    }
+  }
   function applyFx(first) {
     if (!fxNodes) return;
-    var n = fxNodes, t = audioCtx.currentTime, d = fx.mdMix / 100, tc = first ? .001 : .05, rv = fx.rvMix / 100 * .6;
+    var n = fxNodes, t = audioCtx.currentTime, d = fx.mdMix / 100, tc = first ? .001 : .05;
     var set = function (node, v) { node.gain.setTargetAtTime(v, t, tc); };
-    set(n.dry, fx.md === "vibrato" || fx.md.indexOf("les") === 0 ? 1 - d : 1);
-    set(n.ch, fx.md === "chorus" ? .5 * d : 0);
+    var les = fx.md.indexOf("les") === 0, am = d * Math.PI / 4, ar = fx.rvMix / 100 * Math.PI / 4;
+    /* chorus et réverbération se mélangent à puissance constante (cos/sin) : le total ne dépasse plus le son sec */
+    set(n.dry, fx.md === "chorus" ? Math.cos(am) : (fx.md === "vibrato" || les ? 1 - d : 1));
+    set(n.ch, fx.md === "chorus" ? .7 * Math.sin(am) : 0);
     set(n.vib, fx.md === "vibrato" ? d : 0);
-    set(n.les, fx.md.indexOf("les") === 0 ? d : 0);
+    set(n.les, les ? d : 0);
     var fast = fx.md === "les_fast";
     n.horn.frequency.setTargetAtTime(fast ? 6.8 : .83, t, .7);   // le haut-parleur accélère ou ralentit doucement
     n.drum.frequency.setTargetAtTime(fast ? 6 : .66, t, 1.4);
-    set(n.rvA, fx.rv === "room" ? rv : 0);
-    set(n.rvB, fx.rv === "church" ? rv : 0);
+    set(n.direct, fx.rv === "none" ? 1 : Math.cos(ar));
+    set(n.rvA, fx.rv === "room" ? Math.sin(ar) : 0);
+    set(n.rvB, fx.rv === "church" ? Math.sin(ar) : 0);
+    setLink(n, "ch", fx.md === "chorus", 600);
+    setLink(n, "vib", fx.md === "vibrato", 600);
+    setLink(n, "les", les, 800);
+    setLink(n, "rvA", fx.rv === "room", 3000);
+    setLink(n, "rvB", fx.rv === "church", 6500);
   }
   function setFx(opts) {
     if (opts) {
@@ -2437,8 +2472,8 @@
     setEcho: setEcho, echo: echo, knobs: knobs,
     importMidi: importMidiBuffer, songTools: updateSongTools,
     fx: fx, setFx: setFx, setPlay: setPlay, layer: layer, trans: function () { return TRANS; }, noteLabel: noteLabel, setInstrument: setInstrument, instrument: function () { return instId; }, instruments: INSTRUMENTS,
-    sampleVoiceCount: function () { return liveSamples.filter(function (x) { return !x.dead; }).length; },
-    voiceCount: function () { return liveSynth.filter(function (x) { return !x.dead; }).length; },
+    sampleVoiceCount: function () { return liveAll.filter(function (x) { return !x.dead && !x.nodes; }).length; },
+    voiceCount: function () { return liveAll.filter(function (x) { return !x.dead && x.nodes; }).length; },
     _draw: draw, _update: update
   };
 

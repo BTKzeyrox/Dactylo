@@ -91,6 +91,12 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - Mode défi du jour, classement entre joueurs de l'appareil.
 - Duo en ligne avec le futur multijoueur.
 
+## Son : saturation et plusieurs touches (v51)
+- Chorus et réverbération se mélangent à puissance constante : le total ne dépasse plus le son sec.
+- Au-delà de 4 notes simultanées, chaque note baisse (puissance constante) ; une seule limite de 24 voix (échantillons, synthés, couche).
+- Réverbérations, chorus, vibrato et Leslie ne sont branchés que s'ils sont actifs (moins de processeur, plus de craquements).
+- Volume lissé ; notes coupées quand l'onglet est caché.
+
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public. Ne pas ajouter de morceaux sous droits d'auteur.
