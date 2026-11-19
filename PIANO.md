@@ -110,6 +110,11 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - Bouton **↺ Réinitialiser** (barre des onglets, deux clics) : remet instrument = piano, effets (réverbération, modulation, attaque, fondu), écho, couche, transposition, accord, volume et octave aux valeurs d'origine. Ne touche ni au métronome ni au nombre de touches.
 - **Niveau automatique** avant le limiteur : quand le mélange (accords + couche + écho + effets) devient trop fort (pointes au-dessus de 0,8), tout baisse vite (jusqu'à −10 dB) puis remonte doucement. Le limiteur n'a plus qu'à rattraper les pointes. Écho un peu plus discret (0,30).
 
+## Notes qui tombent fluides, Für Élise et Frère Jacques complets (v57)
+- Fluidité : le mouvement suit l'horloge de l'écran (plus de saccades), les textes du tableau de bord ne sont réécrits que s'ils changent, le dessin est plafonné (2x, environ 1,6 million de pixels) et les notes sont alignées sur les pixels réels.
+- **Frère Jacques** : deux couplets complets (64 temps, environ 38 s).
+- **Für Élise** : thème A, partie B (en Do majeur, jusqu'à Sol5), thème A (86 notes, environ 74 s). Avec 10 touches, les notes trop hautes sont jouées une octave plus bas ; avec 21 touches, tout est à la bonne octave.
+
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public. Ne pas ajouter de morceaux sous droits d'auteur.

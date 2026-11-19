@@ -146,10 +146,10 @@
     ["Ode à la joie", 100, "E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 E4:1.5 D4:.5 D4:2 E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4:1.5 C4:.5 C4:2 D4 D4 E4 C4 D4 E4:.5 F4:.5 E4 C4 D4 E4:.5 F4:.5 E4 D4 C4 D4 G4:2 E4 E4 F4 G4 G4 F4 E4 D4 C4 C4 D4 E4 D4:1.5 C4:.5 C4:2"],
     ["Au clair de la lune", 96, "C5 C5 C5 D5 E5:2 D5:2 C5 E5 D5 D5 C5:4 C5 C5 C5 D5 E5:2 D5:2 C5 E5 D5 D5 C5:4 D5 D5 D5 D5 A4:2 A4:2 D5 C5 B4 A4 G4:4 C5 C5 C5 D5 E5:2 D5:2 C5 E5 D5 D5 C5:4"],
     ["Ah ! vous dirai-je, maman", 100, "C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2 G4 G4 F4 F4 E4 E4 D4:2 G4 G4 F4 F4 E4 E4 D4:2 C4 C4 G4 G4 A4 A4 G4:2 F4 F4 E4 E4 D4 D4 C4:2"],
-    ["Frère Jacques", 100, "G4 A4 B4 G4 G4 A4 B4 G4 B4 C5 D5:2 B4 C5 D5:2 D5:.5 E5:.5 D5:.5 C5:.5 B4 G4 D5:.5 E5:.5 D5:.5 C5:.5 B4 G4 G4 D4 G4:2 G4 D4 G4:2"],
+    ["Frère Jacques", 100, "G4 A4 B4 G4 G4 A4 B4 G4 B4 C5 D5:2 B4 C5 D5:2 D5:.5 E5:.5 D5:.5 C5:.5 B4 G4 D5:.5 E5:.5 D5:.5 C5:.5 B4 G4 G4 D4 G4:2 G4 D4 G4:2 G4 A4 B4 G4 G4 A4 B4 G4 B4 C5 D5:2 B4 C5 D5:2 D5:.5 E5:.5 D5:.5 C5:.5 B4 G4 D5:.5 E5:.5 D5:.5 C5:.5 B4 G4 G4 D4 G4:2 G4 D4 G4:2"],
     ["Jingle Bells", 120, "E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 E4 D4 D4 E4 D4:2 G4:2 E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 G4 G4 F4 D4 C4:4"],
-    ["Für Élise (début)", 96, "E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 G#4 B4 C5:2 R E4 E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 C5 B4 A4:3"],
-    /* mélodies du domaine public ; tout tient dans Do4–Mi5 (Joyeux anniversaire est écrit en Fa pour y tenir) */
+    ["Für Élise", 96, "E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 G#4 B4 C5:2 R E4 E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 C5 B4 A4:3 B4 C5 D5 E5:3 G5 F5 E5 D5:3 F5 E5 D5 C5:3 E5 D5 C5 B4:3 E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 G#4 B4 C5:2 R E4 E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 C5 B4 A4:3"],
+    /* mélodies du domaine public ; tout tient dans Do4–Mi5 (Joyeux anniversaire est écrit en Fa pour y tenir). Für Élise monte jusqu'à Sol5 : avec 10 touches, les notes trop hautes sont jouées une octave plus bas. */
     ["Mary avait un petit agneau", 108, "E4 D4 C4 D4 E4 E4 E4:2 D4 D4 D4:2 E4 G4 G4:2 E4 D4 C4 D4 E4 E4 E4 E4 D4 D4 E4 D4 C4:4"],
     ["London Bridge", 100, "G4:1.5 A4:.5 G4 F4 E4 F4 G4:2 D4 E4 F4:2 E4 F4 G4:2 G4:1.5 A4:.5 G4 F4 E4 F4 G4:2 D4 G4 E4 C4:2"],
     ["Row, row, row your boat", 96, "C4:1.5 C4:1.5 C4 D4:.5 E4:1.5 E4 D4:.5 E4 F4:.5 G4:3 C4:.5 C4:.5 C4:.5 G4:.5 G4:.5 G4:.5 E4:.5 E4:.5 E4:.5 C4:.5 C4:.5 C4:.5 G4 F4:.5 E4 D4:.5 C4:3"],
@@ -165,6 +165,10 @@
       if (parts[0] !== "R") {
         var head = parts[0].slice(0, 2);
         var name = SHARP[head] ? SHARP[head] + parts[0].slice(2) : parts[0];
+        if (!keyByNote[name]) {   // absente (clavier à 10 touches) : même note, octave voisine
+          var oc = +name.slice(-1), stem = name.slice(0, -1);
+          name = keyByNote[stem + (oc - 1)] ? stem + (oc - 1) : keyByNote[stem + (oc + 1)] ? stem + (oc + 1) : name;
+        }
         if (keyByNote[name]) out.push({ n: name, t: t, b: beats });
       }
       t += beats;
@@ -1157,13 +1161,15 @@
     if (loadedCount < SAMPLE_NAMES.length) status = "Chargement des notes de piano… " + loadedCount + "/" + SAMPLE_NAMES.length;
     else if (noAudio) status = "Audio non pris en charge par ce navigateur";
     else if (failed) status = "Sons de secours (échantillons indisponibles hors ligne)";
-    loadEl.textContent = status;
-    $("pn_score").textContent = game.score;
-    $("pn_combo").textContent = game.combo;
+    /* appelée à chaque image : on n'écrit dans la page que si le texte change (sinon la page se recalcule 60 fois par seconde) */
+    var put = function (el, v) { v = String(v); if (el.textContent !== v) el.textContent = v; };
+    put(loadEl, status);
+    put($("pn_score"), game.score);
+    put($("pn_combo"), game.combo);
     var total = accuracyTotal();
-    $("pn_acc").textContent = (total ? Math.round(game.hits / total * 100) : 100) + "%";
+    put($("pn_acc"), (total ? Math.round(game.hits / total * 100) : 100) + "%");
     var count = game.mode === "lesson" ? game.lt : game.notes.length;
-    $("pn_prog").textContent = (count ? Math.round(game.done / count * 100) : 0) + "%";
+    put($("pn_prog"), (count ? Math.round(game.done / count * 100) : 0) + "%");
   }
 
   /* étiquette d'une touche selon la vraie disposition du clavier, si le navigateur la donne */
@@ -1406,9 +1412,13 @@
   }
 
   function drawFallingNotes(hint) {
+    var S = cvScale || 1;   // pixels réels par unité de dessin : on aligne les bords dessus (pas de scintillement)
+    ctx.font = '700 ' + FS(20) + 'px Poppins,Arial,sans-serif';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     game.notes.forEach(function (n, j) {
       if (n.hit) return;
-      var yb = HIT_Y - (n.time - game.clock) * SPEED, yt = yb - n.h;
+      var yb = Math.round((HIT_Y - (n.time - game.clock) * SPEED) * S) / S, yt = yb - n.h;
       if (yb < -8 || yt > KEY_Y) return;
       var k = n.k, w = Math.round(k.w * (k.white ? .8 : .87)), x = k.cx - w / 2;
       var col = n.miss ? "#6f748a" : PASTEL[k.f];
@@ -1421,9 +1431,6 @@
       ctx.fillStyle = "rgba(255,255,255,.5)";
       ctx.fillRect(x + 4, yt + 4, w - 8, 6);
       ctx.fillStyle = "#3A2F45";
-      ctx.font = '700 ' + FS(20) + 'px Poppins,Arial,sans-serif';
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
       ctx.fillText(k.label.toUpperCase(), k.cx, yb - Math.min(n.h / 2, 18));
     });
   }
@@ -1587,10 +1594,12 @@
 
   var rafId = 0, lastTime = 0;
   function nowSec() { return performance.now() / 1000; }
-  function frame() {
+  function frame(ts) {
     rafId = requestAnimationFrame(frame);
-    var t = nowSec(), dt = Math.min(.05, t - lastTime);
+    /* l'horodatage du navigateur (calé sur l'écran) donne un mouvement régulier ; performance.now() dans le rappel varie d'une image à l'autre */
+    var t = (typeof ts === "number" ? ts : performance.now()) / 1000, dt = t - lastTime;
     lastTime = t;
+    if (!(dt > 0)) dt = 0; else if (dt > .1) dt = .1;   // pause (onglet caché) : on ne saute pas
     update(dt);
     draw(t);
     drawMetroObject();
@@ -1607,8 +1616,8 @@
     if (!aw || !ah) return;
     /* hauteur du dessin = celle de la scène (à la largeur 900) ; résolution suivant la taille affichée (net sur grand écran) */
     var h = Math.max(380, Math.min(700, Math.round(W * ah / aw)));
-    var q = Math.max(1, Math.min(3, aw / W * (window.devicePixelRatio || 1)));
-    q = Math.round(q * 4) / 4;
+    var q = Math.max(1, Math.min(2, aw / W * (window.devicePixelRatio || 1), Math.sqrt(1.6e6 / (W * h))));   // au plus 2x et ~1,6 million de pixels
+    q = Math.floor(q * 4) / 4;
     if (h !== H || q !== cvScale) {
       if (h !== H) setGeometry(h);
       cvScale = q;
