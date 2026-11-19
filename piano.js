@@ -19,8 +19,18 @@
   /* ================= 1. Constantes et données ================= */
 
   var W = 900, H = 460;       // taille du canvas
-  var KEY_Y = 330;            // haut du clavier dessiné
+  var KEY_Y = 330;            // haut du clavier dessiné (suit la hauteur de la scène)
   var HIT_Y = 318;            // ligne dorée où les notes doivent être jouées
+  var KEYH = 130, BH = 80;    // hauteur des touches blanches et des noires
+  /* la largeur reste 900 ; la hauteur suit celle de la scène, le clavier prend le bas : plus de vide autour */
+  function setGeometry(h) {
+    H = h;
+    KEYH = Math.max(150, Math.min(260, Math.round(H * .34)));
+    BH = Math.round(KEYH * .615);
+    KEY_Y = H - KEYH;
+    HIT_Y = KEY_Y - 12;
+    gradWhite = null;
+  }
   var SPEED = 190;            // vitesse de chute des notes (pixels par seconde)
   var LEAD = 2.8;             // délai avant la première note (secondes)
   var HIT_WINDOW = .22;       // tolérance en mode Rythme (secondes)
@@ -265,6 +275,10 @@
     ".pstage .res{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);z-index:5;background:var(--card);text-align:center;min-width:min(330px,90%);margin:0;box-shadow:0 8px 0 var(--line2)}",
     ".pn_load{position:absolute;left:0;right:0;top:8px;text-align:center;font-size:.8rem;color:#fff;opacity:.9;pointer-events:none}",
     "#pn_help{margin:8px 0 0}",
+    /* filtre des fonctions du panneau : on n'affiche que les groupes de l'onglet choisi */
+    ".ptabs{display:flex;flex-wrap:wrap;gap:6px}body.fit .ptabs{flex:1 1 100%}",
+    ".ppanel[data-tab=jeu] .pgrp:not([data-tabs~=jeu]),.ppanel[data-tab=son] .pgrp:not([data-tabs~=son]),.ppanel[data-tab=effets] .pgrp:not([data-tabs~=effets]),.ppanel[data-tab=tic] .pgrp:not([data-tabs~=tic]){display:none!important}",
+    "@media(max-width:760px){body.fit .ptabs{flex:0 0 auto;flex-wrap:nowrap}}",
     /* page unique, sans défilement : le panneau est compact et le clavier prend toute la place restante */
     "body.fit #v-piano .pcard{flex:1;min-height:0;display:flex;flex-direction:column;overflow:auto;margin-bottom:0}",
     "body.fit .ppanel{flex:none}",
@@ -305,15 +319,22 @@
           '<div class="plcd" role="status" aria-label="Écran du piano"><div class="l1" id="lcd1"></div><div class="l2" id="lcd2"></div><div class="l3" id="lcd3"></div></div>',
           '<div class="pk big" id="kn_vol"></div>',
         '</div>',
+        '<div class="ptabs" id="pn_tabs" role="group" aria-label="Filtrer les fonctions du piano">',
+          '<button class="pbtn" data-tab="jeu" aria-pressed="true"><i class="led"></i>Jeu</button>',
+          '<button class="pbtn" data-tab="son" aria-pressed="false"><i class="led"></i>Son</button>',
+          '<button class="pbtn" data-tab="effets" aria-pressed="false"><i class="led"></i>Effets</button>',
+          '<button class="pbtn" data-tab="tic" aria-pressed="false"><i class="led"></i>Tic-tac</button>',
+          '<button class="pbtn" data-tab="all" aria-pressed="false"><i class="led"></i>Tout</button>',
+        '</div>',
         '<div class="pgrid">',
-          '<div class="pgrp"><div class="pbtns" id="pn_mode">',
+          '<div class="pgrp" data-tabs="jeu"><div class="pbtns" id="pn_mode">',
             '<button class="pbtn" data-mode="free" aria-pressed="true"><i class="led"></i>Libre</button>',
             '<button class="pbtn" data-mode="learn" aria-pressed="false"><i class="led"></i>Apprendre</button>',
             '<button class="pbtn" data-mode="rhythm" aria-pressed="false"><i class="led"></i>Rythme</button>',
             '<button class="pbtn" data-mode="lesson" aria-pressed="false"><i class="led"></i>Leçons</button>',
           '</div></div>',
-          '<div class="pgrp"><select class="psel" id="pn_inst" aria-label="Instrument" title="Instrument"></select></div>',
-          '<div class="pgrp" id="pg_play">',
+          '<div class="pgrp" data-tabs="son"><select class="psel" id="pn_inst" aria-label="Instrument" title="Instrument"></select></div>',
+          '<div class="pgrp" id="pg_play" data-tabs="jeu">',
             '<select class="psel" id="pn_song" aria-label="Mélodie"></select>',
             '<button class="pbtn" id="pn_imp" type="button" style="display:none" aria-label="Importer un fichier MIDI"><i class="led"></i>Importer</button>',
             '<button class="pbtn" id="pn_del" type="button" style="display:none" aria-label="Supprimer ce morceau importé"><i class="led"></i>Supprimer</button>',
@@ -327,7 +348,7 @@
             '<select class="psel" id="pn_rep" aria-label="Couplets" title="Rejouer la mélodie plusieurs fois à la suite"><option value="1">Couplets : 1×</option><option value="2">Couplets : 2×</option><option value="3">Couplets : 3×</option></select>',
             '<button class="pbtn go" id="pn_go">▶ Jouer</button>',
           '</div>',
-          '<div class="pgrp">',
+          '<div class="pgrp" data-tabs="jeu">',
             '<div class="pbtns" id="pn_oct">',
               '<button class="pbtn round" data-o="-1" aria-label="Octave plus grave">−</button>',
               '<span class="poct" id="pn_octl">Octaves 4–5</span>',
@@ -336,29 +357,29 @@
             '<select class="psel" id="pn_kb" aria-label="Nombre de touches" title="Réglage : nombre de touches du clavier"><option value="10">Touches : 10</option><option value="21">Touches : 21</option></select>',
             '<button class="pbtn" id="pn_ped" aria-pressed="false" title="Pédale de sustain (barre Espace)"><i class="led"></i>Pédale</button>',
           '</div>',
-          '<div class="pgrp">',
+          '<div class="pgrp" data-tabs="effets">',
             '<button class="pbtn" id="pe_on" aria-pressed="false" title="Ajoute des répétitions du son, comme dans une grande salle"><i class="led"></i>Écho</button>',
             '<div class="pk" id="kn_ed"></div><div class="pk" id="kn_ef"></div>',
           '</div>',
-          '<div class="pgrp">',
+          '<div class="pgrp" data-tabs="son">',
             '<div class="pk" id="kn_tu"></div>',
             '<button class="pbtn" id="pt_la" title="Joue le La pour accorder">♪ La</button>',
             '<button class="pbtn" id="pt_rs" title="Remettre le La à 440 Hz">440</button>',
           '</div>',
-          '<div class="pgrp" id="pg_fx">',
+          '<div class="pgrp" id="pg_fx" data-tabs="effets">',
             '<select class="psel" id="fx_rv" aria-label="Réverbération" title="Réverbération : le son résonne dans une salle"><option value="none">Réverb. : aucune</option><option value="room">Réverb. : salle</option><option value="church">Réverb. : église</option></select>',
             '<div class="pk" id="kn_rv"></div>',
             '<select class="psel" id="fx_md" aria-label="Modulation" title="Chorus, vibrato ou haut-parleur rotatif (Leslie)"><option value="none">Modul. : aucune</option><option value="chorus">Chorus</option><option value="vibrato">Vibrato</option><option value="les_slow">Leslie lent</option><option value="les_fast">Leslie rapide</option></select>',
             '<div class="pk" id="kn_md"></div>',
           '</div>',
-          '<div class="pgrp" id="pg_env">',
+          '<div class="pgrp" id="pg_env" data-tabs="son">',
             '<div class="pk" id="kn_at"></div><div class="pk" id="kn_rl"></div><div class="pk" id="kn_tr"></div>',
           '</div>',
-          '<div class="pgrp" id="pg_layer">',
+          '<div class="pgrp" id="pg_layer" data-tabs="son">',
             '<select class="psel" id="pn_inst2" aria-label="Deuxième son (couche)" title="Joue un deuxième instrument en même temps"></select>',
             '<div class="pk" id="kn_ly"></div>',
           '</div>',
-          '<div class="pgrp pmetro">',
+          '<div class="pgrp pmetro" data-tabs="tic">',
             '<div class="mowrap"><div class="mo" id="mo" title="Cliquez pour démarrer ou arrêter le métronome"><svg viewBox="0 0 120 170" role="img" aria-label="Métronome"><path d="M24 164 L96 164 L77 22 L43 22 Z" fill="#7a4a2d" stroke="#25150a" stroke-width="3" stroke-linejoin="round"/><path d="M33 152 L87 152 L73 36 L47 36 Z" fill="#a46a41" opacity=".6"/><g stroke="#2a190d" stroke-width="1.5" opacity=".55"><line x1="52" y1="52" x2="68" y2="52"/><line x1="50" y1="72" x2="70" y2="72"/><line x1="48" y1="92" x2="72" y2="92"/><line x1="46" y1="112" x2="74" y2="112"/><line x1="44" y1="132" x2="76" y2="132"/></g><rect x="18" y="160" width="84" height="9" rx="3" fill="#3a2314" stroke="#25150a" stroke-width="2"/><g id="mo_arm" transform="rotate(0 60 140)"><rect x="58.5" y="2" width="3" height="140" rx="1.5" fill="#dcd6e8" stroke="#6d6580" stroke-width="1"/><rect id="mo_w" x="52" y="14" width="16" height="14" rx="3" fill="#e0b04a" stroke="#6b4a10" stroke-width="1.5"/></g><circle cx="60" cy="140" r="7" fill="#e0b04a" stroke="#6b4a10" stroke-width="2"/></svg></div><span class="pdots" id="pm_dots"></span></div>',
             '<div class="pmctl">',
               '<div class="pk" id="kn_bpm"></div><div class="pk" id="kn_mv"></div>',
@@ -1343,14 +1364,14 @@
       ctx.fillStyle = "rgb(" + [22 + 14 * f | 0, 18 + 12 * f | 0, 32 + 24 * f | 0] + ")";
       ctx.fillRect(0, i * KEY_Y / 8, W, KEY_Y / 8 + 1);
     }
-    /* colonnes des 10 touches blanches */
-    for (i = 0; i < 10; i++) {
+    /* colonnes des touches blanches */
+    for (i = 0; i < WHITE_KEYS.length; i++) {
       ctx.fillStyle = i % 2 ? "rgba(255,255,255,.03)" : "rgba(255,255,255,.07)";
-      ctx.fillRect(50 + i * 80, 0, 80, KEY_Y);
+      ctx.fillRect(KB_X0 + i * KB_W / WHITE_KEYS.length, 0, KB_W / WHITE_KEYS.length, KEY_Y);
     }
     /* ligne dorée */
     ctx.fillStyle = "rgba(242,169,59,.9)";
-    for (i = 50; i < 850; i += 24) ctx.fillRect(i, HIT_Y, 14, 4);
+    for (i = KB_X0; i < KB_X0 + KB_W; i += 24) ctx.fillRect(i, HIT_Y, 14, 4);
   }
 
   function drawFallingNotes(hint) {
@@ -1385,7 +1406,7 @@
       return g;
     }
     gradWhite = grad(KEY_Y, H, [[0, "#e3dccb"], [.1, "#fffdf6"], [.8, "#fbf7ec"], [1, "#d6cfbd"]]);
-    gradBlack = grad(KEY_Y, KEY_Y + 80, [[0, "#4d475b"], [.8, "#18141f"], [1, "#050407"]]);
+    gradBlack = grad(KEY_Y, KEY_Y + BH, [[0, "#4d475b"], [.8, "#18141f"], [1, "#050407"]]);
     gradPressed = grad(KEY_Y, H, [[0, "#ffd58a"], [1, "#f2a93b"]]);
     gradCheek = grad(KEY_Y, H, [[0, "#2c2635"], [1, "#0d0a12"]]);
   }
@@ -1428,10 +1449,10 @@
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = '700 ' + FS(24) + 'px Poppins,Arial,sans-serif';
-      ctx.fillText(k.label.toUpperCase(), k.cx, KEY_Y + 104);
+      ctx.fillText(k.label.toUpperCase(), k.cx, KEY_Y + Math.round(KEYH * .8));
       ctx.font = '600 ' + FS(13) + 'px Poppins,Arial,sans-serif';
       ctx.globalAlpha = .7;
-      ctx.fillText(noteLabel(k), k.cx, KEY_Y + 124);
+      ctx.fillText(noteLabel(k), k.cx, KEY_Y + Math.round(KEYH * .94));
       ctx.globalAlpha = 1;
     });
     /* touches noires, par-dessus */
@@ -1439,20 +1460,20 @@
       if (k.white) return;
       var pressed = game.down[k.code], dy = pressed ? 3 : 0;
       ctx.fillStyle = "rgba(0,0,0,.55)";
-      ctx.fillRect(k.x - 2, KEY_Y, k.w + 4, 86);
+      ctx.fillRect(k.x - 2, KEY_Y, k.w + 4, BH + 6);
       ctx.fillStyle = pressed ? "#F2A93B" : hint[k.code] ? PASTEL[k.f] : gradBlack;
-      ctx.fillRect(k.x, KEY_Y + dy, k.w, 80 - dy);
+      ctx.fillRect(k.x, KEY_Y + dy, k.w, BH - dy);
       if (!pressed && !hint[k.code]) {
         ctx.fillStyle = "rgba(255,255,255,.16)";
-        ctx.fillRect(k.x + 4, KEY_Y + 4, 5, 56);
+        ctx.fillRect(k.x + 4, KEY_Y + 4, 5, BH - 24);
         ctx.fillStyle = "rgba(255,255,255,.07)";
-        ctx.fillRect(k.x + 3, KEY_Y + 62, k.w - 6, 14);
+        ctx.fillRect(k.x + 3, KEY_Y + BH - 18, k.w - 6, 14);
       }
       ctx.fillStyle = pressed || hint[k.code] ? "#3A2F45" : "#FFFDF6";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.font = '700 ' + FS(17) + 'px Poppins,Arial,sans-serif';
-      ctx.fillText(k.label.toUpperCase(), k.cx, KEY_Y + 56);
+      ctx.fillText(k.label.toUpperCase(), k.cx, KEY_Y + Math.round(BH * .7));
     });
   }
 
@@ -1553,10 +1574,22 @@
     if (!sec.classList.contains("on") || !document.body.classList.contains("fit")) return;
     var st = cv.parentNode, aw = st.clientWidth, ah = st.clientHeight;
     if (!aw || !ah) return;
+    /* hauteur du dessin = celle de la scène (à la largeur 900) ; résolution suivant la taille affichée (net sur grand écran) */
+    var h = Math.max(380, Math.min(700, Math.round(W * ah / aw)));
+    var q = Math.max(1, Math.min(3, aw / W * (window.devicePixelRatio || 1)));
+    q = Math.round(q * 4) / 4;
+    if (h !== H || q !== cvScale) {
+      if (h !== H) setGeometry(h);
+      cvScale = q;
+      cv.width = Math.round(W * q);
+      cv.height = Math.round(H * q);
+      ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
+    }
     var w = Math.max(120, Math.floor(Math.min(aw, ah * W / H)));
     cv.style.width = w + "px";
     cv.style.height = Math.round(w * H / W) + "px";
   }
+  var cvScale = 1;
   if (window.ResizeObserver) new ResizeObserver(fitCanvas).observe(cv.parentNode);
   window.addEventListener("resize", fitCanvas);
 
@@ -1865,6 +1898,24 @@
     var b = e.target.closest("[data-o]");
     if (b && !b.disabled) { setOct(+b.dataset.o); b.blur(); }
   };
+  /* onglets : Jeu / Son / Effets / Tic-tac / Tout (choix mémorisé) */
+  var TABS = ["jeu", "son", "effets", "tic", "all"], panelEl = sec.querySelector(".ppanel");
+  function setTab(t) {
+    if (TABS.indexOf(t) < 0) t = "jeu";
+    panelEl.setAttribute("data-tab", t);
+    Array.prototype.forEach.call(document.querySelectorAll("#pn_tabs [data-tab]"), function (b) {
+      b.setAttribute("aria-pressed", b.dataset.tab === t);
+    });
+    try { localStorage.setItem("dactylo.piano.tab.v1", t); } catch (e) {}
+    fitCanvas();
+  }
+  $("pn_tabs").onclick = function (e) {
+    var b = e.target.closest("[data-tab]");
+    if (b) { setTab(b.dataset.tab); b.blur(); }
+  };
+  var savedTab = "jeu";
+  try { savedTab = localStorage.getItem("dactylo.piano.tab.v1") || "jeu"; } catch (e) {}
+  setTab(savedTab);
   $("pn_kb").value = kbId;
   $("pn_kb").onchange = function () {
     releaseAll();
@@ -1957,7 +2008,7 @@
     var i, k;
     for (i = 0; i < keys.length; i++) {
       k = keys[i];
-      if (!k.white && x >= k.x && x <= k.x + k.w && y < KEY_Y + 80) return k;
+      if (!k.white && x >= k.x && x <= k.x + k.w && y < KEY_Y + BH) return k;
     }
     for (i = 0; i < keys.length; i++) {
       k = keys[i];

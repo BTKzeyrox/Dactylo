@@ -97,6 +97,10 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - Réverbérations, chorus, vibrato et Leslie ne sont branchés que s'ils sont actifs (moins de processeur, plus de craquements).
 - Volume lissé ; notes coupées quand l'onglet est caché.
 
+## Clavier plein cadre et onglets (v53)
+- Le dessin suit la taille de la scène : le clavier remplit toute la largeur et le bas, sans bandes vides ; la hauteur des touches s'adapte, nettes sur grand écran.
+- Onglets du panneau : **Jeu** (mode, morceau, octaves, touches, pédale), **Son** (instrument, couche, attaque/relâche/transposition, accordage), **Effets** (écho, réverbération, modulation), **Tic-tac** (métronome), **Tout**. Choix mémorisé, « Jeu » par défaut.
+
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public. Ne pas ajouter de morceaux sous droits d'auteur.
