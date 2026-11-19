@@ -119,6 +119,10 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - Réglage **Perf : Auto / Léger / Complet** (onglet Son). Auto allège sur les appareils à 4 cœurs ou moins, ou 2 Go ou moins : 12 notes simultanées (32 en complet), latence audio « balanced » (moins de craquements, effective au prochain lancement), dessin en résolution simple.
 - Pour tous : les effets (réverbération, chorus, Leslie) ne sont construits qu'au premier choix ; l'écho n'est branché que s'il est actif ; l'écrêtage final ne sur-échantillonne plus ; les analyses du niveau s'arrêtent au repos et onglet caché.
 
+## Marche nuptiale (v59)
+- **Marche nuptiale (Wagner)**, le chœur nuptial de Lohengrin (« Voici la mariée »), domaine public : 38 notes, environ 28 s. Écrite en Sol (D4 à D5) pour tenir sur 10 comme sur 21 touches. Notes relevées sur une tablature de référence ; le rythme est approché (notes pointées).
+- Pas encore : la Marche nuptiale de Mendelssohn (« Le Songe d'une nuit d'été »), notes non trouvées de façon fiable.
+
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public. Ne pas ajouter de morceaux sous droits d'auteur.
