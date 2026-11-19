@@ -369,6 +369,7 @@
           '</div>',
           '<div class="pgrp" data-tabs="son">',
             '<div class="pk" id="kn_tu"></div>',
+            '<select class="psel" id="pn_perf" aria-label="Performance" title="Performance : Auto allège le piano sur les appareils modestes (12 notes simultanées, dessin simple, latence plus sûre au prochain lancement)"><option value="auto">Perf : Auto</option><option value="light">Perf : Léger</option><option value="full">Perf : Complet</option></select>',
             '<button class="pbtn" id="pt_la" title="Joue le La pour accorder">♪ La</button>',
             '<button class="pbtn" id="pt_rs" title="Remettre le La à 440 Hz">440</button>',
           '</div>',
@@ -562,11 +563,21 @@
   var failed = false;          // au moins un échantillon manque : sons de secours
   var noAudio = false;         // le navigateur n'a pas du tout de Web Audio
   var volume = .8;
+  /* Performance : « auto » allège le piano sur les appareils modestes (4 cœurs ou moins, 2 Go ou moins) ;
+     « léger » force l'allègement, « complet » le désactive. Allégé : 12 notes simultanées au lieu de 32,
+     latence audio plus sûre (moins de craquements), dessin en résolution simple. Rien n'est retiré côté sons. */
+  var perfPref = "auto";
+  try { var spf = localStorage.getItem("dactylo.piano.perf.v1"); if (spf === "light" || spf === "full" || spf === "auto") perfPref = spf; } catch (e) {}
+  var LOW_END = (function () { var nv = navigator; return (nv.hardwareConcurrency || 8) <= 4 || (nv.deviceMemory || 8) <= 2; })();
+  function lightOn() { return perfPref === "light" || (perfPref === "auto" && LOW_END); }
+  function maxVoices() { return lightOn() ? 12 : 32; }
+  var lastNoteMs = 0;   // dernier son joué : au repos, on n'analyse plus rien
   var TUNE = 440;              // fréquence du La4 (réglable de 430 à 450 Hz)
   var voices = {};             // note en cours par touche : { s: source, g: gain, t: début }
   var sustainOn = false;       // pédale de sustain enfoncée
   var heldVoices = [];         // notes relâchées mais maintenues par la pédale
   var echo = { on: false, time: .3, fb: .4 };   // écho : délai (secondes) et répétitions (0 à .6)
+  var echoLinked = false, echoTm = 0;
   var echoSend = null, echoWet = null, echoDelayL = null, echoDelayR = null, echoFbL = null, echoFbR = null;
   var preBus = null, agcAn = null, agcBuf = null, agcGain = 1;   // niveau automatique avant le limiteur
   var outNode = null;   // limiteur de sortie : tout passe par lui pour que les accords + l'écho ne saturent pas
@@ -616,7 +627,7 @@
   }
   /* voyant « LIMITE » : si le compresseur baisse le son de plus de 3 dB, l'écran LCD le dit un instant */
   function watchLevel() {
-    if (!outComp) return;
+    if (!outComp || document.hidden || (!limitShown && Date.now() - lastNoteMs > 8000)) return;
     var r = outComp.reduction;
     r = typeof r === "number" ? r : (r && r.value) || 0;
     if (r < -3) limitUntil = Date.now() + 1200;
@@ -625,6 +636,7 @@
   }
   function watchMix() {
     if (!agcAn || !audioCtx || !preBus || !agcAn.getFloatTimeDomainData) return;
+    if (document.hidden || (agcGain >= 1 && Date.now() - lastNoteMs > 8000)) return;   // au repos : aucune analyse
     agcAn.getFloatTimeDomainData(agcBuf);
     var pk = 0, i, a;
     for (i = 0; i < agcBuf.length; i++) { a = agcBuf[i] < 0 ? -agcBuf[i] : agcBuf[i]; if (a > pk) pk = a; }
@@ -644,7 +656,7 @@
       outTrim = c.createGain();
       outTrim.gain.value = OUT_TRIM / OUT_MAKEUP0 * .5;
       sc.curve = softClipCurve();
-      sc.oversample = "2x";
+      sc.oversample = "none";   // la courbe est linéaire sous 0,95 : le sur-échantillonnage ne servait qu'à consommer du processeur
       comp.connect(outTrim); outTrim.connect(sc); sc.connect(c.destination);
       outComp = comp;
       calibrateOutput();
@@ -661,7 +673,7 @@
       var Ctor = window.AudioContext || window.webkitAudioContext;
       if (!Ctor) return null;
       try {
-        audioCtx = new Ctor();
+        try { audioCtx = new Ctor({ latencyHint: lightOn() ? "balanced" : "interactive" }); } catch (e) { audioCtx = new Ctor(); }
         master = audioCtx.createGain();
         master.gain.value = volume;
         outNode = makeLimiter();
@@ -677,7 +689,7 @@
           setInterval(watchMix, 40);
         } catch (e) { agcAn = null; }
         master.connect(preBus);
-        buildFx(audioCtx);
+        if (fx.rv !== "none" || fx.md !== "none") buildFx(audioCtx);   // sinon : à la première utilisation (voir ensureFx)
         buildEcho();
         polyBus = audioCtx.createGain();
         polyBus.connect(fxIn || master);
@@ -710,7 +722,6 @@
       echoFbR = c.createGain();
       var hpL = filt("highpass", 160), lpL = filt("lowpass", 3200);
       var hpR = filt("highpass", 160), lpR = filt("lowpass", 3200);
-      master.connect(echoSend);
       echoSend.connect(echoDelayL);
       echoDelayL.connect(hpL); hpL.connect(lpL); lpL.connect(echoFbL); echoFbL.connect(echoDelayR);
       echoDelayR.connect(hpR); hpR.connect(lpR); lpR.connect(echoFbR); echoFbR.connect(echoDelayL);
@@ -737,6 +748,13 @@
     echoFbR.gain.setTargetAtTime(echo.fb, t, .05);
     echoWet.gain.setTargetAtTime(.3, t, .05);
     echoSend.gain.setTargetAtTime(echo.on ? 1 : 0, t, .02);
+    /* branché seulement quand l'écho est actif (les répétitions finissent d'abord) : désactivé, il ne coûte plus rien */
+    if (echo.on) {
+      if (echoTm) { clearTimeout(echoTm); echoTm = 0; }
+      if (!echoLinked) { master.connect(echoSend); echoLinked = true; }
+    } else if (echoLinked && !echoTm) {
+      echoTm = setTimeout(function () { echoTm = 0; try { master.disconnect(echoSend); } catch (e) {} echoLinked = false; }, 4000);
+    }
   }
 
   function decode(arrayBuffer) {
@@ -978,7 +996,7 @@
   var LEVEL = { epiano: .077, organ: .033, church: .036, rock: .045, strings: .05, synth: .054, vibes: .08 };
 
   /* trop de notes en même temps : la plus ancienne s'éteint vite (protège le processeur et le niveau) */
-  var liveAll = [], MAX_VOICES = 32, polyBus = null;   // une seule limite pour échantillons, synthés et couche
+  var liveAll = [], polyBus = null;   // une seule limite pour échantillons, synthés et couche
   function capVoices(list, max, v) {
     var alive = list.filter(function (x) { return !x.dead; });
     while (alive.length >= max) { var old = alive.shift(); old.rel = .08; old.hold = 0; old.dead = true; release(old); }
@@ -1001,7 +1019,7 @@
     out.connect(g);
     SYNTH[inst](a, t, f, out, nodes, v);
     v.s = nodes[0];
-    liveAll = capVoices(liveAll, MAX_VOICES, v);
+    liveAll = capVoices(liveAll, maxVoices(), v);
     polyUpdate();
     return v;
   }
@@ -1039,6 +1057,7 @@
   function playVoice(k, vel, m0, inst) {
     var a = getAudio();
     if (!a) return null;
+    lastNoteMs = Date.now();
     var t = a.currentTime, g = a.createGain();
     var m = m0 == null ? soundMidi(k.midi + 12 * octShift()) : m0;
     var sample = pickSample(m);
@@ -1054,7 +1073,7 @@
       src.connect(g);
       src.start(t);
       var sv = { s: src, g: g, t: t };
-      liveAll = capVoices(liveAll, MAX_VOICES, sv);
+      liveAll = capVoices(liveAll, maxVoices(), sv);
       polyUpdate();
       return sv;
     }
@@ -1616,7 +1635,7 @@
     if (!aw || !ah) return;
     /* hauteur du dessin = celle de la scène (à la largeur 900) ; résolution suivant la taille affichée (net sur grand écran) */
     var h = Math.max(380, Math.min(700, Math.round(W * ah / aw)));
-    var q = Math.max(1, Math.min(2, aw / W * (window.devicePixelRatio || 1), Math.sqrt(1.6e6 / (W * h))));   // au plus 2x et ~1,6 million de pixels
+    var q = lightOn() ? 1 : Math.max(1, Math.min(2, aw / W * (window.devicePixelRatio || 1), Math.sqrt(1.6e6 / (W * h))));   // au plus 2x et ~1,6 million de pixels
     q = Math.floor(q * 4) / 4;
     if (h !== H || q !== cvScale) {
       if (h !== H) setGeometry(h);
@@ -1983,6 +2002,13 @@
   var savedTab = "jeu";
   try { savedTab = localStorage.getItem("dactylo.piano.tab.v1") || "jeu"; } catch (e) {}
   setTab(savedTab);
+  $("pn_perf").value = perfPref;
+  $("pn_perf").onchange = function () {
+    perfPref = this.value;
+    try { localStorage.setItem("dactylo.piano.perf.v1", perfPref); } catch (e) {}
+    fitCanvas();
+    this.blur();
+  };
   $("pn_kb").value = kbId;
   $("pn_kb").onchange = function () {
     releaseAll();
@@ -2363,6 +2389,12 @@
     }
     return buf;
   }
+  /* construit la chaîne d'effets la première fois qu'on en choisit un, puis y fait passer les notes */
+  function ensureFx() {
+    if (fxNodes || !audioCtx || !polyBus || (fx.rv === "none" && fx.md === "none")) return;
+    buildFx(audioCtx);
+    if (fxIn) { try { polyBus.disconnect(); } catch (e) {} polyBus.connect(fxIn); }
+  }
   function buildFx(a) {
     try {
       if (!a.createConvolver || !a.createDelay) return;
@@ -2456,6 +2488,7 @@
     knobs.mdMix.set(fx.mdMix);
     knobs.attack.set(fx.at);
     knobs.release.set(fx.fd);
+    ensureFx();
     applyFx();
     try { localStorage.setItem("dactylo.piano.fx.v1", JSON.stringify(fx)); } catch (e) {}
   }

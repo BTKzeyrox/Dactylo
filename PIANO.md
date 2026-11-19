@@ -115,6 +115,10 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - **Frère Jacques** : deux couplets complets (64 temps, environ 38 s).
 - **Für Élise** : thème A, partie B (en Do majeur, jusqu'à Sol5), thème A (86 notes, environ 74 s). Avec 10 touches, les notes trop hautes sont jouées une octave plus bas ; avec 21 touches, tout est à la bonne octave.
 
+## Appareils modestes : moins de saturation et de craquements (v58)
+- Réglage **Perf : Auto / Léger / Complet** (onglet Son). Auto allège sur les appareils à 4 cœurs ou moins, ou 2 Go ou moins : 12 notes simultanées (32 en complet), latence audio « balanced » (moins de craquements, effective au prochain lancement), dessin en résolution simple.
+- Pour tous : les effets (réverbération, chorus, Leslie) ne sont construits qu'au premier choix ; l'écho n'est branché que s'il est actif ; l'écrêtage final ne sur-échantillonne plus ; les analyses du niveau s'arrêtent au repos et onglet caché.
+
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public. Ne pas ajouter de morceaux sous droits d'auteur.
