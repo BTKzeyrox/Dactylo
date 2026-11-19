@@ -277,7 +277,7 @@
     ".pn_load{position:absolute;left:0;right:0;top:8px;text-align:center;font-size:.8rem;color:#fff;opacity:.9;pointer-events:none}",
     "#pn_help{margin:8px 0 0}",
     /* filtre des fonctions du panneau : on n'affiche que les groupes de l'onglet choisi */
-    ".ptabs{display:flex;flex-wrap:wrap;gap:6px}body.fit .ptabs{flex:1 1 100%}",
+    ".ptabs{display:flex;flex-wrap:wrap;gap:6px}body.fit .ptabs{flex:1 1 100%}#pn_reset{margin-left:auto}",
     ".ppanel[data-tab=jeu] .pgrp:not([data-tabs~=jeu]),.ppanel[data-tab=son] .pgrp:not([data-tabs~=son]),.ppanel[data-tab=effets] .pgrp:not([data-tabs~=effets]),.ppanel[data-tab=tic] .pgrp:not([data-tabs~=tic]){display:none!important}",
     "@media(max-width:760px){body.fit .ptabs{flex:0 0 auto;flex-wrap:nowrap}}",
     /* page unique, sans défilement : le panneau est compact et le clavier prend toute la place restante */
@@ -326,6 +326,7 @@
           '<button class="pbtn" data-tab="effets" aria-pressed="false"><i class="led"></i>Effets</button>',
           '<button class="pbtn" data-tab="tic" aria-pressed="false"><i class="led"></i>Tic-tac</button>',
           '<button class="pbtn" data-tab="all" aria-pressed="false"><i class="led"></i>Tout</button>',
+          '<button class="pbtn" id="pn_reset" title="Remet les réglages d\'origine : instrument, effets, écho, couche, transposition, accord, volume, octave">↺ Réinitialiser</button>',
         '</div>',
         '<div class="pgrid">',
           '<div class="pgrp" data-tabs="jeu"><div class="pbtns" id="pn_mode">',
@@ -563,6 +564,7 @@
   var heldVoices = [];         // notes relâchées mais maintenues par la pédale
   var echo = { on: false, time: .3, fb: .4 };   // écho : délai (secondes) et répétitions (0 à .6)
   var echoSend = null, echoWet = null, echoDelayL = null, echoDelayR = null, echoFbL = null, echoFbR = null;
+  var preBus = null, agcAn = null, agcBuf = null, agcGain = 1;   // niveau automatique avant le limiteur
   var outNode = null;   // limiteur de sortie : tout passe par lui pour que les accords + l'écho ne saturent pas
 
   var SAMPLE_NAMES = "C3 Eb3 Gb3 A3 C4 Db4 D4 Eb4 E4 F4 Gb4 G4 Ab4 A4 Bb4 B4 C5 Db5 D5 Eb5 E5 A5 C6 Eb6".split(" ");
@@ -617,6 +619,20 @@
     var on = Date.now() < limitUntil;
     if (on !== limitShown) { limitShown = on; refreshLcd(); }
   }
+  function watchMix() {
+    if (!agcAn || !audioCtx || !preBus || !agcAn.getFloatTimeDomainData) return;
+    agcAn.getFloatTimeDomainData(agcBuf);
+    var pk = 0, i, a;
+    for (i = 0; i < agcBuf.length; i++) { a = agcBuf[i] < 0 ? -agcBuf[i] : agcBuf[i]; if (a > pk) pk = a; }
+    var now = audioCtx.currentTime;
+    if (pk > .8) {                      // trop fort : on baisse vite (jusqu'à -10 dB)
+      agcGain = Math.max(.3, agcGain * (.8 / pk));
+      preBus.gain.setTargetAtTime(agcGain, now, .01);
+    } else if (agcGain < 1 && pk < .65) {   // de nouveau de la marge : on remonte doucement
+      agcGain = Math.min(1, agcGain + .03);
+      preBus.gain.setTargetAtTime(agcGain, now, .25);
+    }
+  }
   function makeLimiter() {
     try {
       var c = audioCtx, comp = c.createDynamicsCompressor(), sc = c.createWaveShaper();
@@ -645,7 +661,18 @@
         master = audioCtx.createGain();
         master.gain.value = volume;
         outNode = makeLimiter();
-        master.connect(outNode);
+        /* niveau automatique : si le mélange (accords + couche + écho + effets) devient trop fort, on baisse tout en douceur
+           AVANT le limiteur, qui n'a plus qu'à rattraper les pointes : plus de saturation quand on cumule les réglages */
+        preBus = audioCtx.createGain();
+        preBus.connect(outNode);
+        try {
+          agcAn = audioCtx.createAnalyser();
+          agcAn.fftSize = 1024;
+          agcBuf = new Float32Array(agcAn.fftSize);
+          preBus.connect(agcAn);
+          setInterval(watchMix, 40);
+        } catch (e) { agcAn = null; }
+        master.connect(preBus);
         buildFx(audioCtx);
         buildEcho();
         polyBus = audioCtx.createGain();
@@ -689,7 +716,7 @@
       };
       toWet(lpL, -.7);
       toWet(lpR, .7);
-      echoWet.connect(outNode);
+      echoWet.connect(preBus || outNode);
       applyEcho(true);
     } catch (e) {
       echoSend = echoWet = echoDelayL = echoDelayR = echoFbL = echoFbR = null;
@@ -704,7 +731,7 @@
     echoDelayR.delayTime.setTargetAtTime(echo.time, t, tc);
     echoFbL.gain.setTargetAtTime(echo.fb, t, .05);
     echoFbR.gain.setTargetAtTime(echo.fb, t, .05);
-    echoWet.gain.setTargetAtTime(.35, t, .05);
+    echoWet.gain.setTargetAtTime(.3, t, .05);
     echoSend.gain.setTargetAtTime(echo.on ? 1 : 0, t, .02);
   }
 
@@ -1916,6 +1943,33 @@
   $("pn_tabs").onclick = function (e) {
     var b = e.target.closest("[data-tab]");
     if (b) { setTab(b.dataset.tab); b.blur(); }
+  };
+  /* Réinitialiser : remet tous les réglages d'origine (deux clics pour éviter l'erreur) */
+  function resetAll() {
+    releaseAll();
+    setInstrument("piano");
+    setFx({ rv: "none", rvMix: 30, md: "none", mdMix: 60, at: 0, fd: 80 });
+    setEcho({ on: false, time: .3, fb: .4 });
+    setPlay({ trans: 0, layer: "none", layerMix: 50 });
+    setTune(440);
+    volume = .8;
+    knobs.volume.set(80);
+    if (master) master.gain.setTargetAtTime(volume, audioCtx.currentTime, .02);
+    setOct(-game.oct);
+    refreshLcd();
+  }
+  var rstBtn = $("pn_reset"), rstTimer = 0;
+  function rstDisarm() { clearTimeout(rstTimer); rstBtn.textContent = "↺ Réinitialiser"; rstBtn.removeAttribute("data-arm"); }
+  rstBtn.onclick = function () {
+    if (!rstBtn.getAttribute("data-arm")) {
+      rstBtn.setAttribute("data-arm", "1");
+      rstBtn.textContent = "Confirmer ?";
+      rstTimer = setTimeout(rstDisarm, 3000);
+    } else {
+      rstDisarm();
+      resetAll();
+    }
+    rstBtn.blur();
   };
   var savedTab = "jeu";
   try { savedTab = localStorage.getItem("dactylo.piano.tab.v1") || "jeu"; } catch (e) {}

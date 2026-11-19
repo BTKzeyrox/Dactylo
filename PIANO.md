@@ -106,6 +106,10 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - Limite : les échantillons du piano durent 3,2 s et s'éteignent d'eux-mêmes (≈ −17 dB par seconde) ; le fondu règle la fin après le relâchement, il ne rallonge pas l'échantillon.
 - Jusqu'à 32 voix ; une note en fondu pèse moins dans la baisse de volume des accords.
 
+## Réinitialiser et anti-saturation des mélanges (v56)
+- Bouton **↺ Réinitialiser** (barre des onglets, deux clics) : remet instrument = piano, effets (réverbération, modulation, attaque, fondu), écho, couche, transposition, accord, volume et octave aux valeurs d'origine. Ne touche ni au métronome ni au nombre de touches.
+- **Niveau automatique** avant le limiteur : quand le mélange (accords + couche + écho + effets) devient trop fort (pointes au-dessus de 0,8), tout baisse vite (jusqu'à −10 dB) puis remonte doucement. Le limiteur n'a plus qu'à rattraper les pointes. Écho un peu plus discret (0,30).
+
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public. Ne pas ajouter de morceaux sous droits d'auteur.
