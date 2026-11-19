@@ -37,9 +37,10 @@
   var BASE = "sounds/piano/"; // dossier des échantillons
 
   /* Relâchement : une note jouée ne s'arrête jamais avant MIN_HOLD, puis elle s'éteint
-     progressivement (constante de temps RELEASE_TC, environ 1 s pour disparaître). */
+     progressivement (constante de temps RELEASE_TC : environ 1,5 s pour disparaître). Même sans écho ni réglage,
+     aucun instrument ne coupe net : chacun a sa propre fin douce (v.rel de chaque son ci-dessous). */
   var MIN_HOLD = .3;
-  var RELEASE_TC = .12;
+  var RELEASE_TC = .3;
 
   /* Dispositions du clavier (positions physiques : [code, note, nom français]). Réglable avec « Touches » dans le panneau.
      « 21 » (par défaut) : deux octaves et demie sur deux rangées : blanches sur la rangée du haut (A Z E R T Y U I O P)
@@ -851,7 +852,7 @@
       env.gain.setTargetAtTime(0, t + .004, 1.7);
       env.connect(hp);   // le filtre coupe la composante quasi continue que la modulation 1:1 crée vers 0 Hz
       nodes.forEach(function (n) { n.stop(t + 9); });
-      v.rel = .25; v.hold = .12;
+      v.rel = .4; v.hold = .12;
     },
     /* Hammond : 9 tirettes, petit clic à l'attaque, percussion sur la 3e harmonique */
     organ: function (a, t, f, out, nodes, v) {
@@ -864,7 +865,7 @@
       pg.connect(out);
       mkOsc(a, nodes, t, "sine", f * 3, pg, 0, 0);
       burst(a, t, 2600, 1.4, .5, .014, out);
-      v.rel = .04; v.hold = .06;
+      v.rel = .25; v.hold = .06;
     },
     /* orgue d'église : tuyaux, attaque lente, souffle, son plein et sombre */
     church: function (a, t, f, out, nodes, v) {
@@ -881,7 +882,7 @@
       g2.connect(env);
       mkOsc(a, nodes, t, "sine", f, g2, 5, 0);
       burst(a, t, f * 2, 1.2, .06, .2, out);
-      v.rel = .14; v.hold = .1;
+      v.rel = .6; v.hold = .1;
     },
     /* orgue rock : tirettes brillantes, vibrato, saturation */
     rock: function (a, t, f, out, nodes, v) {
@@ -896,7 +897,7 @@
       pg.gain.exponentialRampToValueAtTime(.001, t + .22);
       pg.connect(env);
       mkOsc(a, nodes, t, "sine", f * 3, pg, 0, 8);
-      v.rel = .05; v.hold = .06;
+      v.rel = .25; v.hold = .06;
     },
     /* ensemble de cordes : trois scies légèrement désaccordées, attaque lente, vibrato */
     strings: function (a, t, f, out, nodes, v) {
@@ -904,7 +905,7 @@
       ramp(env.gain, t, 0, 1, .4);
       env.connect(lp);
       [-12, 0, 12].forEach(function (d) { mkOsc(a, nodes, t, "sawtooth", f, env, d, 5); });
-      v.rel = .3; v.hold = .15;
+      v.rel = .6; v.hold = .15;
     },
     /* synthé : scies désaccordées + sous-octave carrée, filtre qui s'ouvre puis se referme */
     synth: function (a, t, f, out, nodes, v) {
@@ -921,7 +922,7 @@
       sg.gain.value = .5;
       sg.connect(lp);
       mkOsc(a, nodes, t, "square", f / 2, sg, 0, 0);
-      v.rel = .18; v.hold = .08;
+      v.rel = .35; v.hold = .08;
     },
     /* vibraphone : lames (partiels 1, 4, 10 qui s'éteignent à des vitesses différentes), trémolo du moteur, coup de maillet */
     vibes: function (a, t, f, out, nodes, v) {
@@ -938,7 +939,7 @@
       });
       burst(a, t, 3500, 1.5, .22, .02, out);
       nodes.forEach(function (n) { n.stop(t + 9); });
-      v.rel = .35; v.hold = .2;
+      v.rel = .6; v.hold = .2;
     }
   };
   /* niveaux de sortie réglés par mesure pour que tous les instruments sonnent aussi fort que le piano */
@@ -948,7 +949,7 @@
   var liveAll = [], MAX_VOICES = 24, polyBus = null;   // une seule limite pour échantillons, synthés et couche
   function capVoices(list, max, v) {
     var alive = list.filter(function (x) { return !x.dead; });
-    while (alive.length >= max) { var old = alive.shift(); old.rel = .03; old.hold = 0; old.dead = true; release(old); }
+    while (alive.length >= max) { var old = alive.shift(); old.rel = .08; old.hold = 0; old.dead = true; release(old); }
     alive.push(v);
     if (v.s) v.s.onended = function () { v.dead = true; polyUpdate(); };
     return alive;
