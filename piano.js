@@ -31,27 +31,59 @@
   var MIN_HOLD = .3;
   var RELEASE_TC = .12;
 
-  /* Disposition : touches blanches sur la rangée du milieu, dièses sur celle du haut
-     (positions physiques du clavier : [code, note, nom français]). */
-  var WHITE_KEYS = [
-    ["KeyA", "C4", "Do"], ["KeyS", "D4", "Ré"], ["KeyD", "E4", "Mi"], ["KeyF", "F4", "Fa"], ["KeyG", "G4", "Sol"],
-    ["KeyH", "A4", "La"], ["KeyJ", "B4", "Si"], ["KeyK", "C5", "Do"], ["KeyL", "D5", "Ré"], ["Semicolon", "E5", "Mi"]
-  ];
-  /* [code, note, position entre les blanches, nom français] */
-  var BLACK_KEYS = [
-    ["KeyW", "Db4", 1, "Do#"], ["KeyE", "Eb4", 2, "Ré#"], ["KeyT", "Gb4", 4, "Fa#"], ["KeyY", "Ab4", 5, "Sol#"],
-    ["KeyU", "Bb4", 6, "La#"], ["KeyO", "Db5", 8, "Do#"], ["KeyP", "Eb5", 9, "Ré#"]
-  ];
-  /* doigt conseillé, qui donne la couleur de la note */
+  /* Dispositions du clavier (positions physiques : [code, note, nom français]). Réglable avec « Touches » dans le panneau.
+     « 21 » (par défaut) : deux octaves et demie sur deux rangées : blanches sur la rangée du haut (A Z E R T Y U I O P)
+     puis du bas (W X C V B N , ; : ! *), dièses sur la rangée des chiffres puis du milieu.
+     « 10 » : l'ancien clavier, blanches sur la rangée du milieu (Q S D F G H J K L M), dièses sur celle du haut.
+     Les dièses : [code, note, position entre les blanches, nom français]. */
+  var KB_PRESETS = {
+    "10": {
+      last: 5,
+      whites: [
+        ["KeyA", "C4", "Do"], ["KeyS", "D4", "Ré"], ["KeyD", "E4", "Mi"], ["KeyF", "F4", "Fa"], ["KeyG", "G4", "Sol"],
+        ["KeyH", "A4", "La"], ["KeyJ", "B4", "Si"], ["KeyK", "C5", "Do"], ["KeyL", "D5", "Ré"], ["Semicolon", "E5", "Mi"]
+      ],
+      blacks: [
+        ["KeyW", "Db4", 1, "Do#"], ["KeyE", "Eb4", 2, "Ré#"], ["KeyT", "Gb4", 4, "Fa#"], ["KeyY", "Ab4", 5, "Sol#"],
+        ["KeyU", "Bb4", 6, "La#"], ["KeyO", "Db5", 8, "Do#"], ["KeyP", "Eb5", 9, "Ré#"]
+      ]
+    },
+    "21": {
+      last: 6,
+      whites: [
+        ["KeyQ", "C4", "Do"], ["KeyW", "D4", "Ré"], ["KeyE", "E4", "Mi"], ["KeyR", "F4", "Fa"], ["KeyT", "G4", "Sol"],
+        ["KeyY", "A4", "La"], ["KeyU", "B4", "Si"], ["KeyI", "C5", "Do"], ["KeyO", "D5", "Ré"], ["KeyP", "E5", "Mi"],
+        ["KeyZ", "F5", "Fa"], ["KeyX", "G5", "Sol"], ["KeyC", "A5", "La"], ["KeyV", "B5", "Si"], ["KeyB", "C6", "Do"],
+        ["KeyN", "D6", "Ré"], ["KeyM", "E6", "Mi"], ["Comma", "F6", "Fa"], ["Period", "G6", "Sol"], ["Slash", "A6", "La"],
+        ["Backslash", "B6", "Si"]
+      ],
+      blacks: [
+        ["Digit2", "Db4", 1, "Do#"], ["Digit3", "Eb4", 2, "Ré#"], ["Digit5", "Gb4", 4, "Fa#"], ["Digit6", "Ab4", 5, "Sol#"],
+        ["Digit7", "Bb4", 6, "La#"], ["Digit9", "Db5", 8, "Do#"], ["Digit0", "Eb5", 9, "Ré#"],
+        ["KeyS", "Gb5", 11, "Fa#"], ["KeyD", "Ab5", 12, "Sol#"], ["KeyF", "Bb5", 13, "La#"], ["KeyH", "Db6", 15, "Do#"],
+        ["KeyJ", "Eb6", 16, "Ré#"], ["KeyL", "Gb6", 18, "Fa#"], ["Semicolon", "Ab6", 19, "Sol#"], ["Quote", "Bb6", 20, "La#"]
+      ]
+    }
+  };
+  var WHITE_KEYS = [], BLACK_KEYS = [], kbId = "21", kbScale = 1;
+  /* doigt conseillé, qui donne la couleur de la note (disposition « 10 ») ; en « 21 » il suit la place de la touche */
   var FINGER = {
     KeyA: 1, KeyS: 2, KeyD: 3, KeyF: 4, KeyG: 4, KeyH: 5, KeyJ: 5, KeyK: 6, KeyL: 7, Semicolon: 8,
     KeyW: 2, KeyE: 3, KeyT: 4, KeyY: 5, KeyU: 5, KeyO: 7, KeyP: 8
   };
+  var FINGER21 = [1, 2, 3, 4, 4, 5, 5, 6, 7, 8];
   /* étiquettes par défaut (disposition AZERTY) */
   var DEFAULT_LABEL = {
     KeyA: "q", KeyS: "s", KeyD: "d", KeyF: "f", KeyG: "g", KeyH: "h", KeyJ: "j", KeyK: "k", KeyL: "l", Semicolon: "m",
-    KeyW: "z", KeyE: "e", KeyT: "t", KeyY: "y", KeyU: "u", KeyO: "o", KeyP: "p"
+    KeyW: "z", KeyE: "e", KeyT: "t", KeyY: "y", KeyU: "u", KeyO: "o", KeyP: "p",
+    KeyQ: "a", KeyR: "r", KeyI: "i", KeyZ: "w", KeyX: "x", KeyC: "c", KeyV: "v", KeyB: "b", KeyN: "n", KeyM: ",",
+    Comma: ";", Period: ":", Slash: "!", Backslash: "*", Quote: "ù",
+    Digit2: "é", Digit3: "\"", Digit5: "(", Digit6: "-", Digit7: "è", Digit9: "ç", Digit0: "à"
   };
+  var ALL_CODES = [];
+  Object.keys(KB_PRESETS).forEach(function (id) {
+    KB_PRESETS[id].whites.concat(KB_PRESETS[id].blacks).forEach(function (x) { if (ALL_CODES.indexOf(x[0]) < 0) ALL_CODES.push(x[0]); });
+  });
   var PASTEL = {
     1: "#F7C6D0", 2: "#F9D5B0", 3: "#F8EAA8", 4: "#CBE8B8",
     5: "#BFE0F0", 6: "#D8CCF0", 7: "#B8E8DC", 8: "#F4BDB5"
@@ -66,20 +98,37 @@
   }
 
   var keys = [], keyByCode = {}, keyByNote = {};
-  WHITE_KEYS.forEach(function (w, i) {
-    keys.push({
-      code: w[0], note: w[1], fr: w[2], white: true, midi: noteToMidi(w[1]),
-      x: 50 + i * 80, w: 80, cx: 90 + i * 80, f: FINGER[w[0]], label: DEFAULT_LABEL[w[0]]
+  var KB_X0 = 50, KB_W = 800;   // le clavier occupe toujours la même largeur : plus de touches = touches plus étroites
+  /* (re)construit les touches de la disposition choisie, sur place (les listes gardent la même identité) */
+  function buildKeys(id) {
+    var pr = KB_PRESETS[id] || KB_PRESETS["21"];
+    kbId = KB_PRESETS[id] ? id : "21";
+    WHITE_KEYS = pr.whites; BLACK_KEYS = pr.blacks;
+    var kw = KB_W / pr.whites.length, bw = kw === 80 ? 46 : Math.round(kw * .6);
+    kbScale = kw / 80;
+    keys.length = 0;
+    Object.keys(keyByCode).forEach(function (c) { delete keyByCode[c]; });
+    Object.keys(keyByNote).forEach(function (n) { delete keyByNote[n]; });
+    var finger = function (code, i) { return kbId === "10" ? FINGER[code] : FINGER21[i % 10]; };
+    pr.whites.forEach(function (w, i) {
+      keys.push({
+        code: w[0], note: w[1], fr: w[2], white: true, midi: noteToMidi(w[1]),
+        x: KB_X0 + i * kw, w: kw, cx: KB_X0 + (i + .5) * kw, f: finger(w[0], i), label: keyLabel(w[0])
+      });
     });
-  });
-  BLACK_KEYS.forEach(function (b) {
-    var cx = 50 + b[2] * 80;
-    keys.push({
-      code: b[0], note: b[1], fr: b[3], white: false, midi: noteToMidi(b[1]),
-      x: cx - 23, w: 46, cx: cx, f: FINGER[b[0]], label: DEFAULT_LABEL[b[0]]
+    pr.blacks.forEach(function (b) {
+      var cx = KB_X0 + b[2] * kw;
+      keys.push({
+        code: b[0], note: b[1], fr: b[3], white: false, midi: noteToMidi(b[1]),
+        x: cx - bw / 2, w: bw, cx: cx, f: finger(b[0], b[2] - 1), label: keyLabel(b[0])
+      });
     });
-  });
-  keys.forEach(function (k) { keyByCode[k.code] = k; keyByNote[k.note] = k; });
+    keys.forEach(function (k) { keyByCode[k.code] = k; keyByNote[k.note] = k; });
+  }
+  try { var savedKb = localStorage.getItem("dactylo.piano.kb.v1"); if (KB_PRESETS[savedKb]) kbId = savedKb; } catch (e) {}
+  buildKeys(kbId);
+  /* taille des textes du clavier selon la largeur des touches */
+  function FS(n) { return Math.round(n * (.55 + .45 * kbScale)); }
 
   /* Mélodies du domaine public. Notation : Note[:temps], R = silence. [titre, tempo, notes] */
   var SONGS = [
@@ -284,6 +333,7 @@
               '<span class="poct" id="pn_octl">Octaves 4–5</span>',
               '<button class="pbtn round" data-o="1" aria-label="Octave plus aiguë">+</button>',
             '</div>',
+            '<select class="psel" id="pn_kb" aria-label="Nombre de touches" title="Réglage : nombre de touches du clavier"><option value="10">Touches : 10</option><option value="21">Touches : 21</option></select>',
             '<button class="pbtn" id="pn_ped" aria-pressed="false" title="Pédale de sustain (barre Espace)"><i class="led"></i>Pédale</button>',
           '</div>',
           '<div class="pgrp">',
@@ -917,7 +967,7 @@
   function soundMidi(m) {
     m += TRANS;
     while (m < 45) m += 12;
-    while (m > 91) m -= 12;
+    while (m > 96) m -= 12;
     return m;
   }
   /* Couche : un deuxième instrument joué en même temps que le premier (niveau réglable). */
@@ -1071,10 +1121,8 @@
     if (navigator.keyboard && navigator.keyboard.getLayoutMap) {
       navigator.keyboard.getLayoutMap().then(function (m) {
         layout = {};
-        keys.forEach(function (k) {
-          var v = m.get(k.code);
-          if (v) { layout[k.code] = v; k.label = v; }
-        });
+        ALL_CODES.forEach(function (c) { var v = m.get(c); if (v) layout[c] = v; });
+        keys.forEach(function (k) { k.label = keyLabel(k.code); });
         helpText();
       }).catch(function () {});
     }
@@ -1089,7 +1137,7 @@
     var whites = WHITE_KEYS.map(function (w) { return keyLabel(w[0]).toUpperCase(); }).join(" ");
     var blacks = BLACK_KEYS.map(function (b) { return keyLabel(b[0]).toUpperCase(); }).join(" ");
     $("pn_help").innerHTML = intro +
-      "Touches blanches : <b>" + whites + "</b> (Do à Mi). Dièses : <b>" + blacks + "</b>. La souris et le tactile marchent aussi." +
+      "Touches blanches : <b>" + whites + "</b> (" + (kbId === "10" ? "Do à Mi" : "Do à Si") + "). Dièses : <b>" + blacks + "</b>. La souris et le tactile marchent aussi." +
       (m === "lesson" ? "<br><b>" + LESSONS[game.les].name + "</b> : " + LESSONS[game.les].desc : "") +
       (m === "free" ? " Flèches <b>↑ ↓</b> ou boutons − / + : changer d'octave (3 à 6). Glissez la souris ou le doigt sur les touches pour un glissando." : "") +
       " <b>Espace</b> : pédale de sustain (les notes continuent de résonner).";
@@ -1310,7 +1358,7 @@
       if (n.hit) return;
       var yb = HIT_Y - (n.time - game.clock) * SPEED, yt = yb - n.h;
       if (yb < -8 || yt > KEY_Y) return;
-      var k = n.k, w = k.white ? 64 : 40, x = k.cx - w / 2;
+      var k = n.k, w = Math.round(k.w * (k.white ? .8 : .87)), x = k.cx - w / 2;
       var col = n.miss ? "#6f748a" : PASTEL[k.f];
       var isNext = game.mode === "learn" && j === game.idx;
       if (!n.miss && n.time - game.clock < 1.3 && n.time - game.clock > -HIT_WINDOW) hint[k.code] = 1;
@@ -1321,7 +1369,7 @@
       ctx.fillStyle = "rgba(255,255,255,.5)";
       ctx.fillRect(x + 4, yt + 4, w - 8, 6);
       ctx.fillStyle = "#3A2F45";
-      ctx.font = '700 20px Poppins,Arial,sans-serif';
+      ctx.font = '700 ' + FS(20) + 'px Poppins,Arial,sans-serif';
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(k.label.toUpperCase(), k.cx, yb - Math.min(n.h / 2, 18));
@@ -1379,9 +1427,9 @@
       ctx.fillStyle = "#3A2F45";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = '700 24px Poppins,Arial,sans-serif';
+      ctx.font = '700 ' + FS(24) + 'px Poppins,Arial,sans-serif';
       ctx.fillText(k.label.toUpperCase(), k.cx, KEY_Y + 104);
-      ctx.font = '600 13px Poppins,Arial,sans-serif';
+      ctx.font = '600 ' + FS(13) + 'px Poppins,Arial,sans-serif';
       ctx.globalAlpha = .7;
       ctx.fillText(noteLabel(k), k.cx, KEY_Y + 124);
       ctx.globalAlpha = 1;
@@ -1403,7 +1451,7 @@
       ctx.fillStyle = pressed || hint[k.code] ? "#3A2F45" : "#FFFDF6";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = '700 17px Poppins,Arial,sans-serif';
+      ctx.font = '700 ' + FS(17) + 'px Poppins,Arial,sans-serif';
       ctx.fillText(k.label.toUpperCase(), k.cx, KEY_Y + 56);
     });
   }
@@ -1464,7 +1512,7 @@
       ctx.fillRect(150, 120, 600, 70);
       ctx.fillStyle = "#fff";
       ctx.font = '600 20px Poppins,Arial,sans-serif';
-      var msg = game.mode === "free" ? "Jouez avec votre clavier : Q S D F G H J K L M…"
+      var msg = game.mode === "free" ? "Jouez avec votre clavier : " + (kbId === "10" ? "Q S D F G H J K L M" : "A Z E R T Y U I O P") + "…"
         : game.mode === "lesson" ? "Choisissez une leçon puis cliquez sur Jouer"
         : "Choisissez une mélodie puis cliquez sur Jouer";
       ctx.fillText(msg, W / 2, 155);
@@ -1560,7 +1608,7 @@
 
   function setOct(d) {
     game.oct = Math.max(-1, Math.min(1, game.oct + d));
-    $("pn_octl").textContent = "Octaves " + (4 + game.oct) + "–" + (5 + game.oct);
+    $("pn_octl").textContent = "Octaves " + (4 + game.oct) + "–" + (KB_PRESETS[kbId].last + game.oct);
     Array.prototype.forEach.call(document.querySelectorAll("#pn_oct [data-o]"), function (b) {
       b.disabled = (+b.dataset.o < 0 && game.oct <= -1) || (+b.dataset.o > 0 && game.oct >= 1);
     });
@@ -1816,6 +1864,14 @@
   $("pn_oct").onclick = function (e) {
     var b = e.target.closest("[data-o]");
     if (b && !b.disabled) { setOct(+b.dataset.o); b.blur(); }
+  };
+  $("pn_kb").value = kbId;
+  $("pn_kb").onchange = function () {
+    releaseAll();
+    buildKeys(this.value);
+    try { localStorage.setItem("dactylo.piano.kb.v1", kbId); } catch (e) {}
+    setMode(game.mode);
+    this.blur();
   };
   $("pn_les").onchange = function () {
     game.les = +this.value;

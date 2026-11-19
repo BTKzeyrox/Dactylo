@@ -3,7 +3,7 @@
 ## 1. État actuel (v1, en ligne)
 - **17 vraies notes de piano** (Do4 à Mi5, dièses compris) : soundfont FluidR3_GM (licence MIT) via midi-js-soundfonts.
   Hauteur vérifiée par analyse du spectre (écart ≤ 4 cents), volume égalisé, mono 112 kbps, silence initial retiré.
-- **Clavier** : touches blanches sur Q S D F G H J K L M (Do à Mi), dièses sur Z E T Y U O P. Positions **physiques** (`e.code`), étiquettes selon la disposition réelle quand le navigateur la donne.
+- **Clavier** : réglage « Touches » (panneau) : **21 touches par défaut** (Do4 à Si6 sur deux rangées : blanches A Z E R T Y U I O P puis W X C V B N , ; : ! *, dièses sur la rangée des chiffres puis S D F H J L M ù), ou 10 touches (blanches sur Q S D F G H J K L M, dièses sur Z E T Y U O P ; Do à Mi). Choix mémorisé. Positions **physiques** (`e.code`), étiquettes selon la disposition réelle quand le navigateur la donne.
 - **3 modes** : Libre, Apprendre (la mélodie attend la bonne touche), Rythme (notes qui tombent ; Parfait / Bien / Ok / Raté, série, étoiles).
 - **6 mélodies du domaine public** : Ode à la joie, Au clair de la lune, Ah ! vous dirai-je maman, Frère Jacques, Jingle Bells, Für Élise (début).
 - Records par joueur, volume, souris et tactile, accès par le menu et le catalogue des jeux, hors ligne (sons préchargés et précachés).
