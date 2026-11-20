@@ -128,6 +128,12 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - **Durée du son** (0,3 s à 6 s, 3 s par défaut) remplace « Fondu » : elle règle ensemble la tenue minimale (un piano sonne au moins 1 s même sur une frappe brève) et la fin douce du son. Valable pour tous les instruments (chacun garde son caractère).
 - Limite : les échantillons du piano durent 3,2 s ; au-delà, la note s'arrête d'elle-même.
 
+## Style Piano Tiles et deux Mozart (v62)
+- Modes **Rythme** et **Apprendre** : champ clair avec colonnes (une par touche), **tuiles noires** hautes (dièses en bleu nuit) qui tombent, bord à jouer plus clair en bas, bande dorée au-dessus du clavier ; la tuile réussie s'éteint en bleu, la manquée devient grise ; en Apprendre, la prochaine tuile a un contour doré. Les autres modes gardent le fond sombre.
+- **Eine kleine Nachtmusik (Mozart)** : thème principal en Sol, 60 notes, environ 24 s (D4 à D5 : tient sur 10 comme sur 21 touches).
+- **Marche turque (Mozart)** (Rondo alla turca, K. 331) : parties A, A, B, 94 notes, environ 33 s à 72 battements/min. Monte jusqu'à Do6 : jouer avec 21 touches (à 10 touches, les notes trop hautes sont jouées une octave plus bas).
+- Notes extraites de fichiers MIDI de Mozart (domaine public) : mélodie du haut, sans accompagnement.
+
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public. Ne pas ajouter de morceaux sous droits d'auteur.

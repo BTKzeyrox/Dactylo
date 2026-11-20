@@ -150,6 +150,8 @@
     ["Jingle Bells", 120, "E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 E4 D4 D4 E4 D4:2 G4:2 E4 E4 E4:2 E4 E4 E4:2 E4 G4 C4:1.5 D4:.5 E4:4 F4 F4 F4:1.5 F4:.5 F4 E4 E4 E4:.5 E4:.5 G4 G4 F4 D4 C4:4"],
     ["Für Élise", 96, "E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 G#4 B4 C5:2 R E4 E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 C5 B4 A4:3 B4 C5 D5 E5:3 G5 F5 E5 D5:3 F5 E5 D5 C5:3 E5 D5 C5 B4:3 E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 G#4 B4 C5:2 R E4 E5 D#5 E5 D#5 E5 B4 D5 C5 A4:2 R C4 E4 A4 B4:2 R E4 C5 B4 A4:3"],
     ["Marche nuptiale (Wagner)", 96, "D4 G4:1.5 G4:.5 G4:2 D4 A4:1.5 F#4:.5 G4:2 D4 G4:1.5 C5:.5 C5:2 B4 A4 G4:2 A4 G4 F#4 G4:.5 A4:.5 D4 G4:1.5 G4:.5 G4:2 D4 A4:1.5 F#4:.5 G4:2 D4 G4:1.5 B4:.5 D5:2 B4 G4 E4 A4:.5 B4:.5 G4:2"],
+    ["Eine kleine Nachtmusik (Mozart)", 100, "G4:1.5 D4:.5 G4:1.5 D4:.5 G4:.5 D4:.5 G4:.5 B4:.5 D5:2 C5:1.5 A4:.5 C5:1.5 A4:.5 C5:.5 A4:.5 F#4:.5 A4:.5 D4:2 G4 G4:1.5 B4:.5 A4:.5 G4:.5 G4:.5 F#4:.5 F#4:1.5 A4:.5 C5:.5 F#4:.5 A4:.5 G4:.5 G4:1.5 B4:.5 A4:.5 G4:.5 G4:.5 F#4:.5 F#4:1.5 A4:.5 C5:.5 F#4:.5 G4:.5 G4:.5 G4:.25 F#4:.25 E4:.25 F#4:.25 G4:.5 G4:.5 B4:.25 A4:.25 G4:.25 A4:.25 B4:.5 B4:.5 D5:.25 C5:.25 B4:.25 C5:.25 D5:2"],
+    ["Marche turque (Mozart)", 72, "B4:.25 A4:.25 G#4:.25 A4:.25 C5 D5:.25 C5:.25 B4:.25 C5:.25 E5 F5:.25 E5:.25 D#5:.25 E5:.25 B5:.25 A5:.25 G#5:.25 A5:.25 B5:.25 A5:.25 G#5:.25 A5:.25 C6 A5:.5 C6:.5 B5:.5 A5:.5 G5:.5 A5:.5 B5:.5 A5:.5 G5:.5 A5:.5 B5:.5 A5:.5 G5:.5 F#5:.5 E5 B4:.25 A4:.25 G#4:.25 A4:.25 C5 D5:.25 C5:.25 B4:.25 C5:.25 E5 F5:.25 E5:.25 D#5:.25 E5:.25 B5:.25 A5:.25 G#5:.25 A5:.25 B5:.25 A5:.25 G#5:.25 A5:.25 C6 A5:.5 C6:.5 B5:.5 A5:.5 G5:.5 A5:.5 B5:.5 A5:.5 G5:.5 A5:.5 B5:.5 A5:.5 G5:.5 F#5:.5 E5 E5:.5 F5:.5 G5:.5 G5:.5 A5:.25 G5:.25 F5:.25 E5:.25 D5 E5:.5 F5:.5 G5:.5 G5:.5 A5:.25 G5:.25 F5:.25 E5:.25 D5"],
     /* mélodies du domaine public ; tout tient dans Do4–Mi5 (Joyeux anniversaire est écrit en Fa pour y tenir). Für Élise monte jusqu'à Sol5 : avec 10 touches, les notes trop hautes sont jouées une octave plus bas. */
     ["Mary avait un petit agneau", 108, "E4 D4 C4 D4 E4 E4 E4:2 D4 D4 D4:2 E4 G4 G4:2 E4 D4 C4 D4 E4 E4 E4 E4 D4 D4 E4 D4 C4:4"],
     ["London Bridge", 100, "G4:1.5 A4:.5 G4 F4 E4 F4 G4:2 D4 E4 F4:2 E4 F4 G4:2 G4:1.5 A4:.5 G4 F4 E4 F4 G4:2 D4 G4 E4 C4:2"],
@@ -1329,6 +1331,7 @@
   }
   function registerHit(note, pts, txt, col) {
     note.hit = true;
+    note.hitAt = performance.now();
     game.hits++; game.done++; game.combo++;
     game.maxc = Math.max(game.maxc, game.combo);
     game.score += Math.round(pts * (1 + Math.min(game.combo, 30) / 30));
@@ -1412,17 +1415,35 @@
 
   /* ================= 5. Dessin (style pixel : rectangles à bords nets) ================= */
 
+  /* Rythme et Apprendre : style « Piano Tiles » (colonnes claires, tuiles noires) ; les autres modes gardent le fond sombre */
+  function tilesOn() { return game.mode === "rhythm" || game.mode === "learn"; }
   function drawBackground(t) {
-    var i, f;
+    var i, f, n = WHITE_KEYS.length, lw = KB_W / n;
+    if (tilesOn()) {
+      ctx.fillStyle = "#dfe2ee";
+      ctx.fillRect(0, 0, W, KEY_Y);
+      for (i = 0; i < n; i++) {
+        ctx.fillStyle = i % 2 ? "#eceef6" : "#f8f9fd";
+        ctx.fillRect(KB_X0 + i * lw, 0, lw, KEY_Y);
+      }
+      ctx.fillStyle = "rgba(40,40,90,.13)";
+      for (i = 0; i <= n; i++) ctx.fillRect(Math.round(KB_X0 + i * lw) - .5, 0, 1, KEY_Y);
+      /* zone où l'on joue : bande dorée au-dessus du clavier */
+      ctx.fillStyle = "rgba(242,169,59,.16)";
+      ctx.fillRect(KB_X0, HIT_Y - 6, KB_W, KEY_Y - HIT_Y + 6);
+      ctx.fillStyle = "#F2A93B";
+      ctx.fillRect(KB_X0, HIT_Y - 2, KB_W, 4);
+      return;
+    }
     for (i = 0; i < 8; i++) {
       f = i / 7;
       ctx.fillStyle = "rgb(" + [22 + 14 * f | 0, 18 + 12 * f | 0, 32 + 24 * f | 0] + ")";
       ctx.fillRect(0, i * KEY_Y / 8, W, KEY_Y / 8 + 1);
     }
     /* colonnes des touches blanches */
-    for (i = 0; i < WHITE_KEYS.length; i++) {
+    for (i = 0; i < n; i++) {
       ctx.fillStyle = i % 2 ? "rgba(255,255,255,.03)" : "rgba(255,255,255,.07)";
-      ctx.fillRect(KB_X0 + i * KB_W / WHITE_KEYS.length, 0, KB_W / WHITE_KEYS.length, KEY_Y);
+      ctx.fillRect(KB_X0 + i * lw, 0, lw, KEY_Y);
     }
     /* ligne dorée */
     ctx.fillStyle = "rgba(242,169,59,.9)";
@@ -1430,28 +1451,44 @@
   }
 
   function drawFallingNotes(hint) {
-    var S = cvScale || 1;   // pixels réels par unité de dessin : on aligne les bords dessus (pas de scintillement)
+    var S = cvScale || 1, nowMs = performance.now();   // S : pixels réels par unité de dessin, pour aligner les bords
     ctx.font = '700 ' + FS(20) + 'px Poppins,Arial,sans-serif';
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     game.notes.forEach(function (n, j) {
-      if (n.hit) return;
       var yb = Math.round((HIT_Y - (n.time - game.clock) * SPEED) * S) / S, yt = yb - n.h;
       if (yb < -8 || yt > KEY_Y) return;
-      var k = n.k, w = Math.round(k.w * (k.white ? .8 : .87)), x = k.cx - w / 2;
-      var col = n.miss ? "#6f748a" : PASTEL[k.f];
+      var k = n.k, w = k.white ? Math.round(k.w - 3) : Math.round(k.w), x = Math.round(k.cx - w / 2);
+      if (n.hit) {   // tuile réussie : elle s'éteint en bleu en un clin d'oeil
+        var ht = (nowMs - (n.hitAt || 0)) / 1000;
+        if (!(ht >= 0 && ht < .22)) return;
+        ctx.globalAlpha = (1 - ht / .22) * .85;
+        ctx.fillStyle = "#5B9BE0";
+        ctx.fillRect(x, yt, w, n.h);
+        ctx.globalAlpha = 1;
+        return;
+      }
       var isNext = game.mode === "learn" && j === game.idx;
       if (!n.miss && n.time - game.clock < 1.3 && n.time - game.clock > -HIT_WINDOW) hint[k.code] = 1;
-      ctx.fillStyle = isNext ? "#FFFFFF" : "#3A2F45";
-      ctx.fillRect(x - 3, yt - 3, w + 6, n.h + 6);
-      ctx.fillStyle = col;
+      /* tuile noire (dièses : bleu nuit), bord à jouer plus clair en bas */
+      ctx.fillStyle = n.miss ? "#c4c8da" : (k.white ? "#13131a" : "#271b5a");
       ctx.fillRect(x, yt, w, n.h);
-      ctx.fillStyle = "rgba(255,255,255,.5)";
-      ctx.fillRect(x + 4, yt + 4, w - 8, 6);
-      ctx.fillStyle = "#3A2F45";
+      if (!n.miss) {
+        ctx.fillStyle = "rgba(255,255,255,.11)";
+        ctx.fillRect(x, yt, 3, n.h);
+        ctx.fillStyle = "rgba(255,255,255,.26)";
+        ctx.fillRect(x, yb - 6, w, 6);
+      }
+      if (isNext) {
+        ctx.strokeStyle = "#F2A93B";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x - 1.5, yt - 1.5, w + 3, n.h + 3);
+      }
+      ctx.fillStyle = n.miss ? "#7b8097" : "#FFFFFF";
       ctx.fillText(k.label.toUpperCase(), k.cx, yb - Math.min(n.h / 2, 18));
     });
   }
+
 
   /* dégradés du clavier, créés une seule fois */
   var gradWhite = null, gradBlack = null, gradPressed = null, gradCheek = null;
@@ -1565,10 +1602,14 @@
     ctx.globalAlpha = 1;
     game.pop.forEach(function (p) {
       ctx.globalAlpha = Math.max(0, 1 - p.t / .8);
-      ctx.fillStyle = p.col;
       ctx.font = '400 14px "Press Start 2P",Poppins,monospace';
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
+      ctx.lineWidth = 4;
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = "rgba(20,16,40,.6)";   // contour sombre : lisible sur fond clair comme sombre
+      ctx.strokeText(p.txt, p.x, p.y - p.t * 50);
+      ctx.fillStyle = p.col;
       ctx.fillText(p.txt, p.x, p.y - p.t * 50);
     });
     ctx.globalAlpha = 1;
@@ -1579,13 +1620,13 @@
     ctx.textBaseline = "middle";
     /* compte à rebours avant le début du mode Rythme */
     if (game.phase === "play" && game.mode === "rhythm" && game.clock < LEAD - .4) {
-      ctx.fillStyle = "#fff";
+      ctx.fillStyle = tilesOn() ? "#2B2540" : "#fff";
       ctx.font = '400 56px "Press Start 2P",Poppins,monospace';
       ctx.fillText(String(Math.ceil(LEAD - .4 - game.clock)), W / 2, 150);
     }
     /* message d'accueil */
     if (game.mode === "free" || game.phase === "idle") {
-      ctx.fillStyle = "rgba(8,12,28,.55)";
+      ctx.fillStyle = tilesOn() ? "rgba(8,12,28,.78)" : "rgba(8,12,28,.55)";
       ctx.fillRect(150, 120, 600, 70);
       ctx.fillStyle = "#fff";
       ctx.font = '600 20px Poppins,Arial,sans-serif';
