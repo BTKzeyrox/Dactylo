@@ -504,3 +504,8 @@ html[data-anim="low"] #scene .sx{animation:none}
 .palm{left:auto;right:4%}
 .bird{width:64px}
 @media (max-width:760px){.bird{width:46px}.palm{right:2%}}
+
+/* Entrée : toujours affichée au bout de la phrase (discrète tant qu'on n'y est pas), mise en avant quand c'est son tour */
+#txt .ent.wait{background:transparent;outline:2px dashed var(--acc);outline-offset:-1px;opacity:.6}
+/* Exercice texte : un texte normal (pas de gris, de rouge ni de couleurs de doigts) ; seul un soulignement marque la position */
+.ph6 #txt .cur{background:transparent;outline:0;border-bottom:3px solid var(--acc);border-radius:0}

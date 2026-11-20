@@ -74,18 +74,21 @@ function cutStrip(s){var zs=.15,us=CUT.u0+(CUT.u1-CUT.u0)*(zs-CUT.z0)/(CUT.z1-CU
  var m=new T.Mesh(new T.BoxGeometry(.05,.5,Math.hypot(dx,dz)),mt);m.position.set(s*(us+CUT.u1)/2,0,(zs+CUT.z1)/2);m.rotation.y=Math.atan2(dx,dz);m.renderOrder=4;return m}
 function cutUpdate(H){var c=H.cut,P=H.g.position,n=new T.Vector3(-c.s*(CUT.z1-CUT.z0),0,CUT.u1-CUT.u0).normalize();
  c.pa.normal.copy(n);c.pa.constant=-(n.x*(P.x+c.s*CUT.u0)+n.z*(P.z+CUT.z0));c.pb.constant=-(P.z+CUT.z1)}
-var spec={1:[-.78,.8,.9],2:[-.33,.96,1],3:[.12,1,1.03],4:[.56,.94,1]};
+/* par doigt : [décalage x, longueur, épaisseur, décalage z de la base] ; les bases forment un arc (majeur en avant, auriculaire en arrière) et les longueurs diffèrent : mains moins « alignées » */
+var spec={1:[-.8,.78,.9,.1],2:[-.34,.95,1,.02],3:[.11,1.03,1.03,-.08],4:[.56,.91,1,-.01]};
  [0,1].forEach(function(h){var s=h?-1:1,hg=new T.Group(),H={g:hg,objs:[],ox:0,oz:0,right:h},pm0=sk(),ct=H.cut=cutMats(s);ct.cl(pm0);
   var palm=part(rbox(2,.46,2,.22,8,true),pm0,hg,.06,ct.out,ct.pre,4);palm.position.set(0,0,.4);
-  for(var f=1;f<=4;f++){var id=h?9-f:f,sp=spec[f],fg=finger(sp[1]*1.12,.15*sp[2],sk());fg.g.position.set(s*sp[0],.03,-.6);hg.add(fg.g);fg.id=id;fg.H=H;(F[id]=F[id]||[]).push(fg);H.objs.push(fg);
-   var kn=part(new T.SphereGeometry(.19*sp[2],12,8),fg.mat,hg,.045,null,true,4);kn.position.set(s*sp[0],.17,-.5);kn.scale.set(1,.55,1)}
+  for(var f=1;f<=4;f++){var id=h?9-f:f,sp=spec[f],fg=finger(sp[1]*1.25,.15*sp[2],sk());fg.g.position.set(s*sp[0],.03,-.6+sp[3]);hg.add(fg.g);fg.id=id;fg.H=H;(F[id]=F[id]||[]).push(fg);H.objs.push(fg);
+   var kn=part(new T.SphereGeometry(.19*sp[2],12,8),fg.mat,hg,.045,null,true,4);kn.position.set(s*sp[0],.17,-.5+sp[3]);kn.scale.set(1,.55,1)}
   var mound=part(new T.SphereGeometry(.5,14,10),pm0,hg,.05,ct.out,ct.pre,4);mound.scale.set(.8,.5,1.35);mound.position.set(s*.78,-.04,.55);mound.rotation.y=s*.25;
   var th=finger(1.1,.19,ct.cl(sk()),ct.out,ct.pre);th.g.position.set(s*.93,0,.62);th.id=9;th.H=H;th.right=!!h;th.thumb=true;hg.add(th.g);(F[9]=F[9]||[]).push(th);H.objs.push(th);hg.add(cutStrip(s));
   var wg=new T.CylinderGeometry(.62,.5,1.5,18);wg.rotateX(Math.PI/2);var wr=part(wg,pm0,hg,.05,null,true,4);wr.position.set(0,-.02,2.1);wr.scale.y=.74;
   var cg=new T.CylinderGeometry(.7,.7,.6,20);cg.rotateX(Math.PI/2);var cu=part(cg,cuffM,hg,.04,null,false,5);cu.position.set(0,-.02,2.75);cu.scale.y=.85;
-  H.home=new T.Vector3(h?keys.m.x-.78:keys.q.x+.78,.62,1.75);hg.position.copy(H.home);grp.add(hg);hands.push(H)});
+  H.home=new T.Vector3(h?keys.m.x-.78:keys.q.x+.78,.62,1.95);hg.position.copy(H.home);grp.add(hg);hands.push(H)});
  sc.add(grp);
- function homeT(o){if(o.thumb)return new T.Vector3(o.right?3.05:2.6,KT+o.rt+.02,.8);var k=keys[HOME[o.id]];return new T.Vector3(k.x,KT+o.rt+.01,k.z)}
+ /* au repos, chaque doigt se pose un peu à côté du centre de sa touche (x, z) : pas parfaitement aligné */
+ var REST_OFF={1:[.04,.08],2:[-.02,.05],3:[.02,.05],4:[-.03,.04],5:[.03,.04],6:[-.02,.05],7:[.02,.05],8:[-.04,.08]};
+ function homeT(o){if(o.thumb)return new T.Vector3(o.right?3.05:2.6,KT+o.rt+.02,.8);var k=keys[HOME[o.id]],j=REST_OFF[o.id]||[0,0];return new T.Vector3(k.x+j[0],KT+o.rt+.01,k.z+j[1])}
  var all=[];hands.forEach(function(H){H.objs.forEach(function(o){o.tp=homeT(o);o.want=o.tp.clone();all.push(o)})});
  var ctr=new T.Vector3(3.15,.3,.9),size=new T.Vector3(7.2,1.2,3.9),lw=0,lh=0,last=0,dirN=new T.Vector3(0,.96,.28).normalize();
  function fit(){var v=cam.fov*Math.PI/360,se=dirN.y,ce=Math.sqrt(1-se*se),hh=(size.z*se+size.y*ce)/2*1.04,hw=size.x/2*1.02,d=Math.max(hh/Math.tan(v),hw/(Math.tan(v)*cam.aspect));cam.position.copy(ctr).addScaledVector(dirN,d);cam.lookAt(ctr)}
