@@ -576,9 +576,9 @@
     var card = document.createElement("button");
     card.className = "gc";
     card.dataset.piano = "1";
-    card.innerHTML = pixelIcon("big") + '<b>Piano</b><small>Jouez de vraies notes de piano avec votre clavier : mélodies à suivre ou mode libre.</small><div class="tags"><span class="tag">Solo</span><span class="tag">Musique</span><span class="tag" style="background:var(--acc);color:var(--onacc)">Jouable</span></div>';
+    card.innerHTML = pixelIcon("big") + '<b>Piano</b><small>Jouez de vraies mélodies avec votre clavier : vous vous entraînez à taper vite et juste (vitesse et précision comptées dans vos statistiques) et vous apprenez le piano.</small><div class="tags"><span class="tag">Solo</span><span class="tag">Musique</span><span class="tag" style="background:var(--acc);color:var(--onacc)">Jouable</span></div>';
     card.onclick = function () { navBtn.click(); };
-    gamesList.appendChild(card);
+    gamesList.insertBefore(card, gamesList.firstChild);   // le piano passe avant les autres jeux
   }
   if (gamesList) {
     new MutationObserver(addCatalogCard).observe(gamesList, { childList: true });
@@ -1324,6 +1324,7 @@
     game.idx = 0;
     game.score = 0; game.combo = 0; game.maxc = 0;
     game.hits = 0; game.miss = 0; game.wrong = 0; game.done = 0;
+    game.fs = {}; game.t0 = 0; game.t1 = 0;   // par doigt, et début/fin de frappe, pour la vitesse et les statistiques de Dactylo
     game.clock = 0; game.fin = 0;
     game.pop = [];
     game.phase = "play";
@@ -1341,6 +1342,11 @@
     if (game.mode === "rhythm" || game.timed) stars = acc >= 90 && game.miss <= 2 ? 3 : acc >= 70 ? 2 : acc >= 40 ? 1 : 0;
     else stars = acc >= 95 ? 3 : acc >= 85 ? 2 : acc >= 65 ? 1 : 0;
     var r = saveRecord({ s: game.score, a: acc, st: stars });
+    /* vitesse en mots/min (5 touches = 1 mot, comme en dactylo) et envoi aux statistiques de Dactylo */
+    var ms = game.t0 ? Math.max(1000, game.t1 - game.t0) : 0, wpm = ms ? Math.round(game.hits / 5 / (ms / 60000)) : 0;
+    if (window.DactyloApp && window.DactyloApp.recordPiano && (game.mode === "rhythm" || game.mode === "learn")) {
+      try { window.DactyloApp.recordPiano({ ok: game.hits, err: game.miss + game.wrong, ms: ms, fs: game.fs, score: game.score, name: currentName() }); } catch (e) {}
+    }
     var recordLine = "";
     if (r) {
       if (r.best && r.old.s) recordLine = "<br>Nouveau record !";
@@ -1350,7 +1356,7 @@
     el.innerHTML =
       '<b style="font-size:1.2rem">' + currentName() + "</b>" +
       '<div style="font-size:1.6rem;letter-spacing:.2em;margin:4px 0">' + "★".repeat(stars) + "☆".repeat(3 - stars) + "</div>" +
-      '<p style="margin:4px 0 8px">Score <b>' + game.score + "</b> · précision <b>" + acc + " %</b> · meilleure série <b>" + game.maxc + "</b>" + recordLine + "</p>" +
+      '<p style="margin:4px 0 8px">Score <b>' + game.score + "</b> · précision <b>" + acc + " %</b>" + (wpm ? " · vitesse <b>" + wpm + " mots/min</b>" : "") + " · meilleure série <b>" + game.maxc + "</b>" + recordLine + "</p>" +
       '<button class="btn p" id="pn_again">Rejouer</button> <button class="btn" id="pn_free">Mode libre</button>';
     el.classList.remove("hide");
     $("pn_again").onclick = start;
@@ -1369,9 +1375,18 @@
       });
     }
   }
+  /* chaque note jouée (juste ou fausse) compte pour le doigt qui devait la jouer : les statistiques par doigt de Dactylo */
+  function fsAdd(f, ok) {
+    if (!game.fs || !f) return;
+    var d = game.fs[f] || (game.fs[f] = { ok: 0, err: 0 });
+    if (ok) d.ok++; else d.err++;
+  }
   function registerHit(note, pts, txt, col) {
     note.hit = true;
     note.hitAt = performance.now();
+    if (!game.t0) game.t0 = note.hitAt;
+    game.t1 = note.hitAt;
+    fsAdd(note.k.f, true);
     game.hits++; game.done++; game.combo++;
     game.maxc = Math.max(game.maxc, game.combo);
     game.score += Math.round(pts * (1 + Math.min(game.combo, 30) / 30));
@@ -1402,6 +1417,7 @@
           else registerHit(best, 30, "Ok", "#F8EAA8");
         } else {
           game.wrong++; game.combo = 0;
+          fsAdd(k.f, false);
           addPopup(k, "✗", "#F0948C");
         }
       } else if (game.mode === "learn") {
@@ -1415,6 +1431,7 @@
             }
           } else {
             game.wrong++; game.combo = 0;
+            fsAdd(next.k.f, false);
             addPopup(k, "✗", "#F0948C");
           }
         }
@@ -1435,7 +1452,7 @@
       game.clock += dt;
       game.notes.forEach(function (n) {
         if (!n.hit && !n.miss && game.clock > n.time + HIT_WINDOW) {
-          n.miss = true; game.miss++; game.done++; game.combo = 0;
+          n.miss = true; game.miss++; game.done++; game.combo = 0; fsAdd(n.k.f, false);
         }
       });
       if (game.clock > game.end + 1.2) finish();

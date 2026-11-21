@@ -159,7 +159,10 @@ var GAMES=[["car","Course de voitures","4 voitures : votre frappe fait la vitess
 var SK={chateau:{b:["#9ad0ff","#d9f0c4"],d:"L"},zombie:{b:["#141a34","#2b3a3a"],d:"L"},peche:{b:["#4aa8d8","#0f4f7a"],d:"L"},ballon:{b:["#bfe3ff","#fff0d6"],d:"U"},fusee:{b:["#050818","#1a2250"],d:"D"},avion:{b:["#7cc4ff","#d8efff"],d:"L"}};
 function ic(n,c){return pxsvg(n,c)}
 function gf(){var s="";["Tous","Débutant","Solo","Coop","Multi"].forEach(function(t){s+='<button class="chip" data-t="'+t+'" aria-pressed="'+(t===S.filter)+'">'+t+'</button>'});$("gf").innerHTML=s}
-function gl(){var s="";GAMES.forEach(function(g,i){if(S.filter!=="Tous"&&g[3].indexOf(S.filter)<0)return;s+='<button class="gc" data-i="'+i+'"'+(g[4]?"":" disabled")+'>'+ic(g[0],"big")+'<b>'+g[1]+'</b><small>'+g[2]+'</small><div class="tags">'+g[3].map(function(t){return'<span class="tag">'+t+'</span>'}).join("")+(g[4]?'<span class="tag" style="background:var(--acc);color:#fff">Jouable</span>':'<span class="tag">Bientôt</span>')+'</div></button>'});$("gl").innerHTML=s||'<p class="note">Aucun jeu dans cette catégorie.</p>'}
+function gl(){var s="",n=0;GAMES.forEach(function(g,i){if(S.filter!=="Tous"&&g[3].indexOf(S.filter)<0)return;n++;s+='<button class="gc" data-i="'+i+'"'+(g[4]?"":" disabled")+'>'+ic(g[0],"big")+'<b>'+g[1]+'</b><small>'+g[2]+'</small><div class="tags">'+g[3].map(function(t){return'<span class="tag">'+t+'</span>'}).join("")+(g[4]?'<span class="tag" style="background:var(--acc);color:#fff">Jouable</span>':'<span class="tag">Bientôt</span>')+'</div></button>'});/* le piano est LE jeu (sa carte est placée en premier par piano.js) ; les anciens jeux restent là, repliés */
+ $("glead").textContent="Le piano, c\u2019est votre entra\u00eenement : jouez des m\u00e9lodies avec votre clavier, vitesse et pr\u00e9cision comptent dans vos statistiques.";
+ $("gl").innerHTML=s?'<details class="oldg" id="oldg"'+(S.oldOpen?" open":"")+'><summary>Autres jeux de dactylo ('+n+')</summary><div class="games">'+s+'</div></details>':'<p class="note">Aucun jeu dans cette cat\u00e9gorie.</p>';$("v-games").classList.toggle("gold",!!S.oldOpen)}
+$("gl").addEventListener("toggle",function(e){if(e.target.id==="oldg"){S.oldOpen=e.target.open;$("v-games").classList.toggle("gold",S.oldOpen)}},true);
 $("gf").onclick=function(e){var b=e.target.closest("[data-t]");if(!b)return;S.filter=b.dataset.t;gf();gl()};
 $("gl").onclick=function(e){var b=e.target.closest("[data-i]");if(b&&!b.disabled)startGame(+b.dataset.i)};
 function pick(n){S.game=n;$("s2").textContent=n}
@@ -320,6 +323,7 @@ function whoUpdate(){$("who").innerHTML=pxsvg("user")+E(DB.cur);$("who2").textCo
 function enter(name){name=String(name).trim().slice(0,16);if(!name)return;if(!DB.profiles[name])DB.profiles[name]=newProf();DB.cur=name;dbSave();S.fs=prof().fs;S.les=0;applySet();whoUpdate();$("login").classList.remove("on");lchips();bars();lb();begin();go("home")}
 function lb(){var a=Object.keys(DB.profiles).map(function(n){var p=DB.profiles[n];return{n:n,b:p.best||0,p:p.plays||0,w:p.wins||0}}).sort(function(x,y){return y.b-x.b}),h='<table class="tb"><tr><th>#</th><th>Joueur</th><th>Record</th><th>Parties</th><th>Victoires</th></tr>';a.forEach(function(r,i){h+='<tr'+(r.n===DB.cur?' class="me"':"")+'><td>'+(i+1)+'</td><td>'+E(r.n)+'</td><td>'+r.b+' mot/min</td><td>'+r.p+'</td><td>'+r.w+'</td></tr>'});$("lb").innerHTML=h+"</table>"}
 function recLes(m){var p=prof();if(!p)return;var o=p.les[S.les]||{w:0,a:0,n:0};p.les[S.les]={w:Math.max(o.w,m.w),a:Math.max(o.a,m.a),n:o.n+1};p.plays++;p.best=Math.max(p.best||0,m.w);dbSave()}
+function recPiano(m){var p=prof();if(!p||!m||!(m.ok||m.err))return 0;var min=Math.max(m.ms||0,1000)/60000,w=m.ms?Math.round(m.ok/5/min):0,k="Piano",o=p.games[k]||{w:0,s:0,n:0};p.games[k]={w:Math.max(o.w,w),s:Math.max(o.s,m.score||0),n:o.n+1};p.plays++;p.best=Math.max(p.best||0,w);for(var f in(m.fs||{})){var d=p.fs[f]||(p.fs[f]={ok:0,err:0});d.ok+=m.fs[f].ok;d.err+=m.fs[f].err}dbSave();try{bars();lb()}catch(e){}return w}
 function recGame(m){var p=prof();if(!p)return;var k=GAMES[G.gi][1],o=p.games[k]||{w:0,s:0,n:0};p.games[k]={w:Math.max(o.w,m.w),s:Math.max(o.s,G.score||0),n:o.n+1};p.plays++;if(G.won)p.wins=(p.wins||0)+1;p.best=Math.max(p.best||0,m.w);dbSave()}
 function sure(b,fn){if(b._a){clearTimeout(b._t);b._a=0;b.textContent=b._o;fn();return}b._o=b.textContent;b._a=1;b.textContent="Cliquez pour confirmer";b._t=setTimeout(function(){b._a=0;b.textContent=b._o},4000)}
 $("pgo").onclick=function(){enter($("pseudo").value)};$("pseudo").onkeydown=function(e){if(e.key==="Enter")enter(this.value)};
@@ -487,6 +491,6 @@ function boot(){sidebar();dbLoad();Q("i.pxi").forEach(function(e){e.outerHTML=px
  }
 
 /* utilisé par update.js : savoir si une partie est en cours (frappe ou mini-jeu) avant de recharger la page pour une mise à jour */
-window.DactyloApp={busy:function(){return !!((S.start&&!S.done&&S.stage>0)||(G&&!G.done))},save:dbSave};
+window.DactyloApp={busy:function(){return !!((S.start&&!S.done&&S.stage>0)||(G&&!G.done))},save:dbSave,recordPiano:recPiano};
 boot();
 })();

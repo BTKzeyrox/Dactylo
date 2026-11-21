@@ -138,6 +138,11 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - Onglet **Avancé** → **⌨ Régler les touches** (passe en jeu libre) : on clique une touche du piano (elle sonne, un contour doré la marque), puis on appuie sur la touche du clavier voulue (lettre, chiffre ou signe ; Espace, flèches et Échap sont réservés). Si cette touche servait déjà à une autre note, les deux s'échangent. **Échap** annule, **✔ Terminer** quitte, **Touches d'origine** remet la disposition de départ.
 - Les choix sont mémorisés séparément pour 10 et pour 21 touches ; les étiquettes du piano, de l'aide et des leçons suivent.
 
+## Le piano, entraînement de dactylo (v66)
+- Page **Jeux** : le **piano** est la carte principale ; les 10 autres jeux sont repliés sous « Autres jeux de dactylo » (le filtre et le thème des mots n'apparaissent que quand ils sont ouverts). Rien n'est supprimé.
+- Une partie de piano en **Rythme** ou **Apprendre** compte comme une séance de dactylo : **vitesse** (mots/min, 5 touches = 1 mot) et **précision** sont affichées à la fin du morceau et enregistrées dans le profil (record, parties jouées, jeu « Piano ») ; chaque note juste ou fausse compte pour le **doigt** qui devait la jouer, donc la page Stats (précision par doigt, doigt à retravailler) inclut le piano.
+- Vitesse mesurée de la première à la dernière note réussie ; en Rythme, elle dépend du tempo du morceau.
+
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public. Ne pas ajouter de morceaux sous droits d'auteur.

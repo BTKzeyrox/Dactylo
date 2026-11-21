@@ -511,3 +511,8 @@ html[data-anim="low"] #scene .sx{animation:none}
 .ph6 #txt .cur{background:transparent;outline:0;border-bottom:3px solid var(--acc);border-radius:0}
 /* Exercice texte : fautes soulignées (trait ondulé, couleur du texte), sans rouge */
 .ph6 #tin .ul,.ph6 #tin .wul{text-decoration:underline wavy;text-decoration-thickness:2px;text-underline-offset:5px}
+/* Page Jeux : le piano en premier, les autres jeux repliés (filtres et thème des mots visibles seulement quand ils sont ouverts) */
+.oldg{grid-column:1/-1;margin-top:6px}
+.oldg>summary{cursor:pointer;font-weight:700;padding:10px 4px;color:var(--mut,inherit)}
+.oldg>.games{margin-top:8px}
+#v-games:not(.gold) #gf,#v-games:not(.gold) #gthw{display:none}
