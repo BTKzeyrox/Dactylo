@@ -64,8 +64,17 @@ function chHTML(text,from,clsFn,to,wcls){var s="",w=false,en=to==null?text.lengt
 function mkU(arr){var U=[],o=0;arr.forEach(function(u){U.push([o,o+u.length]);o+=u.length+1});return U}
 function unitAt(i){var U=S.units;for(var k=0;k<U.length;k++)if(U[k][1]>=i)return k;return U.length-1}
 function winRange(){var U=S.units,k=unitAt(S.i);var B=S.blk,a=Math.floor(k/B)*B;if(S.mode==="grow")return[a,Math.min(U.length,a+B,k+4)];return[a,Math.min(U.length,a+B)]}
-function paintField(){var t0=S.tOff||0,tp=S.typed.slice(t0),pl=plainOn(),s=chHTML(tp.map(function(o){return o.c}).join(""),0,function(j){return !pl&&tp[j].bad?"bad":""});$("tin").innerHTML=s+'<span class="caret"></span>';$("tin").scrollTop=$("tin").scrollHeight}
-function lchips(){var s="";LES.forEach(function(l,i){s+='<button class="li'+(i===S.les?" on":"")+'" data-i="'+i+'"'+(i===S.les?' aria-current="true"':"")+'><span>'+(i+1)+'</span>'+E(l[0])+'</button>'});$("llist").innerHTML=s;$("ltitle").textContent="Leçon "+(S.les+1)+" / "+LES.length+" · "+LES[S.les][0];$("lprev").disabled=S.les<=0;$("lnext").disabled=S.les>=LES.length-1}
+function paintField(){var t0=S.tOff||0,tp=S.typed.slice(t0),pl=plainOn(),str=tp.map(function(o){return o.c}).join(""),cl,wc=null;
+ if(pl){/* Exercice texte : texte normal, les fautes sont seulement soulignées. Mot terminé (espace tapé) différent du mot attendu : tout le mot ; mot en cours : seulement les lettres fausses. */
+  var wb={},op={},j=0,T=S.text;
+  while(j<tp.length){if(tp[j].c===" "){j++;continue}
+   var a=j;while(j<tp.length&&tp[j].c!==" ")j++;
+   if(j<tp.length){var e0=tp[a].e;if(e0!=null){var ws=T.lastIndexOf(" ",e0-1)+1,we=T.indexOf(" ",e0);if(we<0)we=T.length;if(str.slice(a,j)!==T.slice(ws,we))wb[a]=1}}
+   else for(var q=a;q<j;q++)if(tp[q].bad)op[q]=1}
+  cl=function(q){return op[q]?"ul":""};wc=function(q){return wb[q]?"wul":""}}
+ else cl=function(q){return tp[q].bad?"bad":""};
+ $("tin").innerHTML=chHTML(str,0,cl,null,wc)+'<span class="caret"></span>';$("tin").scrollTop=$("tin").scrollHeight}
+ function lchips(){var s="";LES.forEach(function(l,i){s+='<button class="li'+(i===S.les?" on":"")+'" data-i="'+i+'"'+(i===S.les?' aria-current="true"':"")+'><span>'+(i+1)+'</span>'+E(l[0])+'</button>'});$("llist").innerHTML=s;$("ltitle").textContent="Leçon "+(S.les+1)+" / "+LES.length+" · "+LES[S.les][0];$("lprev").disabled=S.les<=0;$("lnext").disabled=S.les>=LES.length-1}
 function lpanel(o){$("lpanel").classList.toggle("on",o);$("lback").classList.toggle("on",o);if(o){var c=$("llist").querySelector(".on");if(c)c.scrollIntoView({block:"center"})}else focusText()}
 $("lvl").onclick=function(e){var b=e.target.closest("[data-l]");if(!b||!prof())return;prof().set.level=+b.dataset.l;dbSave();lvlUI();if(S.stage>0)startStage(S.stage);else focusText()};$("lopen").onclick=function(){lpanel(true)};$("lclose").onclick=function(){lpanel(false)};$("lback").onclick=function(){lpanel(false)};$("llist").onclick=function(e){var b=e.target.closest("[data-i]");if(!b)return;S.les=+b.dataset.i;lchips();begin();lpanel(false)};document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("lpanel").classList.contains("on"))lpanel(false)});$("lprev").onclick=function(){S.les=Math.max(0,S.les-1);lchips();begin()};$("lnext").onclick=function(){S.les=Math.min(LES.length-1,S.les+1);lchips();begin()};
 function strictOn(){var p=prof();return !!(p&&p.set.strict)}
@@ -102,10 +111,10 @@ document.addEventListener("keydown",function(e){
  if(S.stage===3&&!S.catch&&S.i>=S.text.length)return;S.lastKey=Date.now();if(S.paused){S.paused=false;$("pz").classList.add("hide")}if(!S.start)S.start=Date.now();
  var exp=S.text[S.i],f=MAP[exp]||9,now=Date.now(),ke=S.ks[exp]||(S.ks[exp]={ok:0,err:0,ms:0,n:0,sub:{}}),A={i:S.i,badc:S.badc,tl:S.typed.length,bs:[]};
  if(blockOn()&&k!==exp){ke.err++;ke.sub[k]=(ke.sub[k]||0)+1;S.fs[f].err++;S.err++;sfx("bad");mood("bad");paint();var cu=$("txt").querySelector(".cur");if(cu&&!plainOn()){cu.classList.add("err");setTimeout(function(){cu.classList.remove("err")},200)}upd();return}
- if(k===" "&&exp!==" "){var nx=S.text.indexOf(" ",S.i),en=nx<0?S.text.length:nx;for(var p=S.i;p<en;p++){var ch=S.text[p],kp=S.ks[ch]||(S.ks[ch]={ok:0,err:0,ms:0,n:0,sub:{}});kp.err++;S.bad[p]=1;S.badc++;S.err++;A.bs.push(p)}S.typed.push({c:" ",bad:false});S.i=nx<0?S.text.length:nx+1;sfx("bad");mood("bad")}
- else if(k!==" "&&exp===" "){ke.err++;ke.sub[k]=(ke.sub[k]||0)+1;S.err++;S.typed.push({c:k,bad:true});sfx("bad");mood("bad")}
- else if(k===exp){ke.ok++;if(S.last&&now-S.last<3000){ke.ms+=now-S.last;ke.n++}S.last=now;S.fs[f].ok++;sfx("ok");mood("ok");if(window.H3&&H3.press)H3.press(f);S.typed.push({c:k,bad:false});S.i++}
- else{ke.err++;ke.sub[k]=(ke.sub[k]||0)+1;S.fs[f].err++;sfx("bad");mood("bad");S.err++;S.bad[S.i]=1;S.badc++;A.bs.push(S.i);S.typed.push({c:k,bad:true});S.i++}
+ if(k===" "&&exp!==" "){var nx=S.text.indexOf(" ",S.i),en=nx<0?S.text.length:nx;for(var p=S.i;p<en;p++){var ch=S.text[p],kp=S.ks[ch]||(S.ks[ch]={ok:0,err:0,ms:0,n:0,sub:{}});kp.err++;S.bad[p]=1;S.badc++;S.err++;A.bs.push(p)}S.typed.push({e:S.i,c:" ",bad:false});S.i=nx<0?S.text.length:nx+1;sfx("bad");mood("bad")}
+ else if(k!==" "&&exp===" "){ke.err++;ke.sub[k]=(ke.sub[k]||0)+1;S.err++;S.typed.push({e:S.i,c:k,bad:true});sfx("bad");mood("bad")}
+ else if(k===exp){ke.ok++;if(S.last&&now-S.last<3000){ke.ms+=now-S.last;ke.n++}S.last=now;S.fs[f].ok++;sfx("ok");mood("ok");if(window.H3&&H3.press)H3.press(f);S.typed.push({e:S.i,c:k,bad:false});S.i++}
+ else{ke.err++;ke.sub[k]=(ke.sub[k]||0)+1;S.fs[f].err++;sfx("bad");mood("bad");S.err++;S.bad[S.i]=1;S.badc++;A.bs.push(S.i);S.typed.push({e:S.i,c:k,bad:true});S.i++}
  A.sp=k===" ";(S.hist||(S.hist=[])).push(A);if(S.hist.length>800)S.hist.shift();S.lastAct=A;S.canBack=true;
  paint();upd();if(S.i>=S.text.length&&(S.stage!==3||S.catch||S.i>=S.Q))stageEnd()});
 document.addEventListener("keydown",function(e){if(e.key!=="Backspace"||S.stage<1||S.done||blockOn()||!$("v-lessons").classList.contains("on")||$("lpanel").classList.contains("on"))return;e.preventDefault();/* Retour arrière libre dans le mot en cours : lettre après lettre jusqu'au début du mot. Un espace verrouille : on ne peut plus revenir avant lui. */var h=S.hist,A=h&&h[h.length-1];if(!A||A.sp)return;h.pop();S.i=A.i;S.badc=A.badc;A.bs.forEach(function(p){delete S.bad[p]});S.typed.length=A.tl;S.lastAct=h[h.length-1]||null;paint();upd()});

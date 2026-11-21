@@ -509,3 +509,5 @@ html[data-anim="low"] #scene .sx{animation:none}
 #txt .ent.wait{background:transparent;outline:2px dashed var(--acc);outline-offset:-1px;opacity:.6}
 /* Exercice texte : un texte normal (pas de gris, de rouge ni de couleurs de doigts) ; seul un soulignement marque la position */
 .ph6 #txt .cur{background:transparent;outline:0;border-bottom:3px solid var(--acc);border-radius:0}
+/* Exercice texte : fautes soulignées (trait ondulé, couleur du texte), sans rouge */
+.ph6 #tin .ul,.ph6 #tin .wul{text-decoration:underline wavy;text-decoration-thickness:2px;text-underline-offset:5px}
