@@ -134,6 +134,10 @@ Idées pour plus tard (hors des 3 étapes) : sons de basse, split clavier (deux 
 - **Marche turque (Mozart)** (Rondo alla turca, K. 331) : parties A, A, B, 94 notes, environ 33 s à 72 battements/min. Monte jusqu'à Do6 : jouer avec 21 touches (à 10 touches, les notes trop hautes sont jouées une octave plus bas).
 - Notes extraites de fichiers MIDI de Mozart (domaine public) : mélodie du haut, sans accompagnement.
 
+## Régler les touches (v64)
+- Onglet **Avancé** → **⌨ Régler les touches** (passe en jeu libre) : on clique une touche du piano (elle sonne, un contour doré la marque), puis on appuie sur la touche du clavier voulue (lettre, chiffre ou signe ; Espace, flèches et Échap sont réservés). Si cette touche servait déjà à une autre note, les deux s'échangent. **Échap** annule, **✔ Terminer** quitte, **Touches d'origine** remet la disposition de départ.
+- Les choix sont mémorisés séparément pour 10 et pour 21 touches ; les étiquettes du piano, de l'aide et des leçons suivent.
+
 ## 6. Crédits et licences
 - Sons : FluidR3_GM (licence MIT) via le dépôt midi-js-soundfonts de Michael Deal.
 - Mélodies : domaine public. Ne pas ajouter de morceaux sous droits d'auteur.

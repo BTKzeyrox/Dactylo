@@ -108,6 +108,12 @@
     return 12 * (+note.slice(-1) + 1) + PITCH_CLASS[base[0]] + accidental;
   }
 
+  /* Touches personnalisées : { disposition : { note : code de la touche du clavier } }, mémorisées dans le navigateur.
+     Toujours une permutation : si la touche choisie servait déjà à une autre note, les deux s'échangent. */
+  var KB_MAP = {};
+  try { KB_MAP = JSON.parse(localStorage.getItem("dactylo.piano.map.v1") || "{}") || {}; } catch (e) { KB_MAP = {}; }
+  function saveKbMap() { try { localStorage.setItem("dactylo.piano.map.v1", JSON.stringify(KB_MAP)); } catch (e) {} }
+  var ASSIGNABLE = /^(Key[A-Z]|Digit\d|Numpad\d|Comma|Period|Slash|Semicolon|Quote|Backslash|BracketLeft|BracketRight|Minus|Equal|Backquote|IntlBackslash)$/;
   var keys = [], keyByCode = {}, keyByNote = {};
   var KB_X0 = 50, KB_W = 800;   // le clavier occupe toujours la même largeur : plus de touches = touches plus étroites
   /* (re)construit les touches de la disposition choisie, sur place (les listes gardent la même identité) */
@@ -134,8 +140,30 @@
         x: cx - bw / 2, w: bw, cx: cx, f: finger(b[0], b[2] - 1), label: keyLabel(b[0])
       });
     });
+    /* touches choisies par l'utilisateur (ignorées si elles ne forment pas une permutation valide) */
+    var ov = KB_MAP[kbId], used = {}, okMap = !!ov;
+    if (ov) {
+      keys.forEach(function (k) {
+        var c = ov[k.note] || k.code;
+        if (!ASSIGNABLE.test(c) || used[c]) okMap = false;
+        used[c] = 1;
+      });
+      if (okMap) keys.forEach(function (k) { if (ov[k.note]) { k.code = ov[k.note]; k.label = keyLabel(k.code); } });
+      else delete KB_MAP[kbId];
+    }
     keys.forEach(function (k) { keyByCode[k.code] = k; keyByNote[k.note] = k; });
   }
+  /* donne à la note k la touche du clavier « code » (échange avec la note qui l'utilisait) */
+  function assignKey(k, code) {
+    var other = keyByCode[code], old = k.code, ov = KB_MAP[kbId] || (KB_MAP[kbId] = {});
+    if (other === k) return;
+    if (other) { other.code = old; ov[other.note] = old; other.label = keyLabel(old); }
+    k.code = code; ov[k.note] = code; k.label = keyLabel(code);
+    Object.keys(keyByCode).forEach(function (c) { delete keyByCode[c]; });
+    keys.forEach(function (q) { keyByCode[q.code] = q; });
+    saveKbMap();
+  }
+  function resetKbMap() { delete KB_MAP[kbId]; saveKbMap(); buildKeys(kbId); }
   try { var savedKb = localStorage.getItem("dactylo.piano.kb.v1"); if (KB_PRESETS[savedKb]) kbId = savedKb; } catch (e) {}
   buildKeys(kbId);
   /* taille des textes du clavier selon la largeur des touches */
@@ -361,6 +389,8 @@
               '<button class="pbtn round" data-o="1" aria-label="Octave plus aiguë">+</button>',
             '</div>',
             '<select class="psel" id="pn_kb" aria-label="Nombre de touches" title="Réglage : nombre de touches du clavier"><option value="10">Touches : 10</option><option value="21">Touches : 21</option></select>',
+            '<button class="pbtn" id="pn_remap" aria-pressed="false" title="Choisis toi-même la touche du clavier de chaque note : clique une touche du piano, puis appuie sur la touche voulue">⌨ Régler les touches</button>',
+            '<button class="pbtn" id="pn_remap0" style="display:none" title="Remet les touches d\'origine de cette disposition">Touches d\'origine</button>',
             '<button class="pbtn" id="pn_ped" aria-pressed="false" title="Pédale de sustain (barre Espace)"><i class="led"></i>Pédale</button>',
           '</div>',
           '<div class="pgrp" data-tabs="effets">',
@@ -1194,10 +1224,20 @@
 
   /* étiquette d'une touche selon la vraie disposition du clavier, si le navigateur la donne */
   var layout = null;
-  function keyLabel(code) { return (layout && layout[code]) || DEFAULT_LABEL[code]; }
+  function labelFromCode(code) {
+    var m = /^(?:Key([A-Z])|Digit(\d)|Numpad(\d))$/.exec(code);
+    if (m) return (m[1] || m[2] || m[3]).toLowerCase();
+    return { Comma: ",", Period: ".", Slash: "/", Semicolon: ";", Quote: "'", Backslash: "\\", BracketLeft: "[", BracketRight: "]", Minus: "-", Equal: "=", Backquote: "`", IntlBackslash: "<" }[code] || code;
+  }
+  var layoutMap = null;
+  function keyLabel(code) {
+    var v = layoutMap && layoutMap.get && layoutMap.get(code);
+    return v || (layout && layout[code]) || DEFAULT_LABEL[code] || labelFromCode(code);
+  }
   try {
     if (navigator.keyboard && navigator.keyboard.getLayoutMap) {
       navigator.keyboard.getLayoutMap().then(function (m) {
+        layoutMap = m;
         layout = {};
         ALL_CODES.forEach(function (c) { var v = m.get(c); if (v) layout[c] = v; });
         keys.forEach(function (k) { k.label = keyLabel(k.code); });
@@ -1618,6 +1658,25 @@
   function drawOverlays() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+    if (remap.on) {
+      if (remap.sel) {   // contour doré autour de la touche choisie
+        var rk = remap.sel;
+        ctx.strokeStyle = "#F2A93B";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(rk.x - 1, KEY_Y - 1, rk.w + 2, (rk.white ? KEYH : BH) + 2);
+      }
+      ctx.fillStyle = "rgba(8,12,28,.86)";
+      ctx.fillRect(110, 18, 680, 74);
+      ctx.fillStyle = "#fff";
+      ctx.font = '600 18px Poppins,Arial,sans-serif';
+      var recent = remap.msg && performance.now() - remap.msgT < 4000;
+      ctx.fillText(remap.sel ? "Appuie sur la touche du clavier pour « " + remap.sel.fr + " » (Échap : annuler)"
+        : "Clique une touche du piano, puis appuie sur la touche du clavier voulue", W / 2, 44);
+      ctx.fillStyle = "#FFE066";
+      ctx.font = '600 15px Poppins,Arial,sans-serif';
+      ctx.fillText(recent ? remap.msg : "Échap ou « Terminer » pour finir", W / 2, 72);
+      ctx.fillStyle = "#fff";
+    }
     /* compte à rebours avant le début du mode Rythme */
     if (game.phase === "play" && game.mode === "rhythm" && game.clock < LEAD - .4) {
       ctx.fillStyle = tilesOn() ? "#2B2540" : "#fff";
@@ -2042,6 +2101,8 @@
   var savedTab = "simple";
   try { savedTab = localStorage.getItem("dactylo.piano.tab.v2") || "simple"; } catch (e) {}
   setTab(savedTab);
+  $("pn_remap").onclick = function () { if (remap.on) remapStop(); else remapStart(); this.blur(); };
+  $("pn_remap0").onclick = function () { resetKbMap(); remap.sel = null; remapMsg("Touches d'origine remises"); helpText(); this.blur(); };
   $("pn_perf").value = perfPref;
   $("pn_perf").onchange = function () {
     perfPref = this.value;
@@ -2051,6 +2112,7 @@
   };
   $("pn_kb").value = kbId;
   $("pn_kb").onchange = function () {
+    if (remap.on) remapStop();
     releaseAll();
     buildKeys(this.value);
     try { localStorage.setItem("dactylo.piano.kb.v1", kbId); } catch (e) {}
@@ -2110,6 +2172,20 @@
     if (!visible() || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
     var tag = e.target && e.target.tagName;
     if (tag === "INPUT" && e.target.type !== "range" || tag === "TEXTAREA") return;
+    if (remap.on) {
+      if (e.code === "Escape") { e.preventDefault(); if (remap.sel) remap.sel = null; else remapStop(); return; }
+      if (remap.sel) {
+        e.preventDefault();
+        if (!ASSIGNABLE.test(e.code)) { remapMsg("Cette touche n'est pas possible : choisis une lettre, un chiffre ou un signe."); return; }
+        var kk = remap.sel, was = keyByCode[e.code];
+        assignKey(kk, e.code);
+        remap.swallow[e.code] = true;   // pas de note au relâchement
+        remapMsg(kk.fr + " → " + kk.label.toUpperCase() + (was && was !== kk ? "   (échangée avec " + was.fr + ")" : ""));
+        remap.sel = null;
+        helpText();
+        return;
+      }
+    }
     /* Espace = pédale de sustain (sauf si un bouton ou une liste a le focus : Espace sert alors à l'activer) */
     if (e.code === "Space" && tag !== "BUTTON" && tag !== "SELECT" && tag !== "A") {
       e.preventDefault();
@@ -2129,6 +2205,7 @@
   document.addEventListener("keyup", function (e) {
     if (!visible()) return;
     if (e.code === "Space") { setSustain(false); return; }
+    if (remap.swallow[e.code]) { delete remap.swallow[e.code]; return; }
     var k = keyFromEvent(e);
     if (k) keyUp(k);
   });
@@ -2152,6 +2229,21 @@
 
   /* Souris et tactile : un pointeur par doigt (id -> touche tenue), pour jouer à plusieurs doigts.
      En mode Libre, glisser d'une touche à l'autre fait un glissando. */
+  /* Régler les touches : on clique une touche du piano, puis on appuie sur la touche du clavier voulue */
+  var remap = { on: false, sel: null, msg: "", msgT: 0, swallow: {} };
+  function remapMsg(t) { remap.msg = t; remap.msgT = performance.now(); }
+  function remapStart() {
+    remap.on = true; remap.sel = null; remap.msg = "";
+    if (game.mode !== "free") setMode("free");   // on règle en jeu libre (rien à valider)
+    refreshRemapUI();
+  }
+  function remapStop() { remap.on = false; remap.sel = null; refreshRemapUI(); }
+  function refreshRemapUI() {
+    var b = $("pn_remap"), r = $("pn_remap0");
+    if (b) { b.setAttribute("aria-pressed", remap.on); b.textContent = remap.on ? "✔ Terminer" : "⌨ Régler les touches"; }
+    if (r) r.style.display = remap.on ? "" : "none";
+    helpText();
+  }
   var pointers = {};
   function otherPointerHolds(k) {
     return Object.keys(pointers).some(function (id) { return pointers[id] === k; });
@@ -2165,6 +2257,7 @@
     var k = keyAtEvent(e);
     if (!k) return;
     e.preventDefault();
+    if (remap.on) { remap.sel = k; remapMsg(""); }   // la note choisie attend sa touche du clavier (elle sonne quand même, pour l'entendre)
     try { cv.setPointerCapture(e.pointerId); } catch (err) {}   // on continue de suivre le doigt hors du canvas
     pointers[e.pointerId] = k;
     keyDown(k);
